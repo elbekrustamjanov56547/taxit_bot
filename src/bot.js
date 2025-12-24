@@ -6,7 +6,7 @@ const cron = require('node-cron')
 // Import handlers
 const startHandler = require('./handlers/start')
 const passengerHandler = require('./handlers/passenger')
-const driverHandler = require('./handlers/driver') // Bu yerda import qilinishi kerak
+const driverHandler = require('./handlers/driver')
 const adminHandler = require('./handlers/admin')
 
 // Import models
@@ -41,6 +41,11 @@ mongoose
 	.then(() => console.log('MongoDB connected'))
 	.catch(err => console.error('MongoDB connection error:', err))
 
+// Admin ID larini olish
+const ADMIN_IDS = process.env.ADMIN_IDS
+	? process.env.ADMIN_IDS.split(',').map(id => parseInt(id.trim()))
+	: []
+
 // Middleware: Foydalanuvchini tekshirish
 bot.use(async (ctx, next) => {
 	try {
@@ -68,8 +73,10 @@ bot.use(async (ctx, next) => {
 			await user.save()
 		}
 
-		// Foydalanuvchini ctx ga qo'shish
+		// Admin ekanligini tekshirish va ctx ga qo'shish
+		const isAdmin = ADMIN_IDS.includes(user.telegramId)
 		ctx.user = user
+		ctx.user.isAdmin = isAdmin
 
 		// Sessionni ishga tushirish
 		if (!ctx.session) {
@@ -100,17 +107,27 @@ bot.start(async ctx => {
 	try {
 		const user = ctx.user
 
-		// Til tanlash
-		const message =
-			user.language === 'uz'
-				? '👋 Assalomu alaykum! Iltimos, tilni tanlang:'
-				: '👋 Здравствуйте! Пожалуйста, выберите язык:'
+		// Agar til allaqachon tanlangan bo'lsa, asosiy menyuni ko'rsatish
+		if (user.language && user.language !== '') {
+			const message = user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню'
 
-		await ctx.reply(message, keyboards.languageKeyboard())
+			await ctx.reply(message, keyboards.mainMenuKeyboard(user.language, user.isAdmin))
 
-		// State ni yangilash
-		user.state = states.START
-		await user.save()
+			user.state = states.MAIN_MENU
+			await user.save()
+		} else {
+			// Til tanlash
+			const message =
+				user.language === 'uz'
+					? '👋 Assalomu alaykum! Iltimos, tilni tanlang:'
+					: '👋 Здравствуйте! Пожалуйста, выберите язык:'
+
+			await ctx.reply(message, keyboards.languageKeyboard())
+
+			// State ni yangilash
+			user.state = states.START
+			await user.save()
+		}
 	} catch (error) {
 		console.error('Start error:', error)
 	}
@@ -131,6 +148,63 @@ bot.on('callback_query', async ctx => {
 			}
 		}
 
+		// Admin callback'lari (birinchi tekshirish)
+		if (callbackData.startsWith('admin_')) {
+			switch (true) {
+				case callbackData === 'admin':
+				case callbackData === 'admin_menu':
+					await adminHandler.showAdminMenu(ctx)
+					break
+
+				case callbackData === 'admin_users':
+					await adminHandler.showUsers(ctx)
+					break
+
+				case callbackData.startsWith('admin_user_view_'):
+					await adminHandler.viewUser(ctx, callbackData)
+					break
+
+				case callbackData === 'admin_drivers':
+					await adminHandler.showDrivers(ctx)
+					break
+
+				case callbackData.startsWith('admin_driver_view_'):
+					await adminHandler.viewDriver(ctx, callbackData)
+					break
+
+				case callbackData.startsWith('admin_driver_toggle_'):
+					await adminHandler.toggleDriverStatus(ctx, callbackData)
+					break
+
+				case callbackData.startsWith('admin_driver_payment_'):
+					await adminHandler.addDriverPayment(ctx, callbackData)
+					break
+
+				case callbackData === 'admin_orders':
+					await adminHandler.showOrders(ctx)
+					break
+
+				case callbackData === 'admin_stats':
+					await adminHandler.showStats(ctx)
+					break
+
+				case callbackData === 'admin_broadcast':
+					await adminHandler.showBroadcastMenu(ctx)
+					break
+
+				case callbackData === 'admin_settings':
+					await adminHandler.showAdminSettings(ctx)
+					break
+
+				default:
+					// Agar boshqa admin callback bo'lsa
+					await ctx.reply("⚠️ Admin funksiyasi hali qo'shilmagan")
+					break
+			}
+			await ctx.answerCbQuery()
+			return
+		}
+
 		// Til tanlash
 		if (callbackData.startsWith('lang_')) {
 			user.language = callbackData.split('_')[1]
@@ -139,7 +213,7 @@ bot.on('callback_query', async ctx => {
 
 			const message = user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню'
 
-			await ctx.reply(message, keyboards.mainMenuKeyboard(user.language))
+			await ctx.reply(message, keyboards.mainMenuKeyboard(user.language, user.isAdmin))
 			await ctx.answerCbQuery()
 			return
 		}
@@ -155,6 +229,10 @@ bot.on('callback_query', async ctx => {
 			case 'my_orders':
 				await passengerHandler.showMyOrders(ctx)
 				break
+			case 'admin':
+				await adminHandler.showAdminMenu(ctx)
+				break
+
 			// Tasdiqlash va bekor qilish
 			case 'confirm':
 				// Qaysi holatda ekanligini tekshirish
@@ -170,7 +248,10 @@ bot.on('callback_query', async ctx => {
 					await ctx.reply('❌ Bekor qilindi')
 					user.state = states.MAIN_MENU
 					await user.save()
-					await ctx.reply('🏠 Asosiy menyu', keyboards.mainMenuKeyboard(user.language))
+					await ctx.reply(
+						'🏠 Asosiy menyu',
+						keyboards.mainMenuKeyboard(user.language, user.isAdmin)
+					)
 				} else if (user.state === states.PASSENGER_CONFIRM) {
 					await passengerHandler.cancelOrder(ctx)
 				}
@@ -228,6 +309,52 @@ bot.on('text', async ctx => {
 				orderId: null,
 				tempData: {}
 			}
+		}
+
+		// Admin to'lov qo'shish
+		if (ctx.session?.adminAction === 'add_payment' && ctx.session?.adminDriverId) {
+			const amount = parseInt(text)
+			if (isNaN(amount) || amount <= 0) {
+				await ctx.reply("❌ Noto'g'ri miqdor. Iltimos, raqam kiriting:")
+				return
+			}
+
+			const driver = await Driver.findOne({ telegramId: ctx.session.adminDriverId })
+			if (driver) {
+				driver.balance += amount
+				await driver.save()
+
+				const message =
+					user.language === 'uz'
+						? `✅ Haydovchi balansi yangilandi!\n\n${
+								driver.fullName
+						  }\n💰 Qo'shilgan summa: ${amount.toLocaleString()} so'm\n💳 Yangi balans: ${driver.balance.toLocaleString()} so'm`
+						: `✅ Баланс водителя обновлен!\n\n${
+								driver.fullName
+						  }\n💰 Добавленная сумма: ${amount.toLocaleString()} сум\n💳 Новый баланс: ${driver.balance.toLocaleString()} сум`
+
+				await ctx.reply(message)
+
+				// Haydovchiga xabar
+				try {
+					await ctx.telegram.sendMessage(
+						driver.telegramId,
+						user.language === 'uz'
+							? `💰 Sizning balansingizga ${amount.toLocaleString()} so'm qo'shildi.\n\n💳 Joriy balans: ${driver.balance.toLocaleString()} so'm\n🎉 Rahmat!`
+							: `💰 На ваш баланс добавлено ${amount.toLocaleString()} сум.\n\n💳 Текущий баланс: ${driver.balance.toLocaleString()} сум\n🎉 Спасибо!`
+					)
+				} catch (error) {
+					console.error('Driver notification error:', error)
+				}
+			}
+
+			// Sessionni tozalash
+			delete ctx.session.adminAction
+			delete ctx.session.adminDriverId
+
+			// Admin menyusiga qaytish
+			await adminHandler.showAdminMenu(ctx)
+			return
 		}
 
 		// State bo'yicha harakat

@@ -9,31 +9,40 @@ module.exports = {
 		])
 	},
 
-	// Asosiy menu
-	mainMenuKeyboard: (lang = 'uz') => {
+	// Asosiy menu - ADMIN bor/yo'qligiga qarab
+	mainMenuKeyboard: (lang = 'uz', isAdmin = false) => {
 		const texts = {
 			uz: {
 				needTaxi: '🚕 Taksi kerak',
 				taxiService: '🚘 Taksi xizmati',
 				myOrders: '📋 Mening buyurtmalarim',
-				settings: '⚙️ Sozlamalar'
+				settings: '⚙️ Sozlamalar',
+				admin: '👨‍💼 Admin'
 			},
 			ru: {
 				needTaxi: '🚕 Нужно такси',
 				taxiService: '🚘 Такси сервис',
 				myOrders: '📋 Мои заказы',
-				settings: '⚙️ Настройки'
+				settings: '⚙️ Настройки',
+				admin: '👨‍💼 Админ'
 			}
 		}
 
 		const t = texts[lang]
 
-		return Markup.inlineKeyboard([
+		// Asosiy tugmalar
+		const buttons = [
 			[Markup.button.callback(t.needTaxi, 'need_taxi')],
 			[Markup.button.callback(t.taxiService, 'taxi_service')],
-			[Markup.button.callback(t.myOrders, 'my_orders')],
-			[Markup.button.callback(t.settings, 'settings')]
-		])
+			[Markup.button.callback(t.myOrders, 'my_orders')]
+		]
+
+		// Agar admin bo'lsa, admin tugmasini qo'shamiz
+		if (isAdmin) {
+			buttons.push([Markup.button.callback(t.admin, 'admin')])
+		}
+
+		return Markup.inlineKeyboard(buttons)
 	},
 
 	// Viloyatlar keyboard (yo'lovchi uchun)
