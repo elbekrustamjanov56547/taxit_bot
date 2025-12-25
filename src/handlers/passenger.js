@@ -218,7 +218,6 @@ module.exports = {
 				  `📍 Chiqish: ${order.fromRegion}\n` +
 				  `📍 Kirish: ${order.toRegion}\n` +
 				  `📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
-				  `${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n` : ''}` +
 				  `${order.comment ? `✍️ Izoh: ${order.comment}\n` : ''}` +
 				  `\nBuyurtmani tasdiqlaysizmi?`
 				: `📋 Данные заказа:\n\n` +
@@ -416,7 +415,6 @@ module.exports = {
 				  `📍 Chiqish: ${order.fromRegion}\n` +
 				  `📍 Kirish: ${order.toRegion}\n` +
 				  `📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
-				  `${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n` : ''}` +
 				  `${order.comment ? `✍️ Izoh: ${order.comment}\n` : ''}` +
 				  `\nBuyurtmangiz qabul qilindi va haydovchilar bilan bog'laning.`
 				: `✅ Заказ принят!\n\n` +
@@ -465,7 +463,6 @@ module.exports = {
 				`📍 Chiqish: ${order.fromRegion}\n` +
 				`📍 Kirish: ${order.toRegion}\n` +
 				`📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
-				`${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n` : ''}` +
 				`${order.comment ? `✍️ Izoh: ${order.comment}\n` : ''}` +
 				`👤 Foydalanuvchi: @${order.username || order.userId}\n` +
 				`🆔 ID: ${order.userId}\n` +
