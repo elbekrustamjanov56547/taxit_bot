@@ -139,72 +139,100 @@ bot.on('callback_query', async ctx => {
 		const callbackData = ctx.callbackQuery.data
 		const user = ctx.user
 
-		// Sessionni tekshirish
-		if (!ctx.session) {
-			ctx.session = {
-				driverData: {},
-				orderId: null,
-				tempData: {}
-			}
+	if (!ctx.session) {
+		ctx.session = {
+			driverData: {},
+			orderId: null,
+			tempData: {}
 		}
+	}
 
-		// Admin callback'lari (birinchi tekshirish)
-		if (callbackData.startsWith('admin_')) {
-			switch (true) {
-				case callbackData === 'admin':
-				case callbackData === 'admin_menu':
-					await adminHandler.showAdminMenu(ctx)
-					break
+	// Admin callback'lari (birinchi tekshirish)
+	if (callbackData.startsWith('admin_')) {
+		switch (true) {
+			case callbackData === 'admin':
+			case callbackData === 'admin_menu':
+				await adminHandler.showAdminMenu(ctx)
+				break
 
-				case callbackData === 'admin_users':
-					await adminHandler.showUsers(ctx)
-					break
+			// ✅ TO'G'RI: Haydovchi ma'lumotlari
+			case callbackData.startsWith('admin_driver_'):
+				const driverId = callbackData.replace('admin_driver_', '')
+				await adminHandler.showDriverDetails(ctx, driverId)
+				break
 
-				case callbackData.startsWith('admin_user_view_'):
-					await adminHandler.viewUser(ctx, callbackData)
-					break
+			// ✅ TO'G'RI: Haydovchi holatini o'zgartirish
+			case callbackData.startsWith('admin_toggle_'):
+				const toggleDriverId = callbackData.replace('admin_toggle_', '')
+				await adminHandler.toggleDriverStatus(ctx, toggleDriverId)
+				break
 
-				case callbackData === 'admin_drivers':
-					await adminHandler.showDrivers(ctx)
-					break
+			// ✅ TO'G'RI: To'lov qo'shish bosqichi
+			case callbackData.startsWith('admin_payment_'):
+				const paymentDriverId = callbackData.replace('admin_payment_', '')
+				await adminHandler.addPaymentStep(ctx, paymentDriverId)
+				break
 
-				case callbackData.startsWith('admin_driver_view_'):
-					await adminHandler.viewDriver(ctx, callbackData)
-					break
+			// ✅ TO'G'RI: Xabar yuborish bosqichi
+			case callbackData.startsWith('admin_message_'):
+				const messageDriverId = callbackData.replace('admin_message_', '')
+				await adminHandler.sendMessageStep(ctx, messageDriverId)
+				break
 
-				case callbackData.startsWith('admin_driver_toggle_'):
-					await adminHandler.toggleDriverStatus(ctx, callbackData)
-					break
+			// ✅ TO'G'RI: Haydovchilar ro'yxati
+			case callbackData === 'admin_drivers':
+				await adminHandler.showDrivers(ctx, 0)
+				break
 
-				case callbackData.startsWith('admin_driver_payment_'):
-					await adminHandler.addDriverPayment(ctx, callbackData)
-					break
+			// ✅ TO'G'RI: Pagination
+			case callbackData.startsWith('admin_drivers_page_'):
+				const page = parseInt(callbackData.replace('admin_drivers_page_', ''))
+				await adminHandler.showDrivers(ctx, page)
+				break
 
-				case callbackData === 'admin_orders':
-					await adminHandler.showOrders(ctx)
-					break
+			// ✅ TO'G'RI: Faol haydovchilar
+			case callbackData === 'admin_drivers_active':
+				await adminHandler.showActiveDrivers(ctx)
+				break
 
-				case callbackData === 'admin_stats':
-					await adminHandler.showStats(ctx)
-					break
+			// ✅ TO'G'RI: Nofaol haydovchilar
+			case callbackData === 'admin_drivers_inactive':
+				await adminHandler.showInactiveDrivers(ctx)
+				break
 
-				case callbackData === 'admin_broadcast':
-					await adminHandler.showBroadcastMenu(ctx)
-					break
+			// Foydalanuvchilar ro'yxati
+			case callbackData === 'admin_users':
+				await adminHandler.showUsers(ctx)
+				break
 
-				case callbackData === 'admin_settings':
-					await adminHandler.showAdminSettings(ctx)
-					break
+			// Buyurtmalar ro'yxati
+			case callbackData === 'admin_orders':
+				await adminHandler.showOrders(ctx)
+				break
 
-				default:
-					// Agar boshqa admin callback bo'lsa
-					await ctx.reply("⚠️ Admin funksiyasi hali qo'shilmagan")
-					break
-			}
-			await ctx.answerCbQuery()
-			return
+			// Statistika
+			case callbackData === 'admin_stats':
+				await adminHandler.showStats(ctx)
+				break
+
+			// ❌ OLIB TASHLASH: Qo'shimcha admin_driver_view_ qismi
+			// Bu callbackData admin.js da yo'q
+			// case callbackData.startsWith('admin_driver_view_'):
+			//     await adminHandler.viewDriver(ctx, callbackData);
+			//     break;
+
+			default:
+				// Agar boshqa admin callback bo'lsa
+				await ctx.reply(
+					user.language === 'uz'
+						? "⚠️ Admin funksiyasi hali qo'shilmagan"
+						: '⚠️ Функция администратора еще не добавлена'
+				)
+				break
 		}
-
+		await ctx.answerCbQuery()
+		return
+	}
 		// Til tanlash
 		if (callbackData.startsWith('lang_')) {
 			user.language = callbackData.split('_')[1]
