@@ -8,6 +8,7 @@ const startHandler = require('./handlers/start')
 const passengerHandler = require('./handlers/passenger')
 const driverHandler = require('./handlers/driver')
 const adminHandler = require('./handlers/admin')
+const express = require('express')
 
 // Import models
 const User = require('./models/User')
@@ -21,7 +22,16 @@ const keyboards = require('./keyboards/main')
 const states = require('./utils/states')
 
 // Bot yaratish
+const app = express()
 const bot = new Telegraf(process.env.BOT_TOKEN)
+
+app.get('/ping', (req, res) => {
+  res.send('pong')
+})
+
+app.listen(process.env.PORT || 5000, () => {
+  console.log('🌐 Keep alive server ishga tushdi')
+})
 
 // Session middleware - to'g'ri konfiguratsiya
 bot.use(
