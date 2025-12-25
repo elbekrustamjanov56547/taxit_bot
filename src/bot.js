@@ -21,29 +21,30 @@ const keyboards = require('./keyboards/main')
 // Import states
 const states = require('./utils/states')
 
-// Bot yaratish
+// Express app yaratish
 const app = express()
+const PORT = process.env.PORT || 5000
+
+// JSON parserni o'rnatish
+app.use(express.json())
+
+// Bot yaratish
 const bot = new Telegraf(process.env.BOT_TOKEN)
 
+// Webhook endpoint
+app.post(`/webhook/${process.env.BOT_TOKEN}`, async (req, res) => {
+	try {
+		await bot.handleUpdate(req.body, res)
+	} catch (error) {
+		console.error('Webhook error:', error)
+		res.status(500).send('Internal Server Error')
+	}
+})
+
+// Health check endpoint
 app.get('/ping', (req, res) => {
-  res.send('pong')
+	res.send('pong')
 })
-
-app.listen(process.env.PORT || 5000, () => {
-  console.log('🌐 Keep alive server ishga tushdi')
-})
-
-// Session middleware - to'g'ri konfiguratsiya
-bot.use(
-	session({
-		// Session ni default qiymatlari
-		defaultSession: () => ({
-			driverData: {},
-			orderId: null,
-			tempData: {}
-		})
-	})
-)
 
 // Database ulanish
 mongoose
@@ -57,6 +58,18 @@ const ADMIN_IDS = process.env.ADMIN_IDS
 	: []
 
 // Middleware: Foydalanuvchini tekshirish
+bot.use(
+	session({
+		defaultSession: () => ({
+			driverData: {},
+			orderId: null,
+			tempData: {},
+			adminAction: null,
+			adminDriverId: null
+		})
+	})
+)
+
 bot.use(async (ctx, next) => {
 	try {
 		const userId = ctx.from?.id
@@ -83,17 +96,19 @@ bot.use(async (ctx, next) => {
 			await user.save()
 		}
 
-		// Admin ekanligini tekshirish va ctx ga qo'shish
+		// Admin ekanligini tekshirish
 		const isAdmin = ADMIN_IDS.includes(user.telegramId)
 		ctx.user = user
 		ctx.user.isAdmin = isAdmin
 
-		// Sessionni ishga tushirish
+		// Sessionni tekshirish
 		if (!ctx.session) {
 			ctx.session = {
 				driverData: {},
 				orderId: null,
-				tempData: {}
+				tempData: {},
+				adminAction: null,
+				adminDriverId: null
 			}
 		}
 
@@ -117,24 +132,18 @@ bot.start(async ctx => {
 	try {
 		const user = ctx.user
 
-		// Agar til allaqachon tanlangan bo'lsa, asosiy menyuni ko'rsatish
 		if (user.language && user.language !== '') {
 			const message = user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню'
-
 			await ctx.reply(message, keyboards.mainMenuKeyboard(user.language, user.isAdmin))
-
 			user.state = states.MAIN_MENU
 			await user.save()
 		} else {
-			// Til tanlash
 			const message =
 				user.language === 'uz'
 					? '👋 Assalomu alaykum! Iltimos, tilni tanlang:'
 					: '👋 Здравствуйте! Пожалуйста, выберите язык:'
 
 			await ctx.reply(message, keyboards.languageKeyboard())
-
-			// State ni yangilash
 			user.state = states.START
 			await user.save()
 		}
@@ -149,100 +158,84 @@ bot.on('callback_query', async ctx => {
 		const callbackData = ctx.callbackQuery.data
 		const user = ctx.user
 
-	if (!ctx.session) {
-		ctx.session = {
-			driverData: {},
-			orderId: null,
-			tempData: {}
+		// Admin callback'lari
+		if (callbackData.startsWith('admin_')) {
+			switch (true) {
+				case callbackData === 'admin':
+				case callbackData === 'admin_menu':
+					await adminHandler.showAdminMenu(ctx)
+					break
+
+				case callbackData.startsWith('admin_driver_'):
+					const driverId = callbackData.replace('admin_driver_', '')
+					await adminHandler.showDriverDetails(ctx, driverId)
+					break
+
+				case callbackData.startsWith('admin_toggle_'):
+					const toggleDriverId = callbackData.replace('admin_toggle_', '')
+					await adminHandler.toggleDriverStatus(ctx, toggleDriverId)
+					break
+
+				case callbackData.startsWith('admin_payment_'):
+					const paymentDriverId = callbackData.replace('admin_payment_', '')
+					await adminHandler.addPaymentStep(ctx, paymentDriverId)
+					break
+
+				case callbackData.startsWith('admin_message_'):
+					const messageDriverId = callbackData.replace('admin_message_', '')
+					await adminHandler.sendMessageStep(ctx, messageDriverId)
+					break
+
+				case callbackData === 'admin_drivers':
+					await adminHandler.showDrivers(ctx, 0)
+					break
+
+				case callbackData.startsWith('admin_drivers_page_'):
+					const page = parseInt(callbackData.replace('admin_drivers_page_', ''))
+					await adminHandler.showDrivers(ctx, page)
+					break
+
+				case callbackData === 'admin_drivers_active':
+					await adminHandler.showActiveDrivers(ctx)
+					break
+
+				case callbackData === 'admin_drivers_inactive':
+					await adminHandler.showInactiveDrivers(ctx)
+					break
+
+				case callbackData === 'admin_users':
+					await adminHandler.showUsers(ctx)
+					break
+
+				case callbackData === 'admin_orders':
+					await adminHandler.showOrders(ctx)
+					break
+
+				case callbackData === 'admin_stats':
+					// Agar showStats funksiyasi bo'lsa, ishlatish
+					if (adminHandler.showStats) {
+						await adminHandler.showStats(ctx)
+					} else {
+						await ctx.reply(
+							user.language === 'uz'
+								? '📊 Statistika funksiyasi hozircha mavjud emas'
+								: '📊 Функция статистики пока недоступна'
+						)
+					}
+					break
+
+				default:
+					await ctx.reply(
+						user.language === 'uz'
+							? "⚠️ Admin funksiyasi hali qo'shilmagan"
+							: '⚠️ Функция администратора еще не добавлена'
+					)
+					break
+			}
+			await ctx.answerCbQuery()
+			return
 		}
-	}
 
-	// Admin callback'lari (birinchi tekshirish)
-	if (callbackData.startsWith('admin_')) {
-		switch (true) {
-			case callbackData === 'admin':
-			case callbackData === 'admin_menu':
-				await adminHandler.showAdminMenu(ctx)
-				break
-
-			// ✅ TO'G'RI: Haydovchi ma'lumotlari
-			case callbackData.startsWith('admin_driver_'):
-				const driverId = callbackData.replace('admin_driver_', '')
-				await adminHandler.showDriverDetails(ctx, driverId)
-				break
-
-			// ✅ TO'G'RI: Haydovchi holatini o'zgartirish
-			case callbackData.startsWith('admin_toggle_'):
-				const toggleDriverId = callbackData.replace('admin_toggle_', '')
-				await adminHandler.toggleDriverStatus(ctx, toggleDriverId)
-				break
-
-			// ✅ TO'G'RI: To'lov qo'shish bosqichi
-			case callbackData.startsWith('admin_payment_'):
-				const paymentDriverId = callbackData.replace('admin_payment_', '')
-				await adminHandler.addPaymentStep(ctx, paymentDriverId)
-				break
-
-			// ✅ TO'G'RI: Xabar yuborish bosqichi
-			case callbackData.startsWith('admin_message_'):
-				const messageDriverId = callbackData.replace('admin_message_', '')
-				await adminHandler.sendMessageStep(ctx, messageDriverId)
-				break
-
-			// ✅ TO'G'RI: Haydovchilar ro'yxati
-			case callbackData === 'admin_drivers':
-				await adminHandler.showDrivers(ctx, 0)
-				break
-
-			// ✅ TO'G'RI: Pagination
-			case callbackData.startsWith('admin_drivers_page_'):
-				const page = parseInt(callbackData.replace('admin_drivers_page_', ''))
-				await adminHandler.showDrivers(ctx, page)
-				break
-
-			// ✅ TO'G'RI: Faol haydovchilar
-			case callbackData === 'admin_drivers_active':
-				await adminHandler.showActiveDrivers(ctx)
-				break
-
-			// ✅ TO'G'RI: Nofaol haydovchilar
-			case callbackData === 'admin_drivers_inactive':
-				await adminHandler.showInactiveDrivers(ctx)
-				break
-
-			// Foydalanuvchilar ro'yxati
-			case callbackData === 'admin_users':
-				await adminHandler.showUsers(ctx)
-				break
-
-			// Buyurtmalar ro'yxati
-			case callbackData === 'admin_orders':
-				await adminHandler.showOrders(ctx)
-				break
-
-			// Statistika
-			case callbackData === 'admin_stats':
-				await adminHandler.showStats(ctx)
-				break
-
-			// ❌ OLIB TASHLASH: Qo'shimcha admin_driver_view_ qismi
-			// Bu callbackData admin.js da yo'q
-			// case callbackData.startsWith('admin_driver_view_'):
-			//     await adminHandler.viewDriver(ctx, callbackData);
-			//     break;
-
-			default:
-				// Agar boshqa admin callback bo'lsa
-				await ctx.reply(
-					user.language === 'uz'
-						? "⚠️ Admin funksiyasi hali qo'shilmagan"
-						: '⚠️ Функция администратора еще не добавлена'
-				)
-				break
-		}
-		await ctx.answerCbQuery()
-		return
-	}
 		// Til tanlash
 		if (callbackData.startsWith('lang_')) {
 			user.language = callbackData.split('_')[1]
@@ -250,7 +243,6 @@ bot.on('callback_query', async ctx => {
 			await user.save()
 
 			const message = user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню'
-
 			await ctx.reply(message, keyboards.mainMenuKeyboard(user.language, user.isAdmin))
 			await ctx.answerCbQuery()
 			return
@@ -267,21 +259,16 @@ bot.on('callback_query', async ctx => {
 			case 'my_orders':
 				await passengerHandler.showMyOrders(ctx)
 				break
-			// case 'admin':
-			// 	await adminHandler.showAdminMenu(ctx)
-			// 	break
 
-			// Tasdiqlash va bekor qilish
 			case 'confirm':
-				// Qaysi holatda ekanligini tekshirish
 				if (user.state === states.DRIVER_REG_CONFIRM) {
 					await driverHandler.saveProfile(ctx)
 				} else if (user.state === states.PASSENGER_CONFIRM) {
 					await passengerHandler.confirmOrder(ctx)
 				}
 				break
+
 			case 'cancel':
-				// Qaysi holatda ekanligini tekshirish
 				if (user.state === states.DRIVER_REG_CONFIRM) {
 					await ctx.reply('❌ Bekor qilindi')
 					user.state = states.MAIN_MENU
@@ -294,6 +281,7 @@ bot.on('callback_query', async ctx => {
 					await passengerHandler.cancelOrder(ctx)
 				}
 				break
+
 			default:
 				// Yo'lovchi flow
 				if (callbackData.startsWith('from_') && !callbackData.startsWith('driver_')) {
@@ -339,15 +327,6 @@ bot.on('text', async ctx => {
 	try {
 		const user = ctx.user
 		const text = ctx.message.text
-
-		// Sessionni tekshirish
-		if (!ctx.session) {
-			ctx.session = {
-				driverData: {},
-				orderId: null,
-				tempData: {}
-			}
-		}
 
 		// Admin to'lov qo'shish
 		if (ctx.session?.adminAction === 'add_payment' && ctx.session?.adminDriverId) {
@@ -413,7 +392,6 @@ bot.on('text', async ctx => {
 				await driverHandler.saveCarModel(ctx, text)
 				break
 			default:
-				// Agar command bo'lsa
 				if (text.startsWith('/')) {
 					await ctx.reply('Iltimos, menudan foydalaning')
 				}
@@ -443,7 +421,7 @@ bot.command('admin', async ctx => {
 	await adminHandler.showAdminMenu(ctx)
 })
 
-// Cron job: Haydovchi statusini tekshirish
+// Cron job
 cron.schedule('0 0 * * *', async () => {
 	try {
 		const expiredDrivers = await Driver.find({
@@ -455,7 +433,6 @@ cron.schedule('0 0 * * *', async () => {
 			driver.status = 'inactive'
 			await driver.save()
 
-			// Haydovchiga xabar yuborish
 			await bot.telegram.sendMessage(
 				driver.telegramId,
 				"⚠️ Sizning obunangiz tugadi. Faollashtirish uchun to'lov qiling."
@@ -468,11 +445,50 @@ cron.schedule('0 0 * * *', async () => {
 	}
 })
 
-// Botni ishga tushirish
-bot.launch().then(() => {
-	console.log('Bot ishga tushdi!')
-})
+// Serverni ishga tushirish
+const startServer = async () => {
+	try {
+		// Environment'ni tekshirish
+		const isProduction = process.env.NODE_ENV === 'production'
 
-// Graceful shutdown
-process.once('SIGINT', () => bot.stop('SIGINT'))
-process.once('SIGTERM', () => bot.stop('SIGTERM'))
+		if (isProduction) {
+			// Production (Render.com) uchun webhook
+			const hostname = process.env.RENDER_EXTERNAL_HOSTNAME || 'localhost:5000'
+			const webhookUrl = `https://${hostname}/webhook/${process.env.BOT_TOKEN}`
+
+			console.log(`Production mode - Setting webhook to: ${webhookUrl}`)
+
+			try {
+				await bot.telegram.setWebhook(webhookUrl)
+				console.log('✅ Webhook successfully set')
+			} catch (error) {
+				console.error('❌ Failed to set webhook:', error.message)
+				// Webhook o'rnatishda xatolik bo'lsa ham serverni ishga tushiramiz
+			}
+		} else {
+			// Development uchun polling
+			console.log('Development mode - Using polling')
+			bot
+				.launch()
+				.then(() => console.log('✅ Bot polling mode da ishga tushdi'))
+				.catch(error => console.error('❌ Botni ishga tushirishda xatolik:', error))
+		}
+
+		// Express serverni ishga tushirish
+		app.listen(PORT, () => {
+			console.log(`🌐 Server ${PORT} portda ishga tushdi`)
+			if (isProduction) {
+				console.log(`🤖 Bot webhook mode da ishlayapti`)
+			}
+		})
+
+		// Graceful shutdown
+		process.once('SIGINT', () => bot.stop('SIGINT'))
+		process.once('SIGTERM', () => bot.stop('SIGTERM'))
+	} catch (error) {
+		console.error('Server start error:', error)
+	}
+}
+
+// .env faylni yuklash va server ishga tushirish
+startServer()
