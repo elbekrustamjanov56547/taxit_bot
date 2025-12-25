@@ -267,9 +267,9 @@ bot.on('callback_query', async ctx => {
 			case 'my_orders':
 				await passengerHandler.showMyOrders(ctx)
 				break
-			case 'admin':
-				await adminHandler.showAdminMenu(ctx)
-				break
+			// case 'admin':
+			// 	await adminHandler.showAdminMenu(ctx)
+			// 	break
 
 			// Tasdiqlash va bekor qilish
 			case 'confirm':

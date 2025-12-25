@@ -17,14 +17,14 @@ module.exports = {
 				taxiService: '🚘 Taksi xizmati',
 				myOrders: '📋 Mening buyurtmalarim',
 				settings: '⚙️ Sozlamalar',
-				admin: '👨‍💼 Admin'
+				// admin: '👨‍💼 Admin'
 			},
 			ru: {
 				needTaxi: '🚕 Нужно такси',
 				taxiService: '🚘 Такси сервис',
 				myOrders: '📋 Мои заказы',
 				settings: '⚙️ Настройки',
-				admin: '👨‍💼 Админ'
+				// admin: '👨‍💼 Админ'
 			}
 		}
 
@@ -38,9 +38,9 @@ module.exports = {
 		]
 
 		// Agar admin bo'lsa, admin tugmasini qo'shamiz
-		if (isAdmin) {
-			buttons.push([Markup.button.callback(t.admin, 'admin')])
-		}
+		// if (isAdmin) {
+		// 	buttons.push([Markup.button.callback(t.admin, 'admin')])
+		// }
 
 		return Markup.inlineKeyboard(buttons)
 	},
