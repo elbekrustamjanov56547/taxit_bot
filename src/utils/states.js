@@ -27,9 +27,15 @@ module.exports = {
 	DRIVER_EDIT_PROFILE: 'DRIVER_EDIT_PROFILE',
 	DRIVER_STATUS: 'DRIVER_STATUS',
 	DRIVER_PAYMENT: 'DRIVER_PAYMENT',
+	DRIVER_REG_SELECT_CAR: 'driver_reg_select_car', // Yangi state
+	DRIVER_REG_CAR_MODEL: 'driver_reg_car_model',
+	DRIVER_REG_CAR_TYPE: 'driver_reg_car_type',
 
 	// Admin holatlari
 	ADMIN_MENU: 'ADMIN_MENU',
 	ADMIN_DRIVER_MANAGE: 'ADMIN_DRIVER_MANAGE',
-	ADMIN_ORDER_MANAGE: 'ADMIN_ORDER_MANAGE'
+	ADMIN_ORDER_MANAGE: 'ADMIN_ORDER_MANAGE',
+	DRIVER_REG_MAX_PASSENGERS: 'driver_reg_max_passengers', // Yangi state
+	PASSENGER_PASSENGER_COUNT: 'passenger_passenger_count' ,
+	
 }

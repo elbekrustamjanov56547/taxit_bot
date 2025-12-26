@@ -23,8 +23,20 @@ const driverSchema = new mongoose.Schema({
 		required: true
 	},
 	carModel: {
-		type: String,
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Car',
 		required: true
+	},
+	carType: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'CarType'
+	},
+	maxPassengers: {
+		type: Number,
+		required: true,
+		min: 1,
+		max: 5,
+		default: 4
 	},
 	serviceType: {
 		type: [String],
@@ -37,12 +49,8 @@ const driverSchema = new mongoose.Schema({
 	},
 	status: {
 		type: String,
-		enum: ['active', 'inactive'],
+		enum: ['active', 'inactive', 'blocked'],
 		default: 'inactive'
-	},
-	paidUntil: {
-		type: Date,
-		default: null
 	},
 	balance: {
 		type: Number,
@@ -57,6 +65,9 @@ const driverSchema = new mongoose.Schema({
 	totalOrders: {
 		type: Number,
 		default: 0
+	},
+	paidUntil: {
+		type: Date
 	},
 	createdAt: {
 		type: Date,

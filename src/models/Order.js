@@ -17,6 +17,13 @@ const orderSchema = new mongoose.Schema({
 		type: String,
 		required: true
 	},
+	passengerCount: {
+		type: Number,
+		required: true,
+		min: 1,
+		max: 5,
+		default: 1
+	},
 	hasParcel: {
 		type: Boolean,
 		default: false
@@ -31,8 +38,13 @@ const orderSchema = new mongoose.Schema({
 	},
 	status: {
 		type: String,
-		enum: ['pending', 'searching', 'found', 'cancelled'],
+		enum: ['pending', 'searching', 'found', 'cancelled', 'completed'],
 		default: 'pending'
+	},
+	driverId: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Driver',
+		default: null
 	},
 	createdAt: {
 		type: Date,

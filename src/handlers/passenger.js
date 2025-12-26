@@ -26,11 +26,10 @@ module.exports = {
 		const user = ctx.user
 		const region = callbackData.replace('from_', '')
 
-		// Session ga saqlash (yangi Order yaratmasdan)
-		if (!ctx.session) {
-			ctx.session = {}
-		}
-		ctx.session.fromRegion = region
+		// Session ga to'g'ri saqlash
+		ctx.session = ctx.session || {}
+		ctx.session.orderData = ctx.session.orderData || {}
+		ctx.session.orderData.fromRegion = region
 
 		user.state = states.PASSENGER_TO_REGION
 		await user.save()
@@ -49,18 +48,39 @@ module.exports = {
 		const region = callbackData.replace('to_', '')
 
 		// Session ga saqlash
-		if (!ctx.session) {
-			ctx.session = {}
-		}
-		ctx.session.toRegion = region
+		ctx.session = ctx.session || {}
+		ctx.session.orderData = ctx.session.orderData || {}
+		ctx.session.orderData.toRegion = region
+
+		// Yo'lovchilar sonini tanlashga o'tish
+		user.state = states.PASSENGER_PASSENGER_COUNT
+		await user.save()
+
+		const message =
+			user.language === 'uz'
+				? `📍 Kirish: ${region}\n\n👥 Necha kishi ketasiz?`
+				: `📍 Прибытие: ${region}\n\n👥 Сколько человек едет?`
+
+		await ctx.reply(message, keyboards.passengerCountKeyboard(user.language))
+	},
+
+	// Yo'lovchilar sonini tanlash
+	selectPassengerCount: async (ctx, callbackData) => {
+		const user = ctx.user
+		const passengerCount = parseInt(callbackData.replace('passengers_', ''))
+
+		// Session ga saqlash
+		ctx.session = ctx.session || {}
+		ctx.session.orderData = ctx.session.orderData || {}
+		ctx.session.orderData.passengerCount = passengerCount
 
 		user.state = states.PASSENGER_PARCEL
 		await user.save()
 
 		const message =
 			user.language === 'uz'
-				? `📍 Kirish: ${region}\n\n📦 Pochta yoki yuk bormi?`
-				: `📍 Прибытие: ${region}\n\n📦 Есть посылка или груз?`
+				? `👥 Yo'lovchilar soni: ${passengerCount} kishi\n\n📦 Pochta yoki yuk bormi?`
+				: `👥 Количество пассажиров: ${passengerCount} человек\n\n📦 Есть посылка или груз?`
 
 		await ctx.reply(message, keyboards.parcelKeyboard(user.language))
 	},
@@ -71,10 +91,9 @@ module.exports = {
 		const hasParcel = callbackData === 'parcel_yes'
 
 		// Session ga saqlash
-		if (!ctx.session) {
-			ctx.session = {}
-		}
-		ctx.session.hasParcel = hasParcel
+		ctx.session = ctx.session || {}
+		ctx.session.orderData = ctx.session.orderData || {}
+		ctx.session.orderData.hasParcel = hasParcel
 
 		if (hasParcel) {
 			user.state = states.PASSENGER_PARCEL_DESC
@@ -87,8 +106,9 @@ module.exports = {
 
 			await ctx.reply(message)
 		} else {
-			ctx.session.parcelDescription = ''
-			await module.exports.showCommentKeyboard(ctx)
+			// Pochta yo'q deb tanlaganda
+			ctx.session.orderData.parcelDescription = ''
+			await module.exports.createOrder(ctx) // To'g'ridan-to'g'ri buyurtma yaratish
 		}
 	},
 
@@ -97,73 +117,25 @@ module.exports = {
 		const user = ctx.user
 
 		// Session ga saqlash
-		if (!ctx.session) {
-			ctx.session = {}
-		}
-		ctx.session.parcelDescription = text
-
-		await module.exports.showCommentKeyboard(ctx)
-	},
-
-	// Izoh keyboard
-	showCommentKeyboard: async ctx => {
-		const user = ctx.user
-
-		user.state = states.PASSENGER_COMMENT
-		await user.save()
-
-		const message =
-			user.language === 'uz'
-				? '✍️ Izoh qoldirmoqchimisiz? (ixtiyoriy)'
-				: '✍️ Хотите оставить комментарий? (необязательно)'
-
-		await ctx.reply(message, keyboards.commentKeyboard(user.language))
-	},
-
-	// Izoh qoldirish
-	addComment: async ctx => {
-		const user = ctx.user
-
-		const message =
-			user.language === 'uz' ? '📝 Izohingizni yozing:' : '📝 Напишите ваш комментарий:'
-
-		await ctx.reply(message)
-	},
-
-	// Izoh o'tkazib yuborish
-	skipComment: async ctx => {
-		// Session ga bo'sh izoh saqlash
-		if (!ctx.session) {
-			ctx.session = {}
-		}
-		ctx.session.comment = ''
+		ctx.session = ctx.session || {}
+		ctx.session.orderData = ctx.session.orderData || {}
+		ctx.session.orderData.parcelDescription = text
 
 		await module.exports.createOrder(ctx)
 	},
 
-	// Izohni saqlash
-	saveComment: async (ctx, text) => {
-		// Session ga izoh saqlash
-		if (!ctx.session) {
-			ctx.session = {}
-		}
-		ctx.session.comment = text
-
-		await module.exports.createOrder(ctx)
-	},
-
-	// Buyurtma yaratish (barcha ma'lumotlar to'planganidan keyin)
+	// Buyurtma yaratish
 	createOrder: async ctx => {
 		const user = ctx.user
 
 		// Session ma'lumotlarini tekshirish
-		if (!ctx.session) {
-			ctx.session = {}
-		}
+		ctx.session = ctx.session || {}
+		ctx.session.orderData = ctx.session.orderData || {}
 
-		const { fromRegion, toRegion, hasParcel, parcelDescription, comment } = ctx.session
+		const orderData = ctx.session.orderData
+		const { fromRegion, toRegion, passengerCount } = orderData
 
-		if (!fromRegion || !toRegion) {
+		if (!fromRegion || !toRegion || !passengerCount) {
 			const message =
 				user.language === 'uz'
 					? "❌ Iltimos, barcha maydonlarni to'ldiring."
@@ -180,10 +152,12 @@ module.exports = {
 				username: user.username,
 				fromRegion: fromRegion,
 				toRegion: toRegion,
-				hasParcel: hasParcel || false,
-				parcelDescription: parcelDescription || '',
-				comment: comment || '',
-				status: 'pending'
+				passengerCount: passengerCount,
+				hasParcel: orderData.hasParcel || false,
+				parcelDescription: orderData.parcelDescription || '',
+				comment: '',
+				status: 'pending',
+				createdAt: new Date()
 			})
 
 			await order.save()
@@ -217,15 +191,16 @@ module.exports = {
 				? `📋 Buyurtma ma'lumotlari:\n\n` +
 				  `📍 Chiqish: ${order.fromRegion}\n` +
 				  `📍 Kirish: ${order.toRegion}\n` +
+				  `👥 Yo'lovchilar soni: ${order.passengerCount} kishi\n` +
 				  `📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
-				  `${order.comment ? `✍️ Izoh: ${order.comment}\n` : ''}` +
+				  `${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n` : ''}` +
 				  `\nBuyurtmani tasdiqlaysizmi?`
 				: `📋 Данные заказа:\n\n` +
 				  `📍 Отправление: ${order.fromRegion}\n` +
 				  `📍 Прибытие: ${order.toRegion}\n` +
+				  `👥 Количество пассажиров: ${order.passengerCount} человек\n` +
 				  `📦 Посылка: ${order.hasParcel ? 'Да' : 'Нет'}\n` +
 				  `${order.parcelDescription ? `📝 Описание: ${order.parcelDescription}\n` : ''}` +
-				  `${order.comment ? `✍️ Комментарий: ${order.comment}\n` : ''}` +
 				  `\nПодтверждаете заказ?`
 
 		await ctx.reply(confirmMessage, keyboards.confirmKeyboard(user.language))
@@ -252,7 +227,7 @@ module.exports = {
 				throw new Error('Order not found')
 			}
 
-			// Haydovchi qidirish
+			// Haydovchi qidirish (yo'lovchilar soni hisobga olinadi)
 			await module.exports.searchDrivers(ctx, order)
 		} catch (error) {
 			console.error('Confirm order error:', error)
@@ -266,50 +241,7 @@ module.exports = {
 		}
 	},
 
-	// Haydovchi qidirish
-	// searchDrivers: async (ctx, order) => {
-	// 	const user = ctx.user
-
-	// 	// Statusni yangilash
-	// 	order.status = 'searching'
-	// 	await order.save()
-
-	// 	// Haydovchi qidirish
-	// 	const drivers = await Driver.find({
-	// 		fromRegion: order.fromRegion,
-	// 		toRegion: order.toRegion,
-	// 		status: 'active',
-	// 		paidUntil: { $gte: new Date() }
-	// 	})
-
-	// 	if (drivers.length > 0) {
-	// 		// Haydovchilarni ko'rsatish
-	// 		await module.exports.showFoundDrivers(ctx, drivers, order)
-	// 	} else {
-	// 		// Haydovchi topilmadi
-	// 		order.status = 'pending'
-	// 		await order.save()
-
-	// 		// Kanalga yuborish
-	// 		await module.exports.sendToChannel(ctx, order)
-
-	// 		const message =
-	// 			user.language === 'uz'
-	// 				? `❌ Siz tanlagan yo'nalish bo'yicha hozircha mashina topilmadi.\n\nBuyurtmangiz adminlarga yuborildi, tez orada aloqaga chiqishadi.`
-	// 				: `❌ По выбранному направлению машины не найдены.\n\nВаш заказ отправлен администраторам, они свяжутся с вами в ближайшее время.`
-
-	// 		await ctx.reply(message)
-
-	// 		// Asosiy menyuga qaytish
-	// 		user.state = states.MAIN_MENU
-	// 		await user.save()
-
-	// 		const menuMessage = user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню'
-
-	// 		await ctx.reply(menuMessage, keyboards.mainMenuKeyboard(user.language))
-	// 	}
-	// },
-	// Haydovchi qidirish
+	// Haydovchi qidirish (yo'lovchilar soni hisobga olinadi)
 	searchDrivers: async (ctx, order) => {
 		const user = ctx.user
 
@@ -318,27 +250,22 @@ module.exports = {
 		await order.save()
 
 		console.log(`🔍 Qidirilayotgan yo'nalish: ${order.fromRegion} -> ${order.toRegion}`)
+		console.log(`👥 Yo'lovchilar soni: ${order.passengerCount}`)
 
-		// **MUHIM: Query'ni tuzatamiz**
-		// paidUntil null bo'lsa ham yoki kelajak sanasi bo'lsa ham qidirish
+		// Haydovchilarni qidirish (yo'lovchilar soni hisobga olinadi)
 		const drivers = await Driver.find({
 			fromRegion: order.fromRegion,
 			toRegion: order.toRegion,
 			status: 'active',
+			maxPassengers: { $gte: order.passengerCount }, // Maksimal yo'lovchilar soni yetadigan haydovchilar
 			$or: [
-				{ paidUntil: { $gte: new Date() } }, // To'lov muddati hali tugamagan
-				{ paidUntil: null }, // To'lov muddati yo'q (yangi haydovchi)
-				{ paidUntil: { $exists: false } } // paidUntil maydoni yo'q
+				{ paidUntil: { $gte: new Date() } },
+				{ paidUntil: null },
+				{ paidUntil: { $exists: false } }
 			]
 		})
 
 		console.log(`📊 Topilgan haydovchilar: ${drivers.length} ta`)
-
-		// Har bir haydovchini log qilish
-		drivers.forEach((driver, index) => {
-			console.log(`  ${index + 1}. ${driver.fullName} - ${driver.fromRegion} -> ${driver.toRegion}`)
-			console.log(`     Status: ${driver.status}, PaidUntil: ${driver.paidUntil}`)
-		})
 
 		if (drivers.length > 0) {
 			// Haydovchilarni ko'rsatish
@@ -348,32 +275,20 @@ module.exports = {
 			order.status = 'pending'
 			await order.save()
 
-			// Batafsil log qilish
-			console.log(`❌ Haydovchi topilmadi. Sabablar:`)
-
-			// Alternativ query: faqat region bo'yicha qidirish
-			const allDriversSameRoute = await Driver.find({
-				fromRegion: order.fromRegion,
-				toRegion: order.toRegion
-			})
-			console.log(`📊 Ushbu yo'nalishdagi barcha haydovchilar: ${allDriversSameRoute.length} ta`)
-			allDriversSameRoute.forEach((driver, index) => {
-				console.log(`  ${index + 1}. ${driver.fullName}`)
-				console.log(`     Status: ${driver.status}, PaidUntil: ${driver.paidUntil}`)
-			})
-
 			// Kanalga yuborish
 			await module.exports.sendToChannel(ctx, order)
 
 			const message =
 				user.language === 'uz'
-					? `❌ Siz tanlagan yo'nalish bo'yicha hozircha mashina topilmadi.\n\n` +
+					? `❌ Siz tanlagan yo'nalish bo'yicha (${order.passengerCount} kishi uchun) hozircha mashina topilmadi.\n\n` +
 					  `📍 Chiqish: ${order.fromRegion}\n` +
-					  `📍 Kirish: ${order.toRegion}\n\n` +
+					  `📍 Kirish: ${order.toRegion}\n` +
+					  `👥 Yo'lovchilar: ${order.passengerCount} kishi\n\n` +
 					  `Buyurtmangiz adminlarga yuborildi, tez orada aloqaga chiqishadi.`
-					: `❌ По выбранному направлению машины не найдены.\n\n` +
+					: `❌ По выбранному направлению (для ${order.passengerCount} человек) машины не найдены.\n\n` +
 					  `📍 Отправление: ${order.fromRegion}\n` +
-					  `📍 Прибытие: ${order.toRegion}\n\n` +
+					  `📍 Прибытие: ${order.toRegion}\n` +
+					  `👥 Пассажиры: ${order.passengerCount} человек\n\n` +
 					  `Ваш заказ отправлен администраторам, они свяжутся с вами в ближайшее время.`
 
 			await ctx.reply(message)
@@ -397,6 +312,7 @@ module.exports = {
 		drivers.forEach((driver, index) => {
 			message += `${index + 1}. ${driver.fullName}\n`
 			message += `   🚗 ${driver.carModel}\n`
+			message += `   👥 Sig'im: ${driver.maxPassengers} kishi\n`
 			message += `   📞 ${driver.phone}\n`
 			message += `   ⭐ ${driver.rating}/5.0\n\n`
 		})
@@ -414,15 +330,16 @@ module.exports = {
 				? `✅ Buyurtma qabul qilindi!\n\n` +
 				  `📍 Chiqish: ${order.fromRegion}\n` +
 				  `📍 Kirish: ${order.toRegion}\n` +
+				  `👥 Yo'lovchilar soni: ${order.passengerCount} kishi\n` +
 				  `📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
-				  `${order.comment ? `✍️ Izoh: ${order.comment}\n` : ''}` +
+				  `${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n` : ''}` +
 				  `\nBuyurtmangiz qabul qilindi va haydovchilar bilan bog'laning.`
 				: `✅ Заказ принят!\n\n` +
 				  `📍 Отправление: ${order.fromRegion}\n` +
 				  `📍 Прибытие: ${order.toRegion}\n` +
+				  `👥 Количество пассажиров: ${order.passengerCount} человек\n` +
 				  `📦 Посылка: ${order.hasParcel ? 'Да' : 'Нет'}\n` +
 				  `${order.parcelDescription ? `📝 Описание: ${order.parcelDescription}\n` : ''}` +
-				  `${order.comment ? `✍️ Комментарий: ${order.comment}\n` : ''}` +
 				  `\nВаш заказ принят, свяжитесь с водителями.`
 
 		await ctx.reply(successMessage)
@@ -432,7 +349,6 @@ module.exports = {
 		await user.save()
 
 		const menuMessage = user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню'
-
 		await ctx.reply(menuMessage, keyboards.mainMenuKeyboard(user.language))
 
 		// Haydovchilarga xabar yuborish
@@ -444,7 +360,9 @@ module.exports = {
 						`Yo'lovchi: @${order.username || order.userId}\n` +
 						`📍 Chiqish: ${order.fromRegion}\n` +
 						`📍 Kirish: ${order.toRegion}\n` +
+						`👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
 						`📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
+						`${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n` : ''}` +
 						`📊 Status: Yangi`
 				)
 			} catch (error) {
@@ -453,7 +371,7 @@ module.exports = {
 		}
 	},
 
-	// Kanalga yuborish
+	// Kanalga yuborish (yo'lovchilar soni bilan)
 	sendToChannel: async (ctx, order) => {
 		try {
 			const channelId = process.env.ORDER_CHANNEL_ID || '@your_channel'
@@ -462,10 +380,10 @@ module.exports = {
 				`🚕 YANGI BUYURTMA\n\n` +
 				`📍 Chiqish: ${order.fromRegion}\n` +
 				`📍 Kirish: ${order.toRegion}\n` +
+				`👥 Yo'lovchilar soni: ${order.passengerCount} kishi\n` +
 				`📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
-				`${order.comment ? `✍️ Izoh: ${order.comment}\n` : ''}` +
+				`${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n` : ''}` +
 				`👤 Foydalanuvchi: @${order.username || order.userId}\n` +
-				`🆔 ID: ${order.userId}\n` +
 				`⏰ Vaqt: ${new Date(order.createdAt).toLocaleString('uz-UZ')}`
 
 			await ctx.telegram.sendMessage(channelId, message)
@@ -496,11 +414,7 @@ module.exports = {
 			// Session ni tozalash
 			if (ctx.session) {
 				delete ctx.session.orderId
-				delete ctx.session.fromRegion
-				delete ctx.session.toRegion
-				delete ctx.session.hasParcel
-				delete ctx.session.parcelDescription
-				delete ctx.session.comment
+				delete ctx.session.orderData
 			}
 
 			const message = user.language === 'uz' ? '❌ Buyurtma bekor qilindi.' : '❌ Заказ отменен.'
@@ -512,7 +426,6 @@ module.exports = {
 			await user.save()
 
 			const menuMessage = user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню'
-
 			await ctx.reply(menuMessage, keyboards.mainMenuKeyboard(user.language))
 		} catch (error) {
 			console.error('Cancel order error:', error)
@@ -549,15 +462,19 @@ module.exports = {
 				pending: '⏳ Kutilmoqda',
 				searching: '🔍 Qidirilmoqda',
 				found: '✅ Topildi',
-				cancelled: '❌ Bekor qilingan'
+				cancelled: '❌ Bekor qilingan',
+				completed: '✅ Yakunlangan'
 			}
 
 			const status =
 				user.language === 'uz' ? statusText[order.status] || order.status : order.status
 
 			message += `${index + 1}. ${order.fromRegion} → ${order.toRegion}\n`
+			message += `   👥 Yo'lovchilar: ${order.passengerCount} kishi\n`
 			message += `   📅 ${new Date(order.createdAt).toLocaleDateString('uz-UZ')}\n`
-			message += `   📊 ${status}\n\n`
+			message += `   📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n`
+			message += `   📊 ${status}\n`
+			message += `\n`
 		})
 
 		await ctx.reply(message)

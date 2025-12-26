@@ -1,5 +1,31 @@
 const { Markup } = require('telegraf')
 
+const passengerCountKeyboard = (lang = 'uz') => {
+const buttons = []
+
+// 1-5 gacha sonlar
+for (let i = 1; i <= 5; i++) {
+	buttons.push([
+		Markup.button.callback(`${i} ${lang === 'uz' ? 'kishi' : 'человек'}`, `passengers_${i}`)
+	])
+}
+
+return Markup.inlineKeyboard(buttons)
+}
+
+// Haydovchi maksimal yo'lovchilar soni keyboardi
+const maxPassengersKeyboard = (lang = 'uz') => {
+const buttons = []
+
+// 1-5 gacha sonlar
+for (let i = 1; i <= 5; i++) {
+	buttons.push([
+		Markup.button.callback(`${i} ${lang === 'uz' ? 'kishi' : 'человек'}`, `max_passengers_${i}`)
+	])
+}
+
+return Markup.inlineKeyboard(buttons)
+}
 module.exports = {
 	// Til tanlash keyboard
 	languageKeyboard: () => {
@@ -16,14 +42,14 @@ module.exports = {
 				needTaxi: '🚕 Taksi kerak',
 				taxiService: '🚘 Taksi xizmati',
 				myOrders: '📋 Mening buyurtmalarim',
-				settings: '⚙️ Sozlamalar',
+				settings: '⚙️ Sozlamalar'
 				// admin: '👨‍💼 Admin'
 			},
 			ru: {
 				needTaxi: '🚕 Нужно такси',
 				taxiService: '🚘 Такси сервис',
 				myOrders: '📋 Мои заказы',
-				settings: '⚙️ Настройки',
+				settings: '⚙️ Настройки'
 				// admin: '👨‍💼 Админ'
 			}
 		}
@@ -316,5 +342,7 @@ module.exports = {
 			[Markup.button.callback(t.add, 'add_comment')],
 			[Markup.button.callback(t.skip, 'skip_comment')]
 		])
-	}
+	},
+	passengerCountKeyboard,
+	maxPassengersKeyboard
 }
