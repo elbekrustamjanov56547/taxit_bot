@@ -20,13 +20,13 @@ const userSchema = new mongoose.Schema({
 	},
 	language: {
 		type: String,
-		enum: ['uz', 'ru'],
+		enum: ['uz', 'ru', ''],
 		default: 'uz'
 	},
 	role: {
 		type: String,
-		enum: ['user', 'driver'],
-		default: 'user'
+		enum: ['user', 'driver', 'none'],
+		default: 'none'
 	},
 	phone: {
 		type: String,

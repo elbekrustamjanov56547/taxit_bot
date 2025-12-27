@@ -7,132 +7,625 @@ const states = require('../utils/states')
 const keyboards = require('../keyboards/main')
 const { Markup } = require('telegraf')
 
-// ====================== ADMIN BILAN BOG'LANISH FUNKSIYALARI ======================
+// ====================== SIMPLE PAYMENT CONTACT SYSTEM ======================
 
-// Admin bilan bog'lanish keyboardini yaratish
-const createAdminContactKeyboard = (userLanguage = 'uz') => {
+// ====================== SIMPLE PAYMENT CONTACT SYSTEM ======================
+
+// Admin telegram username formatini tekshirish va tozalash
+const validateAndFormatAdminUsername = () => {
 	const adminUsername = process.env.ADMIN_TELEGRAM_USERNAME || '@TaxiAdmin'
-	const adminUsernameClean = adminUsername.replace('@', '')
+
+	// Barcha keraksiz belgilarni tozalash
+	const cleanedUsername = adminUsername
+		.replace(/[^\w@]/g, '') // Faqat harflar, raqamlar va @ qoldiramiz
+		.trim()
+
+	// Agar @ bilan boshlanmasa, qo'shamiz
+	if (!cleanedUsername.startsWith('@')) {
+		return '@' + cleanedUsername
+	}
+
+	return cleanedUsername
+}
+
+// Admin bilan chat linkini yaratish
+const createAdminChatLink = () => {
+	const adminUsername = validateAndFormatAdminUsername()
+	const usernameClean = adminUsername.replace('@', '')
+
+	return `https://t.me/${usernameClean}`
+}
+
+// const createSimplePaymentKeyboard = (userLanguage = 'uz') => {
+// 	const adminUsername = validateAndFormatAdminUsername()
+// 	const adminChatLink = createAdminChatLink()
+
+// 	return {
+// 		inline_keyboard: [
+// 			[
+// 				{
+// 					text: userLanguage === 'uz' ? '📩 Admin bilan gaplashish' : '📩 Чат с админом',
+// 					url: adminChatLink
+// 				}
+// 			],
+// 			[
+// 				{
+// 					text: userLanguage === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
+// 					callback_data: 'main_menu'
+// 				},
+// 				{
+// 					text: userLanguage === 'uz' ? '❌ Yopish' : '❌ Закрыть',
+// 					callback_data: 'close_menu'
+// 				}
+// 			]
+// 		]
+// 	}
+// }
+
+// Simple payment message - faqat admin bilan bog'lanish uchun
+
+
+// Admin bilan bog'lanish uchun oddiy keyboard
+const createSimplePaymentKeyboard = (userLanguage = 'uz') => {
+	const adminUsername = validateAndFormatAdminUsername()
+	const adminChatLink = createAdminChatLink()
 
 	return {
 		inline_keyboard: [
 			[
 				{
-					text:
-						userLanguage === 'uz' ? "📩 Admin bilan chatga o'tish" : '📩 Перейти в чат с админом',
-					url: `https://t.me/${adminUsernameClean}`
+					text: userLanguage === 'uz' ? '📩 Admin bilan gaplashish' : '📩 Чат с админом',
+					url: adminChatLink
 				}
 			],
 			[
 				{
-					text: userLanguage === 'uz' ? '❌ Bekor qilish' : '❌ Отмена',
-					callback_data: 'cancel_admin_contact'
+					text: userLanguage === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
+					callback_data: 'main_menu'
 				}
 			]
 		]
 	}
 }
+const getSimplePaymentMessage = (userLanguage = 'uz') => {
+	const adminUsername = validateAndFormatAdminUsername()
 
-// Haydovchi uchun admin bilan bog'lanish xabarini ko'rsatish
-const showAdminContactForDriver = async (ctx, driver = null) => {
-	const user = ctx.user
-	const adminUsername = process.env.ADMIN_TELEGRAM_USERNAME || '@TaxiAdmin'
-
-	let message = ''
-
-	if (driver) {
-		// Nofaol haydovchi uchun xabar
-		message =
-			user.language === 'uz'
-				? `💳 Sizning obunangiz faol emas\n\n` +
-				  `📍 Yo'nalish: ${driver.fromRegion} → ${driver.toRegion}\n` +
-				  `🚗 Mashina: ${driver.carModel}\n` +
-				  `👥 Maksimal yo'lovchilar: ${driver.maxPassengers} kishi\n\n` +
-				  `Xizmatlardan foydalanish uchun admin bilan bog'laning\n\n` +
-				  `👤 Admin: ${adminUsername}`
-				: `💳 Ваша подписка не активна\n\n` +
-				  `📍 Направление: ${driver.fromRegion} → ${driver.toRegion}\n` +
-				  `🚗 Машина: ${driver.carModel}\n` +
-				  `👥 Максимум пассажиров: ${driver.maxPassengers} человек\n\n` +
-				  `Для использования услуг свяжитесь с администратором\n\n` +
-				  `👤 Админ: ${adminUsername}`
+	if (userLanguage === 'uz') {
+		return `💳 <b>Xizmatlardan foydalanish uchun to'lov qilishingiz kerak</b>\n\n` +
+			`To'lov va boshqa savollar uchun admin bilan bog'laning:\n\n` +
+			`👤 <b>Admin:</b> ${adminUsername}\n` +
+			`⏱ <b>Ish vaqti:</b> 09:00 - 18:00\n\n` +
+			`<b>Qanday to'lov qilish kerak:</b>\n` +
+			`1. "Admin bilan gaplashish" tugmasini bosing\n` +
+			`2. Telegramda admin bilan chat ochiladi\n` +
+			`3. Adminga "To'lov qilmoqchiman" deb yozing\n` +
+			`4. To'lov qiling va profilingiz faollashadi`
 	} else {
-		// Umumiy admin bilan bog'lanish xabari
-		message =
-			user.language === 'uz'
-				? `💳 Xizmatlardan foydalanish uchun to'lov qilishingiz kerak\n\n` +
-				  `To'lov va boshqa savollar uchun admin bilan bog'laning\n\n` +
-				  `👤 Admin: ${adminUsername}`
-				: `💳 Для использования услуг необходимо оплатить\n\n` +
-				  `По вопросам оплаты и другим вопросам свяжитесь с администратором\n\n` +
-				  `👤 Админ: ${adminUsername}`
+		return `💳 <b>Для использования услуг необходимо оплатить</b>\n\n` +
+			`По вопросам оплаты и другим вопросам свяжитесь с администратором:\n\n` +
+			`👤 <b>Админ:</b> ${adminUsername}\n` +
+			`⏱ <b>Время работы:</b> 09:00 - 18:00\n\n` +
+			`<b>Как произвести оплату:</b>\n` +
+			`1. Нажмите кнопку "Чат с админом"\n` +
+			`2. В Telegram откроется чат с администратором\n` +
+			`3. Напишите администратору "Хочу оплатить"\n` +
+			`4. Оплатите и ваш профиль активируется`
 	}
-
-	await ctx.reply(message, {
-		reply_markup: createAdminContactKeyboard(user.language)
-	})
 }
 
-// Haydovchi to'lov tugmasini bosganda
-// const handleDriverPaymentRequest = async (ctx, driver) => {
+// Main payment function - to'lov qilish tugmasini bosganda ishlaydi
+// Main payment function - to'lov qilish tugmasini bosganda ishlaydi
+// const handleDriverPayment = async (ctx) => {
+// 	console.log('🔵 handleDriverPayment FUNKSIYASI CHAQIRILDI');
+// 	console.log('User:', ctx.user?.telegramId);
+	
+// 	try {
+// 		const user = ctx.user;
+
+// 		// Oddiy payment xabarini chiqaramiz
+// 		const message = getSimplePaymentMessage(user.language);
+// 		const keyboard = createSimplePaymentKeyboard(user.language);
+
+// 		console.log('📤 Xabar yuborilmoqda...');
+		
+// 		await ctx.reply(message, {
+// 			reply_markup: keyboard,
+// 			parse_mode: 'HTML'
+// 		});
+		
+// 		console.log('✅ Xabar muvaffaqiyatli yuborildi');
+		
+// 	} catch (error) {
+// 		console.error('❌ handleDriverPayment da xatolik:', error);
+// 	}
+// }
+
+
+// Main payment function - to'lov qilish tugmasini bosganda ishlaydi
+const handleDriverPayment = async (ctx) => {
+	console.log('🔵 handleDriverPayment FUNKSIYASI CHAQIRILDI');
+	console.log('User:', ctx.user?.telegramId);
+	
+	try {
+		const user = ctx.user;
+		
+		if (!user) {
+			console.log('❌ User not found');
+			return;
+		}
+
+		// Avval oldingi xabarni o'chirishga urinamiz
+		try {
+			if (ctx.callbackQuery?.message?.message_id) {
+				await ctx.deleteMessage();
+			}
+		} catch (error) {
+			console.log('Delete previous message error:', error.message);
+			// Agar o'chirib bo'lmasa, davom etamiz
+		}
+
+		// Oddiy payment xabarini chiqaramiz
+		const message = getSimplePaymentMessage(user.language);
+		const keyboard = createSimplePaymentKeyboard(user.language);
+
+		console.log('📤 Xabar yuborilmoqda...');
+		
+		await ctx.reply(message, {
+			reply_markup: keyboard,
+			parse_mode: 'HTML'
+		});
+		
+		console.log('✅ Xabar muvaffaqiyatli yuborildi');
+		
+	} catch (error) {
+		console.error('❌ handleDriverPayment da xatolik:', error);
+		
+		// Xatolik haqida foydalanuvchiga xabar berish
+		try {
+			await ctx.reply(
+				ctx.user?.language === 'uz' 
+					? '❌ Xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.' 
+					: '❌ Произошла ошибка. Пожалуйста, попробуйте еще раз.',
+				{ parse_mode: 'HTML' }
+			);
+		} catch (replyError) {
+			console.error('Failed to send error message:', replyError);
+		}
+	}
+}
+// ====================== PROFIL SAQLASH FUNKSIYASI ======================
+// const saveProfileWithPayment = async (ctx) => {
 // 	const user = ctx.user
 
-// 	// Agar haydovchi faol bo'lsa, to'lov kerak emas
-// 	if (driver && driver.status === 'active') {
-// 		await showDriverMenu(ctx)
+// 	// Sessionni tekshirish
+// 	if (!ctx.session || !ctx.session.driverData) {
+// 		await ctx.reply(
+// 			user.language === 'uz'
+// 				? "❌ Ma'lumotlar topilmadi. Iltimos, qaytadan boshlang."
+// 				: '❌ Данные не найдены. Пожалуйста, начните заново.'
+// 		)
+// 		user.state = states.MAIN_MENU
+// 		await user.save()
 // 		return
 // 	}
 
-// 	// Admin bilan bog'lanish xabarini ko'rsatish
-// 	await showAdminContactForDriver(ctx, driver)
+// 	const data = ctx.session.driverData
+
+// 	try {
+// 		// Haydovchi yaratish
+// 		const driverData = {
+// 			telegramId: user.telegramId,
+// 			fullName: data.fullName,
+// 			phone: data.phone,
+// 			fromRegion: data.fromRegion,
+// 			toRegion: data.toRegion,
+// 			carModel: data.carId || data.carModel,
+// 			carType: data.carType || null,
+// 			maxPassengers: data.maxPassengers || 4,
+// 			serviceType: data.serviceType,
+// 			departureTime: data.departureTime,
+// 			status: 'inactive',
+// 			balance: 0,
+// 			rating: 5.0,
+// 			totalOrders: 0,
+// 			createdAt: new Date(),
+// 			registrationStep: 'completed'
+// 		}
+
+// 		const driver = new Driver(driverData)
+// 		await driver.save()
+
+// 		// User rolini yangilash
+// 		user.role = 'driver'
+// 		user.state = states.MAIN_MENU
+// 		await user.save()
+
+// 		// Muvaffaqiyatli ro'yxatdan o'tish xabari
+// 		const successMessage =
+// 			user.language === 'uz'
+// 				? `✅ <b>Tabriklaymiz! Profilingiz muvaffaqiyatli yaratildi!</b>\n\n` +
+// 				  `<b>Profil ma'lumotlari:</b>\n` +
+// 				  `👤 <b>Ism:</b> ${data.fullName}\n` +
+// 				  `📍 <b>Yo'nalish:</b> ${data.fromRegion} → ${data.toRegion}\n` +
+// 				  `🚗 <b>Mashina:</b> ${data.carModel}\n` +
+// 				  `👥 <b>Sig'im:</b> ${data.maxPassengers} kishi\n\n` +
+// 				  `⏰ <b>Keyingi qadam:</b> Xizmatlardan foydalanish uchun to'lov qilishingiz kerak.`
+// 				: `✅ <b>Поздравляем! Ваш профиль успешно создан!</b>\n\n` +
+// 				  `<b>Данные профиля:</b>\n` +
+// 				  `👤 <b>Имя:</b> ${data.fullName}\n` +
+// 				  `📍 <b>Направление:</b> ${data.fromRegion} → ${data.toRegion}\n` +
+// 				  `🚗 <b>Машина:</b> ${data.carModel}\n` +
+// 				  `👥 <b>Вместимость:</b> ${data.maxPassengers} человек\n\n` +
+// 				  `⏰ <b>Следующий шаг:</b> Для использования услуг необходимо произвести оплату.`
+
+// 		await ctx.reply(successMessage, { parse_mode: 'HTML' })
+
+// 		// To'lov interfeysini ko'rsatish (2 soniya kutib)
+// 		setTimeout(async () => {
+// 			await handleDriverPayment(ctx)
+// 		}, 2000)
+
+// 		// Session ni tozalash
+// 		delete ctx.session.driverData
+// 	} catch (error) {
+// 		console.error('Save profile error:', error)
+
+// 		const message =
+// 			user.language === 'uz'
+// 				? "❌ Profilni saqlashda xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
+// 				: '❌ Ошибка при сохранении профиля. Пожалуйста, попробуйте еще раз.'
+
+// 		await ctx.reply(message)
+// 	}
+// }
+// const saveProfileWithPayment = async ctx => {
+// 	const user = ctx.user
+
+// 	// Sessionni tekshirish
+// 	if (!ctx.session || !ctx.session.driverData) {
+// 		await ctx.reply(
+// 			user.language === 'uz'
+// 				? "❌ Ma'lumotlar topilmadi. Iltimos, qaytadan boshlang."
+// 				: '❌ Данные не найдены. Пожалуйста, начните заново.'
+// 		)
+// 		user.state = states.MAIN_MENU
+// 		await user.save()
+// 		return
+// 	}
+
+// 	const data = ctx.session.driverData
+
+// 	try {
+// 		// Haydovchi yaratish
+// 		const driverData = {
+// 			telegramId: user.telegramId,
+// 			fullName: data.fullName,
+// 			phone: data.phone,
+// 			fromRegion: data.fromRegion,
+// 			toRegion: data.toRegion,
+// 			carModel: data.carId || data.carModel,
+// 			carType: data.carType || null,
+// 			maxPassengers: data.maxPassengers || 4,
+// 			serviceType: data.serviceType,
+// 			departureTime: data.departureTime,
+// 			status: 'inactive',
+// 			balance: 0,
+// 			rating: 5.0,
+// 			totalOrders: 0,
+// 			createdAt: new Date(),
+// 			registrationStep: 'completed'
+// 		}
+
+// 		const driver = new Driver(driverData)
+// 		await driver.save()
+
+// 		// User rolini yangilash - driver qilib o'rnatamiz
+// 		user.role = 'driver' // ✅ Muhim: rolini driver qilamiz
+// 		user.state = states.MAIN_MENU
+// 		await user.save()
+
+// 		// ... qolgan kod ...
+// 	} catch (error) {
+// 		console.error('Save profile error:', error)
+// 		await ctx.reply(
+// 			user.language === 'uz'
+// 				? "❌ Profilni saqlashda xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
+// 				: '❌ Ошибка при сохранении профиля. Пожалуйста, попробуйте еще раз.'
+// 		)
+// 	}
 // }
 
-// Haydovchi to'lov tugmasini bosganda
-const handleDriverPaymentRequest = async (ctx, driver) => {
-    const user = ctx.user;
-
-    // Agar haydovchi faol bo'lsa, to'lov kerak emas
-    if (driver && driver.status === 'active') {
-        await showDriverMenu(ctx);
-        return;
-    }
-
-    // Admin bilan bog'lanish xabarini ko'rsatish
-    await showAdminContactForDriver(ctx, driver);
-};
-
-// ====================== RO'YXATDAN O'TISH BOSQICHLARI ======================
-
-// Ro'yxatdan o'tishni boshlash
-const startRegistration = async ctx => {
+const saveProfileWithPayment = async ctx => {
 	const user = ctx.user
 
-	// Sessionni tekshirish va yaratish
-	ctx.session = ctx.session || {}
-	ctx.session.driverData = ctx.session.driverData || {}
+	// Sessionni tekshirish
+	if (!ctx.session || !ctx.session.driverData) {
+		await ctx.reply(
+			user.language === 'uz'
+				? "❌ Ma'lumotlar topilmadi. Iltimos, qaytadan boshlang."
+				: '❌ Данные не найдены. Пожалуйста, начните заново.'
+		)
+		user.state = states.MAIN_MENU
+		await user.save()
+		return
+	}
 
-	// Haydovchi borligini tekshirish
+	const data = ctx.session.driverData
+
+	try {
+		// Haydovchi yaratish
+		const driverData = {
+			telegramId: user.telegramId,
+			fullName: data.fullName,
+			phone: data.phone,
+			fromRegion: data.fromRegion,
+			toRegion: data.toRegion,
+			carModel: data.carId || data.carModel, // carId ObjectId, carModel string
+			carType: data.carType || null,
+			maxPassengers: data.maxPassengers || 4,
+			serviceType: data.serviceType,
+			departureTime: data.departureTime,
+			status: 'inactive',
+			balance: 0,
+			rating: 5.0,
+			totalOrders: 0,
+			createdAt: new Date(),
+			registrationStep: 'completed'
+		}
+
+		// Agar carModel string bo'lsa va Model ObjectId talab qilsa
+		// Car modelini topib olish
+		let carModelForDriver = data.carModel
+		if (data.carId) {
+			// Agar carId bor bo'lsa (Car modeli tanlangan)
+			carModelForDriver = data.carId
+		} else {
+			// Agar qo'lda kiritilgan bo'lsa
+			// Car modelini topish yoki yaratish
+			const existingCar = await Car.findOne({ name: data.carModel })
+			if (existingCar) {
+				carModelForDriver = existingCar._id
+			} else {
+				// Yangi car model yaratish
+				const newCar = new Car({
+					name: data.carModel,
+					nameRu: data.carModel, // Agar ruscha nomi bo'lmasa
+					isActive: true
+				})
+				await newCar.save()
+				carModelForDriver = newCar._id
+			}
+		}
+
+		driverData.carModel = carModelForDriver
+
+		const driver = new Driver(driverData)
+		await driver.save()
+
+		// User rolini yangilash - driver qilib o'rnatamiz
+		user.role = 'driver'
+		user.state = states.MAIN_MENU
+		await user.save()
+
+		// Muvaffaqiyatli xabar
+		const successMessage =
+			user.language === 'uz'
+				? `✅ <b>Tabriklaymiz! Profilingiz muvaffaqiyatli yaratildi!</b>\n\n` +
+				  `<b>Profil ma'lumotlari:</b>\n` +
+				  `👤 <b>Ism:</b> ${data.fullName}\n` +
+				  `📍 <b>Yo'nalish:</b> ${data.fromRegion} → ${data.toRegion}\n` +
+				  `🚗 <b>Mashina:</b> ${data.carModel}\n` +
+				  `👥 <b>Sig'im:</b> ${data.maxPassengers} kishi\n` +
+				  `🎯 <b>Xizmatlar:</b> ${data.serviceType.join(', ')}\n` +
+				  `⏰ <b>Jo'nash vaqti:</b> ${data.departureTime}\n\n` +
+				  `✅ Profilingiz yaratildi, endi to'lov qilish orqali faollashtirishingiz mumkin.`
+				: `✅ <b>Поздравляем! Ваш профиль успешно создан!</b>\n\n` +
+				  `<b>Данные профиля:</b>\n` +
+				  `👤 <b>Имя:</b> ${data.fullName}\n` +
+				  `📍 <b>Направление:</b> ${data.fromRegion} → ${data.toRegion}\n` +
+				  `🚗 <b>Машина:</b> ${data.carModel}\n` +
+				  `👥 <b>Вместимость:</b> ${data.maxPassengers} человек\n` +
+				  `🎯 <b>Услуги:</b> ${data.serviceType.join(', ')}\n` +
+				  `⏰ <b>Время отправления:</b> ${data.departureTime}\n\n` +
+				  `✅ Ваш профиль создан, теперь вы можете активировать его, совершив оплату.`
+
+		await ctx.reply(successMessage, { parse_mode: 'HTML' })
+
+		// To'lov menyusini ko'rsatish
+		setTimeout(async () => {
+			await handleDriverPayment(ctx)
+		}, 2000)
+
+		// Sessionni tozalash
+		delete ctx.session.driverData
+	} catch (error) {
+		console.error('Save profile error:', error)
+		await ctx.reply(
+			user.language === 'uz'
+				? `❌ Profilni saqlashda xatolik yuz berdi: ${error.message}\n\nIltimos, qayta urinib ko'ring.`
+				: `❌ Ошибка при сохранении профиля: ${error.message}\n\nПожалуйста, попробуйте еще раз.`
+		)
+	}
+}
+
+// ====================== NOFAOL HAYDOVCHI MENYUSI ======================
+const showInactiveDriverMenu = async (ctx, driver) => {
+	const user = ctx.user
+
+	// Driver ni populate qilamiz
+	const populatedDriver = await Driver.findById(driver._id).populate('carModel').populate('carType')
+
+	// Mashina modelini aniqlash
+	let carModelInfo = ''
+	if (populatedDriver.carModel) {
+		if (typeof populatedDriver.carModel === 'object' && populatedDriver.carModel.name) {
+			carModelInfo =
+				user.language === 'uz' ? populatedDriver.carModel.name : populatedDriver.carModel.nameRu
+		} else {
+			carModelInfo = populatedDriver.carModel
+		}
+	}
+
+	// Mashina turini aniqlash
+	let carTypeInfo = ''
+	if (populatedDriver.carType) {
+		carTypeInfo = `\n🚗 <b>Mashina turi:</b> ${
+			user.language === 'uz' ? populatedDriver.carType.name : populatedDriver.carType.nameRu
+		}`
+	}
+
+	// Admin username ni olish
+	const adminUsername = validateAndFormatAdminUsername()
+
+	const message =
+		user.language === 'uz'
+			? `🚘 <b>Haydovchi profili (Nofaol)</b>\n\n` +
+			  `<b>Sizning ma'lumotlaringiz:</b>\n` +
+			  `👤 <b>Ism:</b> ${populatedDriver.fullName}\n` +
+			  `🚗 <b>Mashina:</b> ${carModelInfo}${carTypeInfo}\n` +
+			  `📍 <b>Yo'nalish:</b> ${populatedDriver.fromRegion} → ${populatedDriver.toRegion}\n` +
+			  `👥 <b>Sig'im:</b> ${populatedDriver.maxPassengers} kishi\n\n` +
+			  `💳 <b>Holat:</b> Profilingiz faol emas\n` +
+			  `📞 <b>Sabab:</b> Oylik to'lov amalga oshirilmagan\n\n` +
+			  `✅ <b>Qanday faollashtirish:</b>\n` +
+			  `1. "To'lov qilish" tugmasini bosing\n` +
+			  `2. Admin bilan Telegram chat ochiladi\n` +
+			  `3. Adminga "To'lov qilmoqchiman" deb yozing\n` +
+			  `4. To'lov qiling va profilingiz faollashadi`
+			: `🚘 <b>Профиль водителя (Неактивен)</b>\n\n` +
+			  `<b>Ваши данные:</b>\n` +
+			  `👤 <b>Имя:</b> ${populatedDriver.fullName}\n` +
+			  `🚗 <b>Машина:</b> ${carModelInfo}${carTypeInfo}\n` +
+			  `📍 <b>Направление:</b> ${populatedDriver.fromRegion} → ${populatedDriver.toRegion}\n` +
+			  `👥 <b>Вместимость:</b> ${populatedDriver.maxPassengers} человек\n\n` +
+			  `💳 <b>Статус:</b> Ваш профиль не активен\n` +
+			  `📞 <b>Причина:</b> Ежемесячный платеж не произведен\n\n` +
+			  `✅ <b>Как активировать:</b>\n` +
+			  `1. Нажмите кнопку "Оплатить"\n` +
+			  `2. Откроется чат в Telegram с администратором\n` +
+			  `3. Напишите администратору "Хочу оплатить"\n` +
+			  `4. Оплатите и ваш профиль активируется`
+
+	const keyboard = {
+		inline_keyboard: [
+			[
+				{
+					text: user.language === 'uz' ? "💳 To'lov qilish" : '💳 Оплатить',
+					callback_data: 'driver_payment'
+				}
+			],
+			[
+				{
+					text: user.language === 'uz' ? '✏️ Profilni tahrirlash' : '✏️ Редактировать профиль',
+					callback_data: 'driver_edit'
+				},
+				{
+					text: user.language === 'uz' ? "📋 Ma'lumotlar" : '📋 Информация',
+					callback_data: 'driver_info'
+				}
+			],
+			[
+				{
+					text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
+					callback_data: 'main_menu'
+				}
+			]
+		]
+	}
+
+	await ctx.reply(message, {
+		reply_markup: keyboard,
+		parse_mode: 'HTML'
+	})
+}
+// ====================== RO'YXATDAN O'TISH FUNKSIYALARI ======================
+
+// Ro'yxatdan o'tishni boshlash
+// const startRegistration = async ctx => {
+// 	const user = ctx.user
+
+// 	// Sessionni tekshirish va yaratish
+// 	ctx.session = ctx.session || {}
+// 	ctx.session.driverData = ctx.session.driverData || {}
+
+// 	// Haydovchi borligini tekshirish
+// 	const existingDriver = await Driver.findOne({ telegramId: user.telegramId })
+
+// 	if (existingDriver) {
+// 		// Profil mavjud
+// 		if (existingDriver.status === 'active') {
+// 			await Menu(ctx)
+// 		} else {
+// 			await showInactiveDriverMenu(ctx, existingDriver)
+// 		}
+// 	} else {
+// 		// Yangi ro'yxatdan o'tish
+// 		user.state = states.DRIVER_REG_FROM_REGION
+// 		await user.save()
+
+// 		const message =
+// 			user.language === 'uz'
+// 				? "🚘 Haydovchi sifatida ro'yxatdan o'tish\n\n📍 Qaysi viloyatdan jo'namoqchisiz?"
+// 				: '🚘 Регистрация как водитель\n\n📍 Из какого региона выезжаете?'
+
+// 		await ctx.reply(message, keyboards.driverFromRegionsKeyboard(user.language))
+// 	}
+// }
+// driver.js faylida:
+const startRegistration = async ctx => {
+	const user = ctx.user
+	console.log('startRegistration chaqirildi, user role:', user.role)
+
+	// Agar user allaqachon haydovchi bo'lsa
 	const existingDriver = await Driver.findOne({ telegramId: user.telegramId })
 
 	if (existingDriver) {
+		console.log('Mavjud driver topildi')
 		// Profil mavjud
 		if (existingDriver.status === 'active') {
 			await showDriverMenu(ctx)
 		} else {
 			await showInactiveDriverMenu(ctx, existingDriver)
 		}
-	} else {
-		// Yangi ro'yxatdan o'tish
-		user.state = states.DRIVER_REG_FROM_REGION
-		await user.save()
-
-		const message =
-			user.language === 'uz'
-				? "🚘 Haydovchi sifatida ro'yxatdan o'tish\n\n📍 Qaysi viloyatdan jo'namoqchisiz?"
-				: '🚘 Регистрация как водитель\n\n📍 Из какого региона выезжаете?'
-
-		await ctx.reply(message, keyboards.driverFromRegionsKeyboard(user.language))
+		return
 	}
+
+	// Agar user roli 'user' bo'lsa (ya'ni allaqachon taxi buyurtma bergan bo'lsa)
+	if (user.role === 'user') {
+		await ctx.reply(
+			user.language === 'uz'
+				? "❌ Siz allaqachon yo`lovchi sifatida ro'yxatdan o`tgansiz. Haydovchi sifatida ro'yxatdan o`ta olmaysiz."
+				: '❌ Вы уже зарегистрированы как пассажир. Вы не можете зарегистрироваться как водитель.'
+		)
+		return
+	}
+
+	// Agar user hali rol tanlamagan bo'lsa
+	if (user.role === 'none') {
+		console.log("User roli bo'sh, rolni tanlash kerak")
+		await ctx.reply(
+			user.language === 'uz'
+				? '❌ Iltimos, avval rol tanlang. /start'
+				: '❌ Пожалуйста, сначала выберите роль. /start'
+		)
+		return
+	}
+
+	// Sessionni tekshirish va yaratish
+	ctx.session = ctx.session || {}
+	ctx.session.driverData = ctx.session.driverData || {}
+
+	// Yangi ro'yxatdan o'tish
+	user.state = states.DRIVER_REG_FROM_REGION
+	await user.save()
+
+	const message =
+		user.language === 'uz'
+			? "🚘 Haydovchi sifatida ro'yxatdan o'tish\n\n📍 Qaysi viloyatdan jo'namoqchisiz?"
+			: '🚘 Регистрация как водитель\n\n📍 Из какого региона выезжаете?'
+
+	console.log('Driver registration boshlanmoqda...')
+	await ctx.reply(message, keyboards.driverFromRegionsKeyboard(user.language))
 }
 
 // Chiqish viloyatini tanlash
@@ -821,219 +1314,6 @@ const showConfirmation = async ctx => {
 	await ctx.reply(message, keyboards.confirmKeyboard(user.language))
 }
 
-// Profilni saqlash funksiyasini yangilaymiz (admin bilan bog'lanish xabarini qo'shamiz)
-// const saveProfile = async ctx => {
-// 	const user = ctx.user
-
-// 	// Sessionni tekshirish
-// 	if (!ctx.session || !ctx.session.driverData) {
-// 		await ctx.reply("❌ Ma'lumotlar topilmadi. Iltimos, qaytadan boshlang.")
-// 		user.state = states.MAIN_MENU
-// 		await user.save()
-// 		return
-// 	}
-
-// 	const data = ctx.session.driverData
-
-// 	try {
-// 		// Haydovchi yaratish
-// 		const driverData = {
-// 			telegramId: user.telegramId,
-// 			fullName: data.fullName,
-// 			phone: data.phone,
-// 			fromRegion: data.fromRegion,
-// 			toRegion: data.toRegion,
-// 			carModel: data.carId || data.carModel,
-// 			carType: data.carType || null,
-// 			maxPassengers: data.maxPassengers || 4,
-// 			serviceType: data.serviceType,
-// 			departureTime: data.departureTime,
-// 			status: 'inactive',
-// 			balance: 0,
-// 			rating: 5.0,
-// 			totalOrders: 0,
-// 			createdAt: new Date()
-// 		}
-
-// 		const driver = new Driver(driverData)
-// 		await driver.save()
-
-// 		// User rolini yangilash
-// 		user.role = 'driver'
-// 		user.state = states.MAIN_MENU
-// 		await user.save()
-
-// 		// To'lov haqida xabar
-// 		const carTypeMessage = data.carTypeName
-// 			? `\n🚗 Mashina turi: ${user.language === 'uz' ? data.carTypeName : data.carTypeNameRu}`
-// 			: ''
-
-// 		const carModelDisplay =
-// 			user.language === 'uz' ? data.carModel : data.carModelRu || data.carModel
-
-// 		// Admin username ni olish
-// 		const adminUsername = process.env.ADMIN_TELEGRAM_USERNAME || '@TaxiAdmin'
-// 		const adminUsernameClean = adminUsername.replace('@', '')
-
-// 		const message =
-// 			user.language === 'uz'
-// 				? `✅ Profilingiz saqlandi!\n` +
-// 				  `🚗 Mashina: ${carModelDisplay}` +
-// 				  carTypeMessage +
-// 				  `\n👥 Maksimal yo'lovchilar: ${data.maxPassengers || 4} kishi` +
-// 				  `\n\n💰 Xizmatni faollashtirish uchun oylik to'lov qilishingiz kerak:\n` +
-// 				  "💳 100,000 so'm / oy\n\n" +
-// 				  `To'lov qilish uchun admin bilan bog'laning\n\n` +
-// 				  `👤 Admin: ${adminUsername}`
-// 				: `✅ Ваш профиль сохранен!\n` +
-// 				  `🚗 Машина: ${carModelDisplay}` +
-// 				  carTypeMessage +
-// 				  `\n👥 Максимум пассажиров: ${data.maxPassengers || 4} человек` +
-// 				  `\n\n💰 Для активации услуги необходимо оплатить ежемесячный платеж:\n` +
-// 				  '💳 100,000 сум / месяц\n\n' +
-// 				  `Для оплаты свяжитесь с администратором\n\n` +
-// 				  `👤 Админ: ${adminUsername}`
-
-// 		// Admin bilan bog'lanish tugmasi bilan xabar yuboramiz
-// 		await ctx.reply(message, {
-// 			reply_markup: {
-// 				inline_keyboard: [
-// 					[
-// 						{
-// 							text:
-// 								user.language === 'uz'
-// 									? "📩 Admin bilan chatga o'tish"
-// 									: '📩 Перейти в чат с админом',
-// 							url: `https://t.me/${adminUsernameClean}`
-// 						}
-// 					],
-// 					[
-// 						{
-// 							text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-// 							callback_data: 'main_menu'
-// 						}
-// 					]
-// 				]
-// 			}
-// 		})
-
-// 		// Session ni tozalash
-// 		delete ctx.session.driverData
-// 	} catch (error) {
-// 		console.error('Save profile error:', error)
-// 		console.error('Error details:', error.stack)
-
-// 		const message =
-// 			user.language === 'uz'
-// 				? "❌ Profilni saqlashda xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
-// 				: '❌ Ошибка при сохранении профиля. Пожалуйста, попробуйте еще раз.'
-
-// 		await ctx.reply(message)
-// 	}
-// }
-
-// Profilni saqlash funksiyasini yangilaymiz (admin bilan bog'lanish xabarini qo'shamiz)
-const saveProfile = async ctx => {
-    const user = ctx.user;
-
-    // Sessionni tekshirish
-    if (!ctx.session || !ctx.session.driverData) {
-        await ctx.reply("❌ Ma'lumotlar topilmadi. Iltimos, qaytadan boshlang.");
-        user.state = states.MAIN_MENU;
-        await user.save();
-        return;
-    }
-
-    const data = ctx.session.driverData;
-
-    try {
-        // Haydovchi yaratish
-        const driverData = {
-            telegramId: user.telegramId,
-            fullName: data.fullName,
-            phone: data.phone,
-            fromRegion: data.fromRegion,
-            toRegion: data.toRegion,
-            carModel: data.carId || data.carModel,
-            carType: data.carType || null,
-            maxPassengers: data.maxPassengers || 4,
-            serviceType: data.serviceType,
-            departureTime: data.departureTime,
-            status: 'inactive',
-            balance: 0,
-            rating: 5.0,
-            totalOrders: 0,
-            createdAt: new Date()
-        };
-
-        const driver = new Driver(driverData);
-        await driver.save();
-
-        // User rolini yangilash
-        user.role = 'driver';
-        user.state = states.MAIN_MENU;
-        await user.save();
-
-        // To'lov haqida xabar
-        const adminUsername = process.env.ADMIN_TELEGRAM_USERNAME || '@TaxiAdmin';
-        const adminUsernameClean = adminUsername.replace('@', '');
-
-        const message =
-            user.language === 'uz'
-                ? `✅ Profilingiz saqlandi!\n\n` +
-                  `💰 Xizmatni faollashtirish uchun oylik to'lov qilishingiz kerak:\n` +
-                  "💳 100,000 so'm / oy\n\n" +
-                  `To'lov qilish uchun admin bilan bog'laning\n\n` +
-                  `👤 Admin: ${adminUsername}`
-                : `✅ Ваш профиль сохранен!\n\n` +
-                  `💰 Для активации услуги необходимо оплатить ежемесячный платеж:\n` +
-                  '💳 100,000 сум / месяц\n\n' +
-                  `Для оплаты свяжитесь с администратором\n\n` +
-                  `👤 Админ: ${adminUsername}`;
-
-        // Admin bilan bog'lanish tugmasi bilan xabar yuboramiz
-        await ctx.reply(message, {
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        {
-                            text: user.language === 'uz' ? "📩 Admin bilan chatga o'tish" : '📩 Перейти в чат с админом',
-                            url: `https://t.me/${adminUsernameClean}`
-                        }
-                    ],
-                    [
-                        {
-                            text: user.language === 'uz' ? "💳 To'lov qilish" : '💳 Оплатить',
-                            callback_data: 'driver_payment'
-                        }
-                    ],
-                    [
-                        {
-                            text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-                            callback_data: 'main_menu'
-                        }
-                    ]
-                ]
-            }
-        });
-
-        // Session ni tozalash
-        delete ctx.session.driverData;
-    } catch (error) {
-        console.error('Save profile error:', error);
-        console.error('Error details:', error.stack);
-
-        const message =
-            user.language === 'uz'
-                ? "❌ Profilni saqlashda xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
-                : '❌ Ошибка при сохранении профиля. Пожалуйста, попробуйте еще раз.';
-
-        await ctx.reply(message);
-    }
-};
-
-// ====================== HAYDOVCHI MENYU ======================
-
 // Haydovchi menusi
 const showDriverMenu = async ctx => {
 	const user = ctx.user
@@ -1139,348 +1419,534 @@ const showDriverMenu = async ctx => {
 	await ctx.reply(message, { reply_markup: keyboard })
 }
 
-// Nofaol haydovchi menusi
-// const showInactiveDriverMenu = async (ctx, driver) => {
-// 	const user = ctx.user
+// ====================== MODULE EXPORTS ======================
 
-// 	// Driver ni populate qilamiz
-// 	const populatedDriver = await Driver.findById(driver._id).populate('carModel').populate('carType')
+// module.exports = {
+// 	// Asosiy funksiyalar
+// 	startRegistration,
+// 	selectFromRegion,
+// 	selectToRegion,
+// 	saveFullName,
+// 	savePhone,
+// 	saveCarModel,
+// 	selectCarType,
+// 	selectCarTypeCallback,
+// 	selectMaxPassengers,
+// 	selectServiceType,
+// 	showCarSelection,
+// 	selectCarCallback,
 
-// 	// Mashina modelini aniqlash
-// 	let carModelInfo = ''
-// 	if (populatedDriver.carModel) {
-// 		if (typeof populatedDriver.carModel === 'object' && populatedDriver.carModel.name) {
-// 			// Agar Car modeliga reference bo'lsa
-// 			carModelInfo =
-// 				user.language === 'uz' ? populatedDriver.carModel.name : populatedDriver.carModel.nameRu
-// 		} else {
-// 			// Agar string bo'lsa
-// 			carModelInfo = populatedDriver.carModel
-// 		}
-// 	}
+// 	// Vaqt va sana tanlash
+// 	selectDate,
+// 	selectTime,
+// 	showDateTimeSelection,
+// 	generateDateKeyboard,
+// 	generateTimeKeyboard,
 
-// 	// Mashina turini aniqlash
-// 	let carTypeInfo = ''
-// 	if (populatedDriver.carType) {
-// 		carTypeInfo = `\n🚗 Mashina turi: ${
-// 			user.language === 'uz' ? populatedDriver.carType.name : populatedDriver.carType.nameRu
-// 		}`
-// 	}
+// 	// Tasdiqlash va profil saqlash
+// 	showConfirmation,
+// 	saveProfile: saveProfileWithPayment,
 
-// 	const message =
-// 		user.language === 'uz'
-// 			? `🚘 Haydovchi profili (Nofaol)\n\n` +
-// 			  `Sizning profilingiz faol emas. Buyurtma olish uchun to'lov qiling.\n\n` +
-// 			  `👤 ${populatedDriver.fullName}\n` +
-// 			  `🚗 Mashina: ${carModelInfo}` +
-// 			  carTypeInfo +
-// 			  `\n📍 ${populatedDriver.fromRegion} → ${populatedDriver.toRegion}\n` +
-// 			  `👥 Maksimal yo'lovchilar: ${populatedDriver.maxPassengers} kishi\n\n` +
-// 			  `💰 Oylik to'lov: 100,000 so'm`
-// 			: `🚘 Профиль водителя (Неактивен)\n\n` +
-// 			  `Ваш профиль не активен. Оплатите, чтобы получать заказы.\n\n` +
-// 			  `👤 ${populatedDriver.fullName}\n` +
-// 			  `🚗 ${carModelInfo}` +
-// 			  carTypeInfo +
-// 			  `\n📍 ${populatedDriver.fromRegion} → ${populatedDriver.toRegion}\n` +
-// 			  `👥 Максимум пассажиров: ${populatedDriver.maxPassengers} человек\n\n` +
-// 			  `💰 Ежемесячный платеж: 100,000 сум`
+// 	// Haydovchi menyusi
+// 	showDriverMenu,
+// 	showInactiveDriverMenu,
 
-// 	const keyboard = {
-// 		inline_keyboard: [
-// 			[
-// 				{
-// 					text: user.language === 'uz' ? "💳 To'lov qilish" : '💳 Оплатить',
-// 					callback_data: 'driver_payment'
-// 				}
-// 			],
-// 			[
-// 				{
-// 					text: user.language === 'uz' ? '✏️ Profilni tahrirlash' : '✏️ Редактировать профиль',
-// 					callback_data: 'driver_edit'
-// 				}
-// 			],
-// 			[
-// 				{
-// 					text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-// 					callback_data: 'main_menu'
-// 				}
-// 			]
-// 		]
-// 	}
-
-// 	await ctx.reply(message, { reply_markup: keyboard })
+// 	// To'lov funksiyalari (soddalashtirilgan)
+// 	handleDriverPayment,
+// 	createSimplePaymentKeyboard,
+// 	getSimplePaymentMessage,
+// 	validateAndFormatAdminUsername,
+// 	createAdminChatLink
 // }
 
 
-// Nofaol haydovchi menusi
-const showInactiveDriverMenu = async (ctx, driver) => {
-    const user = ctx.user;
+// ====================== PROFIL TAHRIRLASH FUNKSIYALARI ======================
 
-    // Driver ni populate qilamiz
-    const populatedDriver = await Driver.findById(driver._id).populate('carModel').populate('carType');
-
-    // Mashina modelini aniqlash
-    let carModelInfo = '';
-    if (populatedDriver.carModel) {
-        if (typeof populatedDriver.carModel === 'object' && populatedDriver.carModel.name) {
-            carModelInfo = user.language === 'uz' ? populatedDriver.carModel.name : populatedDriver.carModel.nameRu;
-        } else {
-            carModelInfo = populatedDriver.carModel;
-        }
-    }
-
-    // Mashina turini aniqlash
-    let carTypeInfo = '';
-    if (populatedDriver.carType) {
-        carTypeInfo = `\n🚗 Mashina turi: ${
-            user.language === 'uz' ? populatedDriver.carType.name : populatedDriver.carType.nameRu
-        }`;
-    }
-
-    const message =
-        user.language === 'uz'
-            ? `🚘 Haydovchi profili (Nofaol)\n\n` +
-              `Sizning profilingiz faol emas. Buyurtma olish uchun to'lov qiling.\n\n` +
-              `👤 ${populatedDriver.fullName}\n` +
-              `🚗 Mashina: ${carModelInfo}` +
-              carTypeInfo +
-              `\n📍 ${populatedDriver.fromRegion} → ${populatedDriver.toRegion}\n` +
-              `👥 Maksimal yo'lovchilar: ${populatedDriver.maxPassengers} kishi\n\n` +
-              `💰 Oylik to'lov: 100,000 so'm`
-            : `🚘 Профиль водителя (Неактивен)\n\n` +
-              `Ваш профиль не активен. Оплатите, чтобы получать заказы.\n\n` +
-              `👤 ${populatedDriver.fullName}\n` +
-              `🚗 ${carModelInfo}` +
-              carTypeInfo +
-              `\n📍 ${populatedDriver.fromRegion} → ${populatedDriver.toRegion}\n` +
-              `👥 Максимум пассажиров: ${populatedDriver.maxPassengers} человек\n\n` +
-              `💰 Ежемесячный платеж: 100,000 сум`;
-
-    const keyboard = {
-        inline_keyboard: [
-            [
-                {
-                    text: user.language === 'uz' ? "💳 To'lov qilish" : '💳 Оплатить',
-                    callback_data: 'driver_payment'
-                }
-            ],
-            [
-                {
-                    text: user.language === 'uz' ? '✏️ Profilni tahrirlash' : '✏️ Редактировать профиль',
-                    callback_data: 'driver_edit'
-                }
-            ],
-            [
-                {
-                    text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-                    callback_data: 'main_menu'
-                }
-            ]
-        ]
-    };
-
-    await ctx.reply(message, { reply_markup: keyboard });
-};
-// ====================== YO'LOVCHI UCHUN ADMIN BILAN BOG'LANISH ======================
-
-// Yo'lovchi uchun admin bilan bog'lanish xabarini ko'rsatish
-const showAdminContactForPassenger = async (ctx, order = null) => {
-	const user = ctx.user
-	const adminUsername = process.env.ADMIN_TELEGRAM_USERNAME || '@TaxiAdmin'
-
-	let message = ''
-
-	if (order) {
-		// Buyurtma bilan bog'liq xabar
-		message =
-			user.language === 'uz'
-				? `🚕 Buyurtmangiz admin tomonidan ko'rib chiqiladi\n\n` +
-				  `📍 Yo'nalish: ${order.fromRegion} → ${order.toRegion}\n` +
-				  `👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
-				  `📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n\n` +
-				  `Qo'shimcha savollar uchun admin bilan bog'lanishingiz mumkin\n\n` +
-				  `👤 Admin: ${adminUsername}`
-				: `🚕 Ваш заказ рассматривается администратором\n\n` +
-				  `📍 Направление: ${order.fromRegion} → ${order.toRegion}\n` +
-				  `👥 Пассажиры: ${order.passengerCount} человек\n` +
-				  `📦 Посылка: ${order.hasParcel ? 'Да' : 'Нет'}\n\n` +
-				  `По дополнительным вопросам вы можете связаться с администратором\n\n` +
-				  `👤 Админ: ${adminUsername}`
-	} else {
-		// Umumiy admin bilan bog'lanish xabari
-		message =
-			user.language === 'uz'
-				? `ℹ️ Qo'shimcha ma'lumot uchun admin bilan bog'lanishingiz mumkin\n\n` +
-				  `👤 Admin: ${adminUsername}`
-				: `ℹ️ Для получения дополнительной информации вы можете связаться с администратором\n\n` +
-				  `👤 Админ: ${adminUsername}`
+// Profil tahrirlash menyusini ko'rsatish
+const showDriverEditMenu = async (ctx) => {
+	const user = ctx.user;
+	
+	const driver = await Driver.findOne({ telegramId: user.telegramId });
+	
+	if (!driver) {
+		await ctx.reply(
+			user.language === 'uz' 
+				? '❌ Profil topilmadi' 
+				: '❌ Профиль не найден'
+		);
+		return;
 	}
-
+	
+	const message = user.language === 'uz'
+		? `✏️ <b>Profil tahrirlash</b>\n\n` +
+		  `Qaysi ma'lumotni tahrirlamoqchisiz?`
+		: `✏️ <b>Редактирование профиля</b>\n\n` +
+		  `Какую информацию вы хотите редактировать?`;
+	
+	const keyboard = {
+		inline_keyboard: [
+			[
+				{
+					text: user.language === 'uz' ? '👤 Ism-familiya' : '👤 Имя-фамилия',
+					callback_data: 'edit_fullname'
+				}
+			],
+			[
+				{
+					text: user.language === 'uz' ? '📞 Telefon raqam' : '📞 Номер телефона',
+					callback_data: 'edit_phone'
+				},
+				{
+					text: user.language === 'uz' ? '🚗 Mashina' : '🚗 Машина',
+					callback_data: 'edit_car'
+				}
+			],
+			[
+				{
+					text: user.language === 'uz' ? '👥 Yo\'lovchilar soni' : '👥 Количество пассажиров',
+					callback_data: 'edit_passengers'
+				},
+				{
+					text: user.language === 'uz' ? '📍 Yo\'nalish' : '📍 Направление',
+					callback_data: 'edit_route'
+				}
+			],
+			[
+				{
+					text: user.language === 'uz' ? '🎯 Xizmat turlari' : '🎯 Типы услуг',
+					callback_data: 'edit_services'
+				}
+			],
+			[
+				{
+					text: user.language === 'uz' ? '⏰ Jo\'nash vaqti' : '⏰ Время отправления',
+					callback_data: 'edit_time'
+				}
+			],
+			[
+				{
+					text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
+					callback_data: 'main_menu'
+				},
+				{
+					text: user.language === 'uz' ? '❌ Bekor qilish' : '❌ Отмена',
+					callback_data: 'driver_info'
+				}
+			]
+		]
+	};
+	
 	await ctx.reply(message, {
-		reply_markup: createAdminContactKeyboard(user.language)
-	})
-}
+		reply_markup: keyboard,
+		parse_mode: 'HTML'
+	});
+};
 
-// ====================== QO'SHIMCHA YAXSHILANISHLAR ======================
-
-// 1. Admin username validatsiyasi
-const validateAdminUsername = () => {
-	const adminUsername = process.env.ADMIN_TELEGRAM_USERNAME || '@TaxiAdmin'
+// Ism-familiyani tahrirlash
+const editFullName = async (ctx) => {
+	const user = ctx.user;
 	
-	// Username formatini tekshirish
-	if (!adminUsername.startsWith('@')) {
-		console.warn('❌ ADMIN_TELEGRAM_USERNAME @ bilan boshlanishi kerak')
-		return '@' + adminUsername.replace('@', '')
+	user.state = states.DRIVER_EDIT_FULLNAME;
+	await user.save();
+	
+	const message = user.language === 'uz'
+		? '👤 Yangi ism-familiyangizni kiriting:'
+		: '👤 Введите новое имя и фамилию:';
+	
+	await ctx.reply(message);
+};
+
+// Telefon raqamini tahrirlash
+const editPhone = async (ctx) => {
+	const user = ctx.user;
+	
+	user.state = states.DRIVER_EDIT_PHONE;
+	await user.save();
+	
+	const message = user.language === 'uz'
+		? '📞 Yangi telefon raqamingizni yuboring (yoki +998XXXXXXXXX formatida yozing):'
+		: '📞 Отправьте новый номер телефона (или напишите в формате +998XXXXXXXXX):';
+	
+	await ctx.reply(message, {
+		reply_markup: {
+			keyboard: [
+				[
+					{
+						text: user.language === 'uz' ? '📞 Telefon raqamini yuborish' : '📞 Отправить номер телефона',
+						request_contact: true
+					}
+				]
+			],
+			resize_keyboard: true,
+			one_time_keyboard: true
+		}
+	});
+};
+
+// Mashinani tahrirlash
+const editCar = async (ctx) => {
+	const user = ctx.user;
+	
+	user.state = states.DRIVER_EDIT_CAR;
+	await user.save();
+	
+	const driver = await Driver.findOne({ telegramId: user.telegramId });
+	
+	if (driver && driver.carModel) {
+		const currentCarMessage = user.language === 'uz'
+			? `🚗 Joriy mashina: ${driver.carModel}\n\n`
+			: `🚗 Текущая машина: ${driver.carModel}\n\n`;
+		
+		await ctx.reply(currentCarMessage + (user.language === 'uz'
+			? 'Yangi mashina modelini tanlang:'
+			: 'Выберите новую модель машины:'));
+	} else {
+		await ctx.reply(user.language === 'uz'
+			? '🚗 Mashina modelini tanlang:'
+			: '🚗 Выберите модель машины:');
 	}
 	
-	return adminUsername
-}
+	// Mashina modellarini ko'rsatish
+	await showCarSelection(ctx);
+};
 
-// 2. Qayta ishlatiladigan admin xabari funksiyasi
-const getAdminContactMessage = (userLanguage = 'uz', context = 'general', additionalInfo = {}) => {
-	const adminUsername = validateAdminUsername()
-	const adminUsernameClean = adminUsername.replace('@', '')
+// Yo'lovchilar sonini tahrirlash
+const editPassengers = async (ctx) => {
+	const user = ctx.user;
 	
-	const messages = {
-		'uz': {
-			'payment_required': `💳 Xizmatlardan foydalanish uchun to'lov qilishingiz kerak\n\n` +
-							   `To'lov va boshqa savollar uchun admin bilan bog'laning\n\n` +
-							   `👤 Admin: ${adminUsername}`,
-			'order_pending': `🚕 Buyurtmangiz admin tomonidan ko'rib chiqiladi\n\n` +
-							`Qo'shimcha savollar uchun admin bilan bog'lanishingiz mumkin\n\n` +
-							`👤 Admin: ${adminUsername}`,
-			'general_help': `ℹ️ Qo'shimcha ma'lumot uchun admin bilan bog'lanishingiz mumkin\n\n` +
-						   `👤 Admin: ${adminUsername}`,
-			'driver_inactive': `💳 Sizning obunangiz faol emas\n\n` +
-							  `📍 Yo'nalish: ${additionalInfo.fromRegion} → ${additionalInfo.toRegion}\n` +
-							  `🚗 Mashina: ${additionalInfo.carModel}\n` +
-							  `👥 Maksimal yo'lovchilar: ${additionalInfo.maxPassengers} kishi\n\n` +
-							  `Xizmatlardan foydalanish uchun admin bilan bog'laning\n\n` +
-							  `👤 Admin: ${adminUsername}`
-		},
-		'ru': {
-			'payment_required': `💳 Для использования услуг необходимо оплатить\n\n` +
-							   `По вопросам оплаты и другим вопросам свяжитесь с администратором\n\n` +
-							   `👤 Админ: ${adminUsername}`,
-			'order_pending': `🚕 Ваш заказ рассматривается администратором\n\n` +
-							`По дополнительным вопросам вы можете связаться с администратором\n\n` +
-							`👤 Админ: ${adminUsername}`,
-			'general_help': `ℹ️ Для получения дополнительной информации вы можете связаться с администратором\n\n` +
-						   `👤 Админ: ${adminUsername}`,
-			'driver_inactive': `💳 Ваша подписка не активна\n\n` +
-							  `📍 Направление: ${additionalInfo.fromRegion} → ${additionalInfo.toRegion}\n` +
-							  `🚗 Машина: ${additionalInfo.carModel}\n` +
-							  `👥 Максимум пассажиров: ${additionalInfo.maxPassengers} человек\n\n` +
-							  `Для использования услуг свяжитесь с администратором\n\n` +
-							  `👤 Админ: ${adminUsername}`
+	const driver = await Driver.findOne({ telegramId: user.telegramId });
+	
+	if (driver) {
+		const currentPassengers = user.language === 'uz'
+			? `👥 Joriy yo'lovchilar soni: ${driver.maxPassengers} kishi\n\n`
+			: `👥 Текущее количество пассажиров: ${driver.maxPassengers} человек\n\n`;
+		
+		await ctx.reply(currentPassengers + (user.language === 'uz'
+			? 'Yangi maksimal yo\'lovchilar sonini tanlang:'
+			: 'Выберите новое максимальное количество пассажиров:'),
+			keyboards.maxPassengersKeyboard(user.language));
+		
+		user.state = states.DRIVER_EDIT_PASSENGERS;
+		await user.save();
+	}
+};
+
+// Yo'nalishni tahrirlash
+const editRoute = async (ctx) => {
+	const user = ctx.user;
+	
+	user.state = states.DRIVER_EDIT_ROUTE_FROM;
+	await user.save();
+	
+	const driver = await Driver.findOne({ telegramId: user.telegramId });
+	
+	if (driver) {
+		const currentRoute = user.language === 'uz'
+			? `📍 Joriy yo'nalish: ${driver.fromRegion} → ${driver.toRegion}\n\n`
+			: `📍 Текущее направление: ${driver.fromRegion} → ${driver.toRegion}\n\n`;
+		
+		await ctx.reply(currentRoute + (user.language === 'uz'
+			? 'Yangi chiqish viloyatini tanlang:'
+			: 'Выберите новый регион отправления:'),
+			keyboards.driverFromRegionsKeyboard(user.language));
+	} else {
+		await ctx.reply(user.language === 'uz'
+			? '📍 Chiqish viloyatini tanlang:'
+			: '📍 Выберите регион отправления:',
+			keyboards.driverFromRegionsKeyboard(user.language));
+	}
+};
+
+// Xizmat turlarini tahrirlash
+const editServices = async (ctx) => {
+	const user = ctx.user;
+	
+	const driver = await Driver.findOne({ telegramId: user.telegramId });
+	
+	if (driver) {
+		const serviceNames = {
+			road: user.language === 'uz' ? "Yo'l-yo'lakay" : 'Попутка',
+			route: user.language === 'uz' ? "Yo'nalish" : 'Направление',
+			parcel: user.language === 'uz' ? 'Pochta' : 'Посылка'
+		};
+		
+		let currentServices = 'Hali tanlanmagan';
+		if (driver.serviceType && driver.serviceType.length > 0) {
+			currentServices = driver.serviceType.map(type => serviceNames[type]).join(', ');
+		}
+		
+		const currentMessage = user.language === 'uz'
+			? `🎯 Joriy xizmatlar: ${currentServices}\n\n`
+			: `🎯 Текущие услуги: ${currentServices}\n\n`;
+		
+		await ctx.reply(currentMessage + (user.language === 'uz'
+			? 'Yangi xizmat turlarini tanlang (bir nechtasini tanlash mumkin):'
+			: 'Выберите новые типы услуг (можно выбрать несколько):'),
+			keyboards.serviceTypeKeyboard(user.language, driver.serviceType || []));
+		
+		user.state = states.DRIVER_EDIT_SERVICES;
+		await user.save();
+	}
+};
+
+// Vaqtni tahrirlash
+const editTime = async (ctx) => {
+	const user = ctx.user;
+	
+	user.state = states.DRIVER_EDIT_TIME_DATE;
+	await user.save();
+	
+	const driver = await Driver.findOne({ telegramId: user.telegramId });
+	
+	if (driver && driver.departureTime) {
+		const currentTime = user.language === 'uz'
+			? `⏰ Joriy jo'nash vaqti: ${driver.departureTime}\n\n`
+			: `⏰ Текущее время отправления: ${driver.departureTime}\n\n`;
+		
+		await ctx.reply(currentTime + (user.language === 'uz'
+			? 'Yangi jo\'nash sanasini tanlang (keyingi 7 kun):'
+			: 'Выберите новую дату отправления (следующие 7 дней):'),
+			generateDateKeyboard(user.language));
+	} else {
+		await ctx.reply(user.language === 'uz'
+			? '📅 Jo\'nash sanasini tanlang (keyingi 7 kun):'
+			: '📅 Выберите дату отправления (следующие 7 дней):',
+			generateDateKeyboard(user.language));
+	}
+};
+
+// Ism-familiyani saqlash
+const saveEditedFullName = async (ctx, text) => {
+	const user = ctx.user;
+	
+	if (text.length < 3) {
+		await ctx.reply(user.language === 'uz'
+			? "❌ Ism-familya kamida 3 ta belgidan iborat bo'lishi kerak."
+			: '❌ Имя и фамилия должны содержать не менее 3 символов.');
+		return;
+	}
+	
+	const driver = await Driver.findOne({ telegramId: user.telegramId });
+	if (driver) {
+		driver.fullName = text;
+		await driver.save();
+		
+		await ctx.reply(user.language === 'uz'
+			? `✅ Ism-familiya muvaffaqiyatli o'zgartirildi: ${text}`
+			: `✅ Имя и фамилия успешно изменены: ${text}`);
+		
+		user.state = states.MAIN_MENU;
+		await user.save();
+		
+		// Profil menyusiga qaytish
+		await showDriverMenu(ctx);
+	}
+};
+
+// Telefon raqamini saqlash
+const saveEditedPhone = async (ctx, phone) => {
+	const user = ctx.user;
+	
+	// Telefon raqamini formatlash
+	let formattedPhone = phone.replace(/\s+/g, '');
+	
+	if (!formattedPhone.startsWith('+')) {
+		if (formattedPhone.startsWith('998')) {
+			formattedPhone = '+' + formattedPhone;
+		} else if (formattedPhone.startsWith('0')) {
+			formattedPhone = '+998' + formattedPhone.substring(1);
+		} else {
+			formattedPhone = '+998' + formattedPhone;
 		}
 	}
 	
-	return {
-		message: messages[userLanguage][context],
-		keyboard: createAdminContactKeyboard(userLanguage),
-		url: `https://t.me/${adminUsernameClean}`
-	}
-}
-
-// 3. Kengaytirilgan admin contact funksiyasi
-const showAdminContactUniversal = async (ctx, context = 'general', additionalInfo = {}) => {
-	const user = ctx.user
-	const contactInfo = getAdminContactMessage(user.language, context, additionalInfo)
-	
-	await ctx.reply(contactInfo.message, {
-		reply_markup: contactInfo.keyboard
-	})
-	
-	return contactInfo
-}
-
-// 4. To'lov talabi tugmasini ishlatish
-const handlePaymentButton = async (ctx, driver = null) => {
-	const user = ctx.user
-	
-	// Agar driver parametr berilmasa, DB dan olamiz
-	if (!driver) {
-		driver = await Driver.findOne({ telegramId: user.telegramId })
-			.populate('carModel')
-			.populate('carType')
+	// Telefon raqamini tekshirish
+	const phoneRegex = /^\+998[0-9]{9}$/;
+	if (!phoneRegex.test(formattedPhone)) {
+		await ctx.reply(user.language === 'uz'
+			? "❌ Telefon raqami noto'g'ri formatda. +998XXXXXXXXX formatida kiriting."
+			: '❌ Неверный формат номера телефона. Введите в формате +998XXXXXXXXX.');
+		return;
 	}
 	
-	// Haydovchi topilmasa
-	if (!driver) {
-		await ctx.reply(
-			user.language === 'uz' 
-				? '❌ Haydovchi profili topilmadi' 
-				: '❌ Профиль водителя не найден'
-		)
-		return
-	}
-	
-	// Agar haydovchi faol bo'lsa
-	if (driver.status === 'active') {
-		await ctx.reply(
-			user.language === 'uz' 
-				? '✅ Sizning obunangiz allaqachon faol. Qo\'shimcha to\'lov talab qilinmaydi.' 
-				: '✅ Ваша подписка уже активна. Дополнительная оплата не требуется.'
-		)
-		await showDriverMenu(ctx)
-		return
-	}
-	
-	// Admin bilan bog'lanish xabarini ko'rsatish
-	await showAdminContactForDriver(ctx, driver)
-}
-
-// 5. Yo'lovchi uchun buyurtma yaratganda admin contact
-const handlePassengerOrderCreated = async (ctx, order) => {
-	const user = ctx.user
-	
-	const contactInfo = await showAdminContactUniversal(ctx, 'order_pending', {
-		fromRegion: order.fromRegion,
-		toRegion: order.toRegion,
-		passengerCount: order.passengerCount,
-		hasParcel: order.hasParcel || false
-	})
-	
-	// Adminga avtomatik xabar yuborish (agar kerak bo'lsa)
-	await notifyAdminAboutNewOrder(order, user)
-}
-
-// 6. Adminni yangi buyurtma haqida ogohlantirish
-const notifyAdminAboutNewOrder = async (order, user) => {
-	try {
-		const adminUsername = validateAdminUsername()
-		const adminUsernameClean = adminUsername.replace('@', '')
+	const driver = await Driver.findOne({ telegramId: user.telegramId });
+	if (driver) {
+		driver.phone = formattedPhone;
+		await driver.save();
 		
-		// Admin telegram ID sini environment dan olish
-		const adminChatId = process.env.ADMIN_CHAT_ID
+		await ctx.reply(user.language === 'uz'
+			? `✅ Telefon raqami muvaffaqiyatli o'zgartirildi: ${formattedPhone}`
+			: `✅ Номер телефона успешно изменен: ${formattedPhone}`);
 		
-		if (adminChatId) {
-			const orderMessage = `📦 YANGI BUYURTMA\n\n` +
-								`👤 Yo'lovchi: ${user.fullName || 'Noma\'lum'}\n` +
-								`📞 Telefon: ${order.phone}\n` +
-								`📍 Yo'nalish: ${order.fromRegion} → ${order.toRegion}\n` +
-								`👥 Yo'lovchilar: ${order.passengerCount}\n` +
-								`📦 Pochta: ${order.hasParcel ? 'Bor' : 'Yo\'q'}\n` +
-								`⏰ Sana: ${new Date().toLocaleString('uz-UZ')}\n\n` +
-								`🆔 Buyurtma ID: ${order._id}`
+		user.state = states.MAIN_MENU;
+		await user.save();
+		
+		// Profil menyusiga qaytish
+		await showDriverMenu(ctx);
+	}
+};
+
+// Yo'lovchilar sonini saqlash
+const saveEditedPassengers = async (ctx, callbackData) => {
+	const user = ctx.user;
+	const maxPassengers = parseInt(callbackData.replace('max_passengers_', ''));
+	
+	const driver = await Driver.findOne({ telegramId: user.telegramId });
+	if (driver) {
+		driver.maxPassengers = maxPassengers;
+		await driver.save();
+		
+		await ctx.reply(user.language === 'uz'
+			? `✅ Maksimal yo'lovchilar soni muvaffaqiyatli o'zgartirildi: ${maxPassengers} kishi`
+			: `✅ Максимальное количество пассажиров успешно изменено: ${maxPassengers} человек`);
+		
+		user.state = states.MAIN_MENU;
+		await user.save();
+		
+		// Profil menyusiga qaytish
+		await showDriverMenu(ctx);
+	}
+};
+
+// Yo'nalishni saqlash (chiqish)
+const saveEditedRouteFrom = async (ctx, callbackData) => {
+	const user = ctx.user;
+	const region = callbackData.replace('driver_from_', '');
+	
+	// Sessionga saqlash
+	ctx.session = ctx.session || {};
+	ctx.session.editedRoute = ctx.session.editedRoute || {};
+	ctx.session.editedRoute.fromRegion = region;
+	
+	user.state = states.DRIVER_EDIT_ROUTE_TO;
+	await user.save();
+	
+	await ctx.reply(user.language === 'uz'
+		? `📍 Chiqish: ${region}\n\nYangi kirish viloyatini tanlang:`
+		: `📍 Отправление: ${region}\n\nВыберите новый регион прибытия:`,
+		keyboards.driverToRegionsKeyboard(user.language));
+};
+
+// Yo'nalishni saqlash (kirish)
+const saveEditedRouteTo = async (ctx, callbackData) => {
+	const user = ctx.user;
+	const region = callbackData.replace('driver_to_', '');
+	
+	// Sessiondan chiqish viloyatini olish
+	const fromRegion = ctx.session?.editedRoute?.fromRegion;
+	
+	if (!fromRegion) {
+		await ctx.reply(user.language === 'uz'
+			? '❌ Xatolik yuz berdi. Iltimos, qaytadan boshlang.'
+			: '❌ Произошла ошибка. Пожалуйста, начните заново.');
+		return;
+	}
+	
+	const driver = await Driver.findOne({ telegramId: user.telegramId });
+	if (driver) {
+		driver.fromRegion = fromRegion;
+		driver.toRegion = region;
+		await driver.save();
+		
+		await ctx.reply(user.language === 'uz'
+			? `✅ Yo'nalish muvaffaqiyatli o'zgartirildi: ${fromRegion} → ${region}`
+			: `✅ Направление успешно изменено: ${fromRegion} → ${region}`);
+		
+		// Sessionni tozalash
+		if (ctx.session.editedRoute) {
+			delete ctx.session.editedRoute;
+		}
+		
+		user.state = states.MAIN_MENU;
+		await user.save();
+		
+		// Profil menyusiga qaytish
+		await showDriverMenu(ctx);
+	}
+};
+
+// Xizmat turlarini saqlash
+const saveEditedServices = async (ctx, callbackData) => {
+	const user = ctx.user;
+	
+	ctx.session = ctx.session || {};
+	ctx.session.editedServices = ctx.session.editedServices || [];
+	
+	if (callbackData === 'service_done') {
+		if (ctx.session.editedServices.length === 0) {
+			await ctx.reply(user.language === 'uz'
+				? '❌ Kamida bitta xizmat turini tanlashingiz kerak.'
+				: '❌ Вы должны выбрать хотя бы один тип услуги.');
+			return;
+		}
+		
+		const driver = await Driver.findOne({ telegramId: user.telegramId });
+		if (driver) {
+			driver.serviceType = ctx.session.editedServices;
+			await driver.save();
 			
-			// Bu yerda bot orqali adminga xabar yuborish logikasi bo'ladi
-			// Masalan: bot.sendMessage(adminChatId, orderMessage)
-			console.log('Admin notification:', orderMessage)
+			// Xizmat nomlarini olish
+			const serviceNames = {
+				road: user.language === 'uz' ? "Yo'l-yo'lakay" : 'Попутка',
+				route: user.language === 'uz' ? "Yo'nalish" : 'Направление',
+				parcel: user.language === 'uz' ? 'Pochta' : 'Посылка'
+			};
+			
+			const servicesText = ctx.session.editedServices.map(type => serviceNames[type]).join(', ');
+			
+			await ctx.reply(user.language === 'uz'
+				? `✅ Xizmat turlari muvaffaqiyatli o'zgartirildi: ${servicesText}`
+				: `✅ Типы услуг успешно изменены: ${servicesText}`);
+			
+			// Sessionni tozalash
+			delete ctx.session.editedServices;
+			
+			user.state = states.MAIN_MENU;
+			await user.save();
+			
+			// Profil menyusiga qaytish
+			await showDriverMenu(ctx);
 		}
-	} catch (error) {
-		console.error('Admin notification error:', error)
+	} else {
+		const serviceType = callbackData.replace('service_', '');
+		
+		// Xizmatni toggle qilish (qo'shish/olib tashlash)
+		if (ctx.session.editedServices.includes(serviceType)) {
+			ctx.session.editedServices = ctx.session.editedServices.filter(
+				type => type !== serviceType
+			);
+		} else {
+			ctx.session.editedServices.push(serviceType);
+		}
+		
+		// Xizmat turlarini ko'rsatish
+		const serviceNames = {
+			road: user.language === 'uz' ? "Yo'l-yo'lakay" : 'Попутка',
+			route: user.language === 'uz' ? "Yo'nalish" : 'Направление',
+			parcel: user.language === 'uz' ? 'Pochta' : 'Посылка'
+		};
+		
+		let selectedServices = '';
+		if (ctx.session.editedServices.length > 0) {
+			selectedServices = ctx.session.editedServices.map(type => serviceNames[type]).join(', ');
+		}
+		
+		const message = user.language === 'uz'
+			? `🎯 Tanlangan xizmatlar: ${selectedServices || 'Hali tanlanmagan'}\n\nQo'shimcha xizmat tanlash yoki "Tayyor" tugmasini bosing:`
+			: `🎯 Выбранные услуги: ${selectedServices || 'Еще не выбрано'}\n\nВыберите дополнительные услуги или нажмите "Готово":`;
+		
+		await ctx.reply(
+			message,
+			keyboards.serviceTypeKeyboard(user.language, ctx.session.editedServices)
+		);
 	}
-}
+};
 
-// ====================== MODULE EXPORTS GA QO'SHAMIZ ======================
 
 // ====================== MODULE EXPORTS ======================
 
 module.exports = {
-	// Ro'yxatdan o'tish funksiyalari
+	// Asosiy funksiyalar
 	startRegistration,
 	selectFromRegion,
 	selectToRegion,
@@ -1503,21 +1969,30 @@ module.exports = {
 
 	// Tasdiqlash va profil saqlash
 	showConfirmation,
-	saveProfile,
+	saveProfile: saveProfileWithPayment,
 
 	// Haydovchi menyusi
 	showDriverMenu,
 	showInactiveDriverMenu,
 
-	// Admin bilan bog'lanish funksiyalari
-	showAdminContactForDriver,
-	showAdminContactForPassenger,
-	handleDriverPaymentRequest,
-	createAdminContactKeyboard,
-	validateAdminUsername,
-	getAdminContactMessage,
-	showAdminContactUniversal,
-	handlePaymentButton,
-	handlePassengerOrderCreated,
-	notifyAdminAboutNewOrder
+	// To'lov funksiyalari (soddalashtirilgan)
+	handleDriverPayment, // ✅ BU YERDA handleDriverPayment funksiyasi export qilinishi kerak
+	createSimplePaymentKeyboard,
+	getSimplePaymentMessage,
+	validateAndFormatAdminUsername,
+	createAdminChatLink,
+	showDriverEditMenu,
+	editFullName,
+	editPhone,
+	editCar,
+	editPassengers,
+	editRoute,
+	editServices,
+	editTime,
+	saveEditedFullName,
+	saveEditedPhone,
+	saveEditedPassengers,
+	saveEditedRouteFrom,
+	saveEditedRouteTo,
+	saveEditedServices
 }

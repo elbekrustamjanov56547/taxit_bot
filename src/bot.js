@@ -2,8 +2,6 @@ require('dotenv').config()
 const { Telegraf, session } = require('telegraf')
 const mongoose = require('mongoose')
 const cron = require('node-cron')
-
-// Import handlers
 const startHandler = require('./handlers/start')
 const passengerHandler = require('./handlers/passenger')
 const driverHandler = require('./handlers/driver')
@@ -79,13 +77,14 @@ bot.use(async (ctx, next) => {
 		let user = await User.findOne({ telegramId: userId })
 
 		if (!user) {
-			// Yangi foydalanuvchi yaratish
+			// Yangi foydalanuvchi yaratish - language va role bo'sh qoldiramiz
 			user = new User({
 				telegramId: userId,
 				username: ctx.from.username || '',
 				firstName: ctx.from.first_name || '',
 				lastName: ctx.from.last_name || '',
-				language: 'uz',
+				language: '', // Bo'sh qoldiriladi
+				role: '', // Bo'sh string
 				state: states.START,
 				lastActivity: new Date()
 			})
@@ -129,30 +128,8 @@ bot.use(async (ctx, next) => {
 
 // /start command
 bot.start(async ctx => {
-	try {
-		const user = ctx.user
-
-		if (user.language && user.language !== '') {
-			const message = user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню'
-			await ctx.reply(message, keyboards.mainMenuKeyboard(user.language, user.isAdmin))
-			user.state = states.MAIN_MENU
-			await user.save()
-		} else {
-			const message =
-				user.language === 'uz'
-					? '👋 Assalomu alaykum! Iltimos, tilni tanlang:'
-					: '👋 Здравствуйте! Пожалуйста, выберите язык:'
-
-			await ctx.reply(message, keyboards.languageKeyboard())
-			user.state = states.START
-			await user.save()
-		}
-	} catch (error) {
-		console.error('Start error:', error)
-	}
+	await startHandler.startHandler(ctx)
 })
-
-// Callback query handler
 
 // Callback query handler
 bot.on('callback_query', async ctx => {
@@ -160,45 +137,214 @@ bot.on('callback_query', async ctx => {
 		const callbackData = ctx.callbackQuery.data
 		const user = ctx.user
 
+		console.log('Callback received:', callbackData)
+
+		// Callback javobini darhol berish
+		await ctx.answerCbQuery()
+
+		// ============ LANGUAGE SELECTION ============
+		if (callbackData.startsWith('lang_')) {
+			await startHandler.handleLanguageSelection(ctx, callbackData)
+			return
+		}
+
+		// ============ ROLE SELECTION ============
+		if (callbackData.startsWith('role_')) {
+			await startHandler.handleRoleSelection(ctx, callbackData)
+			return
+		}
+
 		// ============ ADMIN CALLBACKS ============
 		if (callbackData.startsWith('admin_')) {
 			// ... admin callback'lar ...
 			return
 		}
 
-		// ============ LANGUAGE SELECTION ============
-		if (callbackData.startsWith('lang_')) {
-			// ... til tanlash ...
+		// ============ PASSENGER FLOW CALLBACKS ============
+		if (callbackData.startsWith('passengers_')) {
+			await passengerHandler.selectPassengerCount(ctx, callbackData)
 			return
 		}
 
-		// ============ PASSENGER FLOW CALLBACKS ============
-		// Yo'lovchilar sonini tanlash
-		if (callbackData.startsWith('passengers_')) {
-			await passengerHandler.selectPassengerCount(ctx, callbackData)
-			await ctx.answerCbQuery()
+		if (callbackData.startsWith('max_passengers_')) {
+			if (user.state === states.DRIVER_EDIT_PASSENGERS) {
+				await driverHandler.saveEditedPassengers(ctx, callbackData)
+			} else {
+				await driverHandler.selectMaxPassengers(ctx, callbackData)
+			}
 			return
 		}
-		
-		// ============ DRIVER FLOW CALLBACKS ============
-		// Maksimal yo'lovchilar sonini tanlash
-		if (callbackData.startsWith('max_passengers_')) {
-			await driverHandler.selectMaxPassengers(ctx, callbackData)
-			await ctx.answerCbQuery()
+
+		// Mashina modelini tanlash
+		if (callbackData.startsWith('car_select_')) {
+			if (user.state === states.DRIVER_EDIT_CAR) {
+				await driverHandler.selectCarCallback(ctx, callbackData)
+				// Mashina tanlagandan keyin avtomatik sahifaga qaytish
+				const driver = await Driver.findOne({ telegramId: user.telegramId })
+				if (driver) {
+					user.state = states.MAIN_MENU
+					await user.save()
+					await driverHandler.showDriverMenu(ctx)
+				}
+			} else {
+				await driverHandler.selectCarCallback(ctx, callbackData)
+			}
+			return
+		}
+
+		// Chiqish viloyati
+		if (callbackData.startsWith('driver_from_')) {
+			if (user.state === states.DRIVER_EDIT_ROUTE_FROM) {
+				await driverHandler.saveEditedRouteFrom(ctx, callbackData)
+			} else {
+				await driverHandler.selectFromRegion(ctx, callbackData)
+			}
+			return
+		}
+
+		// Kirish viloyati
+		if (callbackData.startsWith('driver_to_')) {
+			if (user.state === states.DRIVER_EDIT_ROUTE_TO) {
+				await driverHandler.saveEditedRouteTo(ctx, callbackData)
+			} else {
+				await driverHandler.selectToRegion(ctx, callbackData)
+			}
+			return
+		}
+
+		// Xizmat turini tanlash
+		if (callbackData.startsWith('service_')) {
+			if (user.state === states.DRIVER_EDIT_SERVICES) {
+				await driverHandler.saveEditedServices(ctx, callbackData)
+			} else {
+				await driverHandler.selectServiceType(ctx, callbackData)
+			}
 			return
 		}
 
 		// ============ MAIN MENU ============
 		switch (callbackData) {
+			case 'driver_info':
+				// Ma'lumotlar
+				const driver = await Driver.findOne({ telegramId: user.telegramId })
+
+				if (driver) {
+					if (driver.status === 'active') {
+						await driverHandler.showDriverMenu(ctx)
+					} else {
+						await driverHandler.showInactiveDriverMenu(ctx, driver)
+					}
+				} else {
+					// Agar user roli driver bo'lsa, lekin driver profili yo'q
+					if (user.role === 'driver') {
+						await ctx.reply(
+							user.language === 'uz'
+								? '🚘 Siz haydovchi sifatida tanlangansiz, ammo haydovchi profilingiz hali yaratilmagan yoki topilmadi.\n\nIltimos, ro‘yxatdan o‘tish jarayonini qayta boshlang.'
+								: '🚘 Вы выбрали роль водителя, однако профиль водителя не был найден.\n\nПожалуйста, пройдите регистрацию заново.'
+						)
+					}
+
+					// Ro'yxatdan o'tishni boshlash
+					await driverHandler.startRegistration(ctx)
+				}
+				break
+
+			case 'driver_payment':
+				console.log('Driver payment callback triggered')
+				await driverHandler.handleDriverPayment(ctx)
+				break
+
+			case 'driver_edit':
+				await driverHandler.showDriverEditMenu(ctx)
+				break
+
+			case 'edit_fullname':
+				await driverHandler.editFullName(ctx)
+				break
+
+			case 'edit_phone':
+				await driverHandler.editPhone(ctx)
+				break
+
+			case 'edit_car':
+				await driverHandler.editCar(ctx)
+				break
+
+			case 'edit_passengers':
+				await driverHandler.editPassengers(ctx)
+				break
+
+			case 'edit_route':
+				await driverHandler.editRoute(ctx)
+				break
+
+			case 'edit_services':
+				await driverHandler.editServices(ctx)
+				break
+
+			case 'edit_time':
+				await driverHandler.editTime(ctx)
+				break
+
+			case 'main_menu':
+				// Asosiy menyuga qaytish
+				try {
+					await ctx.deleteMessage()
+				} catch (error) {
+					console.log('Delete message for main_menu error:', error.message)
+				}
+
+				await ctx.reply(
+					user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
+					keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role)
+				)
+				user.state = states.MAIN_MENU
+				await user.save()
+				break
+
+			case 'close_menu':
+				// Menyuni yopish - faqat xabarni o'chirish
+				try {
+					await ctx.deleteMessage()
+				} catch (error) {
+					console.log('Delete message error:', error.message)
+				}
+				break
+
 			case 'need_taxi':
 				await passengerHandler.startOrder(ctx)
 				break
+
 			case 'taxi_service':
-				await driverHandler.startRegistration(ctx)
+				// Agar user roli driver bo'lsa, lekin driver profili yo'q
+				if (user.role === 'driver') {
+					const existingDriver = await Driver.findOne({ telegramId: user.telegramId })
+
+					if (existingDriver) {
+						if (existingDriver.status === 'active') {
+							await driverHandler.showDriverMenu(ctx)
+						} else {
+							await driverHandler.showInactiveDriverMenu(ctx, existingDriver)
+						}
+					} else {
+						await ctx.reply(
+							user.language === 'uz'
+								? '🚘 Haydovchi profilingiz topilmadi.\n\nKeling, ro‘yxatdan o‘tishni boshlaymiz.'
+								: '🚘 Профиль водителя не найден.\n\nДавайте начнём регистрацию.'
+						)
+
+						await driverHandler.startRegistration(ctx)
+					}
+				} else {
+					// Oddiy ro'yxatdan o'tish
+					await driverHandler.startRegistration(ctx)
+				}
 				break
+
 			case 'my_orders':
 				await passengerHandler.showMyOrders(ctx)
 				break
+
 			case 'confirm':
 				if (user.state === states.DRIVER_REG_CONFIRM) {
 					await driverHandler.saveProfile(ctx)
@@ -206,6 +352,7 @@ bot.on('callback_query', async ctx => {
 					await passengerHandler.confirmOrder(ctx)
 				}
 				break
+
 			case 'cancel':
 				if (user.state === states.DRIVER_REG_CONFIRM) {
 					await ctx.reply('❌ Bekor qilindi')
@@ -213,12 +360,13 @@ bot.on('callback_query', async ctx => {
 					await user.save()
 					await ctx.reply(
 						'🏠 Asosiy menyu',
-						keyboards.mainMenuKeyboard(user.language, user.isAdmin)
+						keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role)
 					)
 				} else if (user.state === states.PASSENGER_CONFIRM) {
 					await passengerHandler.cancelOrder(ctx)
 				}
 				break
+
 			default:
 				// ============ PASSENGER FLOW ============
 				if (callbackData.startsWith('from_') && !callbackData.startsWith('driver_')) {
@@ -229,28 +377,11 @@ bot.on('callback_query', async ctx => {
 					await passengerHandler.selectParcel(ctx, callbackData)
 				}
 				// ============ DRIVER FLOW ============
-				// Mashina modelini tanlash
-				else if (callbackData.startsWith('car_select_')) {
-					await driverHandler.selectCarCallback(ctx, callbackData)
-				}
 				// Mashina turini tanlash
 				else if (callbackData.startsWith('car_type_')) {
 					await driverHandler.selectCarTypeCallback(ctx, callbackData)
 				}
-				// Chiqish viloyati
-				else if (callbackData.startsWith('driver_from_')) {
-					await driverHandler.selectFromRegion(ctx, callbackData)
-				}
-				// Kirish viloyati
-				else if (callbackData.startsWith('driver_to_')) {
-					await driverHandler.selectToRegion(ctx, callbackData)
-				}
-				// Xizmat turini tanlash
-				else if (callbackData.startsWith('service_')) {
-					await driverHandler.selectServiceType(ctx, callbackData)
-				}
 				// ============ DATE & TIME ============
-				// Sana tanlash
 				else if (callbackData.startsWith('date_')) {
 					await driverHandler.selectDate(ctx, callbackData)
 				}
@@ -266,12 +397,14 @@ bot.on('callback_query', async ctx => {
 				}
 				break
 		}
-
-		await ctx.answerCbQuery()
 	} catch (error) {
 		console.error('Callback error:', error)
 		console.error('Error details:', error.stack)
-		await ctx.answerCbQuery('❌ Xatolik yuz berdi')
+		try {
+			await ctx.answerCbQuery('❌ Xatolik yuz berdi')
+		} catch (e) {
+			console.error('Answer callback error:', e)
+		}
 	}
 })
 
@@ -329,27 +462,42 @@ bot.on('text', async ctx => {
 
 		// ============ STATE BASED ACTIONS ============
 		switch (user.state) {
+			case states.DRIVER_EDIT_FULLNAME:
+				await driverHandler.saveEditedFullName(ctx, text)
+				break
+
+			case states.DRIVER_EDIT_PHONE:
+				await driverHandler.saveEditedPhone(ctx, text)
+				break
+
+			case states.DRIVER_EDIT_CAR:
+				await driverHandler.saveCarModel(ctx, text)
+				break
+
 			case states.PASSENGER_PARCEL_DESC:
 				await passengerHandler.saveParcelDescription(ctx, text)
 				break
+
 			case states.PASSENGER_COMMENT:
 				await passengerHandler.saveComment(ctx, text)
 				break
+
 			case states.DRIVER_REG_FULLNAME:
 				await driverHandler.saveFullName(ctx, text)
 				break
+
 			case states.DRIVER_REG_PHONE:
 				await driverHandler.savePhone(ctx, text)
 				break
+
 			case states.DRIVER_REG_SELECT_CAR:
-				// Endi text emas, callback orqali mashina tanlanadi
-				// Qo'lda mashina modelini kiritish uchun qolgan holat
 				await driverHandler.saveCarModel(ctx, text)
 				break
+
 			case states.DRIVER_REG_CAR_MODEL:
-				// Qo'lda mashina modelini kiritish
 				await driverHandler.saveCarModel(ctx, text)
 				break
+
 			default:
 				if (text.startsWith('/')) {
 					await ctx.reply(
@@ -410,71 +558,27 @@ cron.schedule('0 0 * * *', async () => {
 	}
 })
 
-// To'lov bosilganda
+// To'lov callbacklarini qo'shish
+bot.action('driver_payment_enhanced', async ctx => {
+	await driverHandler.handleEnhancedDriverPayment(ctx)
+	await ctx.answerCbQuery()
+})
+
+bot.action('show_driver_profile', async ctx => {
+	await driverHandler.handleShowProfileCallback(ctx)
+	await ctx.answerCbQuery()
+})
+
+bot.action('close_menu', async ctx => {
+	await ctx.deleteMessage()
+	await ctx.answerCbQuery()
+})
+
+// ============ ESKI TO'LOV HANDLERINI YANGILASH ============
 bot.action('driver_payment', async ctx => {
-    const user = ctx.user;
-    
-    // Haydovchi ma'lumotlarini olish
-    const driver = await Driver.findOne({ telegramId: user.telegramId })
-        .populate('carModel')
-        .populate('carType');
-    
-    if (driver) {
-        // Admin bilan bog'lanish xabarini ko'rsatish
-        await driverFunctions.showAdminContactForDriver(ctx, driver);
-    } else {
-        await ctx.reply(
-            user.language === 'uz' 
-                ? '❌ Haydovchi profili topilmadi' 
-                : '❌ Профиль водителя не найден'
-        );
-    }
-});
-
-// Serverni ishga tushirish
-// const startServer = async () => {
-// 	try {
-// 		// Environment'ni tekshirish
-// 		const isProduction = process.env.NODE_ENV === 'production'
-
-// 		if (isProduction) {
-// 			// Production (Render.com) uchun webhook
-// 			const hostname = process.env.RENDER_EXTERNAL_HOSTNAME || 'localhost:5000'
-// 			const webhookUrl = `https://${hostname}/webhook/${process.env.BOT_TOKEN}`
-
-// 			console.log(`Production mode - Setting webhook to: ${webhookUrl}`)
-
-// 			try {
-// 				await bot.telegram.setWebhook(webhookUrl)
-// 				console.log('✅ Webhook successfully set')
-// 			} catch (error) {
-// 				console.error('❌ Failed to set webhook:', error.message)
-// 				// Webhook o'rnatishda xatolik bo'lsa ham serverni ishga tushiramiz
-// 			}
-// 		} else {
-// 			// Development uchun polling
-// 			console.log('Development mode - Using polling')
-// 			bot
-// 				.launch()
-// 				.then(() => console.log('✅ Bot polling mode da ishga tushdi'))
-// 				.catch(error => console.error('❌ Botni ishga tushirishda xatolik:', error))
-// 		}
-
-// 		// Express serverni ishga tushirish
-// 		app.listen(PORT, () => {
-// 			console.log(`🌐 Server ${PORT} portda ishga tushdi`)
-// 			if (isProduction) {
-// 				console.log(`🤖 Bot webhook mode da ishlayapti`)
-// 			}
-// 		})
-
-// 		// Graceful shutdown
-// 		process.once('SIGINT', () => bot.stop('SIGINT'))
-// 		process.once('SIGTERM', () => bot.stop('SIGTERM'))
-// 	} catch (error) {
-// 		console.error('Server start error:', error)
-// 	}
-// }
+	await driverHandler.handleEnhancedDriverPayment(ctx)
+	await ctx.answerCbQuery()
+})
 
 // Serverni ishga tushirish funksiyasini yangilaymiz
 const startServer = async () => {
@@ -499,20 +603,23 @@ const startServer = async () => {
 		} else {
 			// Development uchun polling - qayta urinish mexanizmi
 			console.log('Development mode - Using polling')
-			
+
 			// Qayta urinish funksiyasi
 			const startPolling = async (retryCount = 0, maxRetries = 5) => {
 				try {
 					await bot.launch()
 					console.log('✅ Bot polling mode da ishga tushdi')
 				} catch (error) {
-					console.error(`❌ Botni ishga tushirishda xatolik (${retryCount + 1}/${maxRetries}):`, error.message)
-					
+					console.error(
+						`❌ Botni ishga tushirishda xatolik (${retryCount + 1}/${maxRetries}):`,
+						error.message
+					)
+
 					if (retryCount < maxRetries - 1) {
 						// Kuting va qayta urinib ko'ring
 						const delay = Math.min(1000 * Math.pow(2, retryCount), 30000) // Exponential backoff
-						console.log(`⏳ ${delay/1000} soniyadan keyin qayta uriniladi...`)
-						
+						console.log(`⏳ ${delay / 1000} soniyadan keyin qayta uriniladi...`)
+
 						setTimeout(() => {
 							startPolling(retryCount + 1, maxRetries)
 						}, delay)
@@ -521,7 +628,7 @@ const startServer = async () => {
 					}
 				}
 			}
-			
+
 			// Polling ni boshlash
 			startPolling()
 		}

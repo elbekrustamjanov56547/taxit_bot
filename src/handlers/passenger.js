@@ -19,6 +19,21 @@ module.exports = {
 				: '📍 Из какого региона выезжаете?'
 
 		await ctx.reply(message, regionKeyboards.fromRegionsKeyboard(user.language))
+
+		if (user.role === 'driver') {
+			await ctx.reply(
+				user.language === 'uz'
+					? '❌ Siz haydovchisiz. Siz taxi buyurtma qila olmaysiz.'
+					: '❌ Вы водитель. Вы не можете заказать такси.'
+			)
+			return
+		}
+
+		// User rolini 'user' qilib o'rnatamiz (agar allaqachon bo'lmasa)
+		if (user.role !== 'user') {
+			user.role = 'user'
+			await user.save()
+		}
 	},
 
 	// Chiqish viloyatini tanlash

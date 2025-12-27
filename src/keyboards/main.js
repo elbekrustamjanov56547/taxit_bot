@@ -1,31 +1,81 @@
 const { Markup } = require('telegraf')
 
 const passengerCountKeyboard = (lang = 'uz') => {
-const buttons = []
+	const buttons = []
 
-// 1-5 gacha sonlar
-for (let i = 1; i <= 5; i++) {
-	buttons.push([
-		Markup.button.callback(`${i} ${lang === 'uz' ? 'kishi' : 'человек'}`, `passengers_${i}`)
-	])
-}
+	// 1-5 gacha sonlar
+	for (let i = 1; i <= 5; i++) {
+		buttons.push([
+			Markup.button.callback(`${i} ${lang === 'uz' ? 'kishi' : 'человек'}`, `passengers_${i}`)
+		])
+	}
 
-return Markup.inlineKeyboard(buttons)
+	return Markup.inlineKeyboard(buttons)
 }
 
 // Haydovchi maksimal yo'lovchilar soni keyboardi
 const maxPassengersKeyboard = (lang = 'uz') => {
-const buttons = []
+	const buttons = []
 
-// 1-5 gacha sonlar
-for (let i = 1; i <= 5; i++) {
-	buttons.push([
-		Markup.button.callback(`${i} ${lang === 'uz' ? 'kishi' : 'человек'}`, `max_passengers_${i}`)
-	])
+	// 1-5 gacha sonlar
+	for (let i = 1; i <= 5; i++) {
+		buttons.push([
+			Markup.button.callback(`${i} ${lang === 'uz' ? 'kishi' : 'человек'}`, `max_passengers_${i}`)
+		])
+	}
+
+	return Markup.inlineKeyboard(buttons)
 }
 
-return Markup.inlineKeyboard(buttons)
+// Asosiy menyu keyboardi - rolga qarab
+const mainMenuKeyboard = (language = 'uz', isAdmin = false, role = 'user') => {
+	const buttons = []
+
+    if (role === 'user') {
+			// User uchun faqat "Taksi kerak" va "Mening buyurtmalarim"
+			buttons.push([
+				Markup.button.callback(
+					language === 'uz' ? '🚖 Taksiga buyurtma berish' : '🚖 Заказать такси',
+					'need_taxi'
+				)
+			])
+			buttons.push([
+				Markup.button.callback(
+					language === 'uz' ? '📋 Mening buyurtmalarim' : '📋 Мои заказы',
+					'my_orders'
+				)
+			])
+		} else if (role === 'driver') {
+			// Driver uchun faqat "Haydovchi menyusi"
+			buttons.push([
+				Markup.button.callback(
+					language === 'uz' ? '🚘 Haydovchi menyusi' : '🚘 Меню водителя',
+					'driver_info'
+				)
+			])
+		} else {
+			// Agar roli yo'q bo'lsa (yangi foydalanuvchi) - ikkala variant ham
+			buttons.push([
+				Markup.button.callback(
+					language === 'uz' ? '🚖 Taksiga buyurtma berish' : '🚖 Нужно такси',
+					'need_taxi'
+				),
+				Markup.button.callback(
+					language === 'uz' ? '🚘 Taksi xizmati ko‘rsatish' : '🚘 Предоставлять такси',
+					'taxi_service'
+				)
+			])
+			buttons.push([
+				Markup.button.callback(
+					language === 'uz' ? '📋 Mening buyurtmalarim' : '📋 Мои заказы',
+					'my_orders'
+				)
+			])
+		}
+
+	return Markup.inlineKeyboard(buttons)
 }
+
 module.exports = {
 	// Til tanlash keyboard
 	languageKeyboard: () => {
@@ -35,41 +85,8 @@ module.exports = {
 		])
 	},
 
-	// Asosiy menu - ADMIN bor/yo'qligiga qarab
-	mainMenuKeyboard: (lang = 'uz', isAdmin = false) => {
-		const texts = {
-			uz: {
-				needTaxi: '🚕 Taksi kerak',
-				taxiService: '🚘 Taksi xizmati',
-				myOrders: '📋 Mening buyurtmalarim',
-				settings: '⚙️ Sozlamalar'
-				// admin: '👨‍💼 Admin'
-			},
-			ru: {
-				needTaxi: '🚕 Нужно такси',
-				taxiService: '🚘 Такси сервис',
-				myOrders: '📋 Мои заказы',
-				settings: '⚙️ Настройки'
-				// admin: '👨‍💼 Админ'
-			}
-		}
-
-		const t = texts[lang]
-
-		// Asosiy tugmalar
-		const buttons = [
-			[Markup.button.callback(t.needTaxi, 'need_taxi')],
-			[Markup.button.callback(t.taxiService, 'taxi_service')],
-			[Markup.button.callback(t.myOrders, 'my_orders')]
-		]
-
-		// Agar admin bo'lsa, admin tugmasini qo'shamiz
-		// if (isAdmin) {
-		// 	buttons.push([Markup.button.callback(t.admin, 'admin')])
-		// }
-
-		return Markup.inlineKeyboard(buttons)
-	},
+	// Asosiy menyu
+	mainMenuKeyboard,
 
 	// Viloyatlar keyboard (yo'lovchi uchun)
 	fromRegionsKeyboard: (lang = 'uz') => {
@@ -343,6 +360,7 @@ module.exports = {
 			[Markup.button.callback(t.skip, 'skip_comment')]
 		])
 	},
+
 	passengerCountKeyboard,
 	maxPassengersKeyboard
 }

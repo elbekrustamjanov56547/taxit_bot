@@ -36,6 +36,15 @@ module.exports = {
 	ADMIN_DRIVER_MANAGE: 'ADMIN_DRIVER_MANAGE',
 	ADMIN_ORDER_MANAGE: 'ADMIN_ORDER_MANAGE',
 	DRIVER_REG_MAX_PASSENGERS: 'driver_reg_max_passengers', // Yangi state
-	PASSENGER_PASSENGER_COUNT: 'passenger_passenger_count' ,
-	
+	PASSENGER_PASSENGER_COUNT: 'passenger_passenger_count',
+	// DRIVER EDIT STATES
+	DRIVER_EDIT_FULLNAME: 'driver_edit_fullname',
+	DRIVER_EDIT_PHONE: 'driver_edit_phone',
+	DRIVER_EDIT_CAR: 'driver_edit_car',
+	DRIVER_EDIT_PASSENGERS: 'driver_edit_passengers',
+	DRIVER_EDIT_ROUTE_FROM: 'driver_edit_route_from',
+	DRIVER_EDIT_ROUTE_TO: 'driver_edit_route_to',
+	DRIVER_EDIT_SERVICES: 'driver_edit_services',
+	DRIVER_EDIT_TIME_DATE: 'driver_edit_time_date',
+	DRIVER_EDIT_TIME_TIME: 'driver_edit_time_time'
 }

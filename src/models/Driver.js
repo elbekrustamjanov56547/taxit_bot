@@ -23,33 +23,34 @@ const driverSchema = new mongoose.Schema({
 		required: true
 	},
 	carModel: {
-		type: mongoose.Schema.Types.ObjectId,
+		type: mongoose.Schema.Types.ObjectId, // Agar bu ObjectId bo'lsa
 		ref: 'Car',
 		required: true
 	},
+	// YOKI carModel string bo'lishi kerak:
+	// carModel: {
+	//   type: String,
+	//   required: true
+	// },
 	carType: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'CarType'
 	},
 	maxPassengers: {
 		type: Number,
-		required: true,
-		min: 1,
-		max: 5,
-		default: 4
+		required: true
 	},
 	serviceType: {
 		type: [String],
-		enum: ['road', 'route', 'parcel'],
 		default: []
 	},
 	departureTime: {
 		type: String,
-		default: ''
+		required: true
 	},
 	status: {
 		type: String,
-		enum: ['active', 'inactive', 'blocked'],
+		enum: ['active', 'inactive'],
 		default: 'inactive'
 	},
 	balance: {
@@ -58,9 +59,7 @@ const driverSchema = new mongoose.Schema({
 	},
 	rating: {
 		type: Number,
-		default: 5.0,
-		min: 0,
-		max: 5
+		default: 5.0
 	},
 	totalOrders: {
 		type: Number,
