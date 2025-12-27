@@ -26,7 +26,8 @@ const userSchema = new mongoose.Schema({
 	role: {
 		type: String,
 		enum: ['user', 'driver', 'none'],
-		default: 'none'
+		default: 'none',
+		set: v => (v && v.length ? v : 'none')
 	},
 	phone: {
 		type: String,

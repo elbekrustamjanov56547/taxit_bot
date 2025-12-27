@@ -84,7 +84,7 @@ bot.use(async (ctx, next) => {
 				firstName: ctx.from.first_name || '',
 				lastName: ctx.from.last_name || '',
 				language: '', // Bo'sh qoldiriladi
-				role: '', // Bo'sh string
+				role: 'none', // Bo'sh string
 				state: states.START,
 				lastActivity: new Date()
 			})
