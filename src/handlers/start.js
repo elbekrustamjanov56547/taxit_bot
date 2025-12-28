@@ -54,20 +54,60 @@ module.exports = {
 	},
 
 	// Rol tanlashni qayta ishlash
-	handleRoleSelection: async (ctx, callbackData) => {
-		const user = ctx.user
-		const role = callbackData.replace('role_', '') // 'user' yoki 'driver'
+	// handleRoleSelection: async (ctx, callbackData) => {
+	// 	const user = ctx.user
+	// 	const role = callbackData.replace('role_', '') // 'user' yoki 'driver'
 
-		// User rolini saqlash
+	// 	// User rolini saqlash
+	// 	user.role = role
+	// 	await user.save()
+
+	// 	// Rolga qarab menyu ko'rsatish
+	// 	const message = user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню'
+	// 	await ctx.reply(message, keyboards.mainMenuKeyboard(user.language, user.isAdmin, role))
+	// 	user.state = states.MAIN_MENU
+	// 	await user.save()
+	// }
+
+	// handlers/start.js faylida handleRoleSelection funksiyasi:
+ handleRoleSelection: async (ctx, callbackData) => {
+	try {
+		const user = ctx.user
+		const role = callbackData.replace('role_', '')
+		
+		console.log(`Role selection: ${role} for user: ${user.telegramId}`)
+		
+		// User ro'lini yangilash
 		user.role = role
 		await user.save()
-
-		// Rolga qarab menyu ko'rsatish
-		const message = user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню'
-		await ctx.reply(message, keyboards.mainMenuKeyboard(user.language, user.isAdmin, role))
-		user.state = states.MAIN_MENU
-		await user.save()
+		
+		if (role === 'driver') {
+			// Agar haydovchi rolini tanlasa, darhol ro'yxatdan o'tishni boshlaymiz
+			const message = user.language === 'uz'
+				? "🚘 Haydovchi sifatida ro'yxatdan o'tishni boshlaymiz..."
+				: '🚘 Начинаем регистрацию как водитель...'
+			
+			await ctx.reply(message)
+			
+			// Driver modulini import qilamiz
+			const driverHandler = require('./driver')
+			
+			// Darhol ro'yxatdan o'tishni boshlaymiz
+			await driverHandler.startRegistration(ctx)
+		} else if (role === 'user') {
+			// Agar yo'lovchi rolini tanlasa, asosiy menyuni ko'rsatamiz
+			const message = user.language === 'uz'
+				? '🚖 Tabriklaymiz! Siz yo\'lovchi sifatida ro\'yxatdan o\'tdingiz.\n\nNima qilishni xohlaysiz?'
+				: '🚖 Поздравляем! Вы зарегистрировались как пассажир.\n\nЧто вы хотите сделать?'
+			
+			await ctx.reply(message, keyboards.mainMenuKeyboard(user.language, false, 'user'))
+			user.state = states.MAIN_MENU
+			await user.save()
+		}
+	} catch (error) {
+		console.error('Role selection error:', error)
 	}
+}
 }
 
 // Rol tanlashni ko'rsatish (faqat bir marta)

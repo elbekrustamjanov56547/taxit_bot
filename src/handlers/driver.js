@@ -572,50 +572,89 @@ const showInactiveDriverMenu = async (ctx, driver) => {
 // 	}
 // }
 // driver.js faylida:
+// const startRegistration = async ctx => {
+// 	const user = ctx.user
+// 	console.log('startRegistration chaqirildi, user role:', user.role)
+
+// 	// Agar user allaqachon haydovchi bo'lsa
+// 	const existingDriver = await Driver.findOne({ telegramId: user.telegramId })
+
+// 	if (existingDriver) {
+// 		console.log('Mavjud driver topildi')
+// 		// Profil mavjud
+// 		if (existingDriver.status === 'active') {
+// 			await showDriverMenu(ctx)
+// 		} else {
+// 			await showInactiveDriverMenu(ctx, existingDriver)
+// 		}
+// 		return
+// 	}
+
+// 	// Agar user roli 'user' bo'lsa (ya'ni allaqachon taxi buyurtma bergan bo'lsa)
+// 	if (user.role === 'user') {
+// 		await ctx.reply(
+// 			user.language === 'uz'
+// 				? "❌ Siz allaqachon yo`lovchi sifatida ro'yxatdan o`tgansiz. Haydovchi sifatida ro'yxatdan o`ta olmaysiz."
+// 				: '❌ Вы уже зарегистрированы как пассажир. Вы не можете зарегистрироваться как водитель.'
+// 		)
+// 		return
+// 	}
+
+// 	// Agar user hali rol tanlamagan bo'lsa
+// 	if (user.role === 'none') {
+// 		console.log("User roli bo'sh, rolni tanlash kerak")
+// 		await ctx.reply(
+// 			user.language === 'uz'
+// 				? '❌ Iltimos, avval rol tanlang. /start'
+// 				: '❌ Пожалуйста, сначала выберите роль. /start'
+// 		)
+// 		return
+// 	}
+
+// 	// Sessionni tekshirish va yaratish
+// 	ctx.session = ctx.session || {}
+// 	ctx.session.driverData = ctx.session.driverData || {}
+
+// 	// Yangi ro'yxatdan o'tish
+// 	user.state = states.DRIVER_REG_FROM_REGION
+// 	await user.save()
+
+// 	const message =
+// 		user.language === 'uz'
+// 			? "🚘 Haydovchi sifatida ro'yxatdan o'tish\n\n📍 Qaysi viloyatdan jo'namoqchisiz?"
+// 			: '🚘 Регистрация как водитель\n\n📍 Из какого региона выезжаете?'
+
+// 	console.log('Driver registration boshlanmoqda...')
+// 	await ctx.reply(message, keyboards.driverFromRegionsKeyboard(user.language))
+// }
+
+// driver.js faylida startRegistration funksiyasini yangilaymiz:
 const startRegistration = async ctx => {
 	const user = ctx.user
 	console.log('startRegistration chaqirildi, user role:', user.role)
 
-	// Agar user allaqachon haydovchi bo'lsa
+	// Sessionni tekshirish va yaratish
+	ctx.session = ctx.session || {}
+	ctx.session.driverData = ctx.session.driverData || {}
+
+	// Haydovchi borligini tekshirish
 	const existingDriver = await Driver.findOne({ telegramId: user.telegramId })
 
 	if (existingDriver) {
 		console.log('Mavjud driver topildi')
 		// Profil mavjud
 		if (existingDriver.status === 'active') {
-			await showDriverMenu(ctx)
+			await driverHandler.showDriverMenu(ctx)
 		} else {
-			await showInactiveDriverMenu(ctx, existingDriver)
+			await driverHandler.showInactiveDriverMenu(ctx, existingDriver)
 		}
 		return
 	}
 
-	// Agar user roli 'user' bo'lsa (ya'ni allaqachon taxi buyurtma bergan bo'lsa)
-	if (user.role === 'user') {
-		await ctx.reply(
-			user.language === 'uz'
-				? "❌ Siz allaqachon yo`lovchi sifatida ro'yxatdan o`tgansiz. Haydovchi sifatida ro'yxatdan o`ta olmaysiz."
-				: '❌ Вы уже зарегистрированы как пассажир. Вы не можете зарегистрироваться как водитель.'
-		)
-		return
-	}
-
-	// Agar user hali rol tanlamagan bo'lsa
-	if (user.role === 'none') {
-		console.log("User roli bo'sh, rolni tanlash kerak")
-		await ctx.reply(
-			user.language === 'uz'
-				? '❌ Iltimos, avval rol tanlang. /start'
-				: '❌ Пожалуйста, сначала выберите роль. /start'
-		)
-		return
-	}
-
-	// Sessionni tekshirish va yaratish
-	ctx.session = ctx.session || {}
-	ctx.session.driverData = ctx.session.driverData || {}
-
-	// Yangi ro'yxatdan o'tish
+	// Agar user hali haydovchi bo'lmasa, ro'yxatdan o'tish jarayonini boshlaymiz
+	console.log('Yangi driver registration boshlanmoqda...')
+	
+	// Ro'yxatdan o'tishning birinchi bosqichi - chiqish viloyatini tanlash
 	user.state = states.DRIVER_REG_FROM_REGION
 	await user.save()
 
@@ -626,7 +665,7 @@ const startRegistration = async ctx => {
 
 	console.log('Driver registration boshlanmoqda...')
 	await ctx.reply(message, keyboards.driverFromRegionsKeyboard(user.language))
-}
+} 
 
 // Chiqish viloyatini tanlash
 const selectFromRegion = async (ctx, callbackData) => {
