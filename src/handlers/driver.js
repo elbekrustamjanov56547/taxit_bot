@@ -31,26 +31,49 @@ const createAdminChatLink = () => {
 }
 
 // Admin bilan bog'lanish uchun oddiy keyboard
-const createSimplePaymentKeyboard = (userLanguage = 'uz') => {
-	const adminUsername = validateAndFormatAdminUsername()
-	const adminChatLink = createAdminChatLink()
+// const createSimplePaymentKeyboard = (userLanguage = 'uz') => {
+// 	const adminUsername = validateAndFormatAdminUsername()
+// 	const adminChatLink = createAdminChatLink()
 
-	return {
-		inline_keyboard: [
-			[
-				{
-					text: userLanguage === 'uz' ? '📩 Admin bilan gaplashish' : '📩 Чат с админом',
-					url: adminChatLink
-				}
-			],
-			[
-				{
-					text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-					callback_data: 'main_menu'
-				}
-			]
-		]
-	}
+// 	return {
+// 		inline_keyboard: [
+// 			[
+// 				{
+// 					text: userLanguage === 'uz' ? '📩 Admin bilan gaplashish' : '📩 Чат с админом',
+// 					url: adminChatLink
+// 				}
+// 			],
+// 			[
+// 				{
+// 					text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
+// 					callback_data: 'main_menu'
+// 				}
+// 			]
+// 		]
+// 	}
+// }
+
+// Admin bilan bog'lanish uchun oddiy keyboard
+const createSimplePaymentKeyboard = (userLanguage = 'uz') => {
+    const adminUsername = validateAndFormatAdminUsername()
+    const adminChatLink = createAdminChatLink()
+
+    return {
+        inline_keyboard: [
+            [
+                {
+                    text: userLanguage === 'uz' ? '📩 Admin bilan gaplashish' : '📩 Чат с админом',
+                    url: adminChatLink
+                }
+            ],
+            [
+                {
+                    text: userLanguage === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
+                    callback_data: 'main_menu'
+                }
+            ]
+        ]
+    }
 }
 
 const getSimplePaymentMessage = (userLanguage = 'uz') => {
@@ -84,53 +107,104 @@ const getSimplePaymentMessage = (userLanguage = 'uz') => {
 }
 
 // Main payment function
+// const handleDriverPayment = async ctx => {
+// 	console.log('🔵 handleDriverPayment FUNKSIYASI CHAQIRILDI')
+// 	console.log('User:', ctx.user?.telegramId)
+
+// 	try {
+// 		const user = ctx.user
+
+// 		if (!user) {
+// 			console.log('❌ User not found')
+// 			return
+// 		}
+
+// 		// Avval oldingi xabarni o'chirishga urinamiz
+// 		try {
+// 			if (ctx.callbackQuery?.message?.message_id) {
+// 				await ctx.deleteMessage()
+// 			}
+// 		} catch (error) {
+// 			console.log('Delete previous message error:', error.message)
+// 		}
+
+// 		// Oddiy payment xabarini chiqaramiz
+// 		const message = getSimplePaymentMessage(user.language)
+// 		const keyboard = createSimplePaymentKeyboard(user.language)
+
+// 		console.log('📤 Xabar yuborilmoqda...')
+
+// 		await ctx.reply(message, {
+// 			reply_markup: keyboard,
+// 			parse_mode: 'HTML'
+// 		})
+
+// 		console.log('✅ Xabar muvaffaqiyatli yuborildi')
+// 	} catch (error) {
+// 		console.error('❌ handleDriverPayment da xatolik:', error)
+
+// 		try {
+// 			await ctx.reply(
+// 				ctx.user?.language === 'uz'
+// 					? "❌ Xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
+// 					: '❌ Произошла ошибка. Пожалуйста, попробуйте еще раз.',
+// 				{ parse_mode: 'HTML' }
+// 			)
+// 		} catch (replyError) {
+// 			console.error('Failed to send error message:', replyError)
+// 		}
+// 	}
+// }
+
+// Main payment function
 const handleDriverPayment = async ctx => {
-	console.log('🔵 handleDriverPayment FUNKSIYASI CHAQIRILDI')
-	console.log('User:', ctx.user?.telegramId)
+    console.log('🔵 handleDriverPayment FUNKSIYASI CHAQIRILDI')
+    console.log('User:', ctx.user?.telegramId)
 
-	try {
-		const user = ctx.user
+    try {
+        const user = ctx.user
 
-		if (!user) {
-			console.log('❌ User not found')
-			return
-		}
+        if (!user) {
+            console.log('❌ User not found')
+            return
+        }
 
-		// Avval oldingi xabarni o'chirishga urinamiz
-		try {
-			if (ctx.callbackQuery?.message?.message_id) {
-				await ctx.deleteMessage()
-			}
-		} catch (error) {
-			console.log('Delete previous message error:', error.message)
-		}
+        // Avval oldingi xabarni o'chirishga urinamiz
+        try {
+            if (ctx.callbackQuery?.message?.message_id) {
+                await ctx.deleteMessage()
+            }
+        } catch (error) {
+            console.log('Delete previous message error:', error.message)
+            // Xabarni o'chirishda xatolik bo'lsa ham davom etamiz
+        }
 
-		// Oddiy payment xabarini chiqaramiz
-		const message = getSimplePaymentMessage(user.language)
-		const keyboard = createSimplePaymentKeyboard(user.language)
+        // Oddiy payment xabarini chiqaramiz
+        const message = getSimplePaymentMessage(user.language)
+        const keyboard = createSimplePaymentKeyboard(user.language)
 
-		console.log('📤 Xabar yuborilmoqda...')
+        console.log('📤 Xabar yuborilmoqda...')
 
-		await ctx.reply(message, {
-			reply_markup: keyboard,
-			parse_mode: 'HTML'
-		})
+        await ctx.reply(message, {
+            reply_markup: keyboard,
+            parse_mode: 'HTML'
+        })
 
-		console.log('✅ Xabar muvaffaqiyatli yuborildi')
-	} catch (error) {
-		console.error('❌ handleDriverPayment da xatolik:', error)
+        console.log('✅ Xabar muvaffaqiyatli yuborildi')
+    } catch (error) {
+        console.error('❌ handleDriverPayment da xatolik:', error)
 
-		try {
-			await ctx.reply(
-				ctx.user?.language === 'uz'
-					? "❌ Xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
-					: '❌ Произошла ошибка. Пожалуйста, попробуйте еще раз.',
-				{ parse_mode: 'HTML' }
-			)
-		} catch (replyError) {
-			console.error('Failed to send error message:', replyError)
-		}
-	}
+        try {
+            await ctx.reply(
+                ctx.user?.language === 'uz'
+                    ? "❌ Xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
+                    : '❌ Произошла ошибка. Пожалуйста, попробуйте еще раз.',
+                { parse_mode: 'HTML' }
+            )
+        } catch (replyError) {
+            console.error('Failed to send error message:', replyError)
+        }
+    }
 }
 
 // ====================== PROFIL SAQLASH FUNKSIYASI ======================
@@ -308,10 +382,6 @@ const showInactiveDriverMenu = async (ctx, driver) => {
 				{
 					text: user.language === 'uz' ? '✏️ Profilni tahrirlash' : '✏️ Редактировать профиль',
 					callback_data: 'driver_edit'
-				},
-				{
-					text: user.language === 'uz' ? "📋 Ma'lumotlar" : '📋 Информация',
-					callback_data: 'driver_info'
 				}
 			],
 			[
