@@ -542,8 +542,8 @@ module.exports = {
 
 			const buttonText =
 				user.language === 'uz'
-					? `${index + 1}. ${driver.fullName} | ${carModelName}`
-					: `${index + 1}. ${driver.fullName} | ${carModelName}`
+					? `${index + 1}. ${driver.fullName}`
+					: `${index + 1}. ${driver.fullName}`
 
 			inlineKeyboard.push([
 				{
@@ -570,23 +570,23 @@ module.exports = {
 		})
 
 		// ============ HAYDOVCHILARGA XABAR YUBORISH ============
-		for (const driver of drivers) {
-			try {
-				await ctx.telegram.sendMessage(
-					driver.telegramId,
-					`🚕 Yangi buyurtma!\n\n` +
-						`Yo'lovchi: @${order.username || order.userId}\n` +
-						`📍 Chiqish: ${order.fromRegion}\n` +
-						`📍 Kirish: ${order.toRegion}\n` +
-						`👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
-						`📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
-						`${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n` : ''}` +
-						`📊 Status: Yangi`
-				)
-			} catch (error) {
-				console.error('Driver notification error:', error)
-			}
-		}
+		// for (const driver of drivers) {
+		// 	try {
+		// 		await ctx.telegram.sendMessage(
+		// 			driver.telegramId,
+		// 			`🚕 Yangi buyurtma!\n\n` +
+		// 				`Yo'lovchi: @${order.username || order.userId}\n` +
+		// 				`📍 Chiqish: ${order.fromRegion}\n` +
+		// 				`📍 Kirish: ${order.toRegion}\n` +
+		// 				`👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
+		// 				`📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
+		// 				`${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n` : ''}` +
+		// 				`📊 Status: Yangi`
+		// 		)
+		// 	} catch (error) {
+		// 		console.error('Driver notification error:', error)
+		// 	}
+		// }
 
 		// Asosiy menyuga qaytish
 		user.state = states.MAIN_MENU
