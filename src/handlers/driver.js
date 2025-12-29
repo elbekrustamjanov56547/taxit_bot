@@ -1728,29 +1728,13 @@ const showDriverMenu = async ctx => {
 				{
 					text: user.language === 'uz' ? '✏️ Profilni tahrirlash' : '✏️ Редактировать профиль',
 					callback_data: 'driver_edit'
-				},
-				{
-					text: user.language === 'uz' ? '📋 Buyurtmalarim' : '📋 Мои заказы',
-					callback_data: 'driver_orders'
 				}
+				
 			],
 			[
 				{
 					text: user.language === 'uz' ? "💳 To'lov qilish" : '💳 Оплатить',
 					callback_data: 'driver_payment'
-				},
-				{
-					text: user.language === 'uz' ? '📊 Statistika' : '📊 Статистика',
-					callback_data: 'driver_stats'
-				}
-			],
-			[
-				{
-					text:
-						user.language === 'uz'
-							? `🔔 ${driver.status === 'active' ? 'Nofaollashtirish' : 'Faollashtirish'}`
-							: `🔔 ${driver.status === 'active' ? 'Деактивировать' : 'Активировать'}`,
-					callback_data: 'driver_toggle_status'
 				}
 			],
 			[
