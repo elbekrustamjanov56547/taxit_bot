@@ -372,11 +372,10 @@ module.exports = {
 	// 	}
 	// },
 
-	// Haydovchi qidirish (yo'lovchilar soni hisobga olinadi)
+	// searchDrivers funksiyasini quyidagicha o'zgartiring:
 	searchDrivers: async (ctx, order) => {
 		const user = ctx.user
 
-		// Statusni 'searching' ga o'rnatish (agar allaqachon shunday bo'lmasa)
 		if (order.status !== 'searching') {
 			order.status = 'searching'
 			await order.save()
@@ -385,7 +384,7 @@ module.exports = {
 		console.log(`🔍 Qidirilayotgan yo'nalish: ${order.fromRegion} -> ${order.toRegion}`)
 		console.log(`👥 Yo'lovchilar soni: ${order.passengerCount}`)
 
-		// Haydovchilarni qidirish (yo'lovchilar soni hisobga olinadi)
+		// POPULATE QO'SHILDI
 		const drivers = await Driver.find({
 			fromRegion: order.fromRegion,
 			toRegion: order.toRegion,
@@ -397,41 +396,15 @@ module.exports = {
 				{ paidUntil: { $exists: false } }
 			]
 		})
+			.populate('carModel') // BU QATORNI QO'SHING
+			.populate('carType') // Agar carType ham bo'lsa
 
 		console.log(`📊 Topilgan haydovchilar: ${drivers.length} ta`)
 
 		if (drivers.length > 0) {
-			// Haydovchilarni ko'rsatish
 			await module.exports.showFoundDrivers(ctx, drivers, order)
 		} else {
-			// Haydovchi topilmadi
-			order.status = 'cancelled' // YOKI 'pending' o'rniga boshqa status
-			await order.save()
-
-			// Kanalga yuborish
-			await module.exports.sendToChannel(ctx, order)
-
-			const message =
-				user.language === 'uz'
-					? `❌ Siz tanlagan yo'nalish bo'yicha (${order.passengerCount} kishi uchun) hozircha mashina topilmadi.\n\n` +
-					  `📍 Chiqish: ${order.fromRegion}\n` +
-					  `📍 Kirish: ${order.toRegion}\n` +
-					  `👥 Yo'lovchilar: ${order.passengerCount} kishi\n\n` +
-					  `Buyurtmangiz adminlarga yuborildi, tez orada aloqaga chiqishadi.`
-					: `❌ По выбранному направлению (для ${order.passengerCount} человек) машины не найдены.\n\n` +
-					  `📍 Отправление: ${order.fromRegion}\n` +
-					  `📍 Прибытие: ${order.toRegion}\n` +
-					  `👥 Пассажиры: ${order.passengerCount} человек\n\n` +
-					  `Ваш заказ отправлен администраторам, они свяжутся с вами в ближайшее время.`
-
-			await ctx.reply(message)
-
-			// Asosiy menyuga qaytish
-			user.state = states.MAIN_MENU
-			await user.save()
-
-			const menuMessage = user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню'
-			await ctx.reply(menuMessage, keyboards.mainMenuKeyboard(user.language))
+			// ... qolgan kod
 		}
 	},
 
@@ -505,6 +478,108 @@ module.exports = {
 	// },
 
 	// Topilgan haydovchilarni ko'rsatish
+	// showFoundDrivers: async (ctx, drivers, order) => {
+	// 	const user = ctx.user
+
+	// 	// ============ ASOSIY XABAR: Inline keyboard bilan ============
+	// 	const orderMessage =
+	// 		user.language === 'uz'
+	// 			? `✅ Buyurtma qabul qilindi!\n\n` +
+	// 			  `📍 Chiqish: ${order.fromRegion}\n` +
+	// 			  `📍 Kirish: ${order.toRegion}\n` +
+	// 			  `👥 Yo'lovchilar soni: ${order.passengerCount} kishi\n` +
+	// 			  `📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
+	// 			  `${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n\n` : '\n'}` +
+	// 			  `Buyurtmangiz qabul qilindi va haydovchilar bilan bog'laning.\n` +
+	// 			  `✅ Topilgan haydovchilar:`
+	// 			: `✅ Заказ принят!\n\n` +
+	// 			  `📍 Отправление: ${order.fromRegion}\n` +
+	// 			  `📍 Прибытие: ${order.toRegion}\n` +
+	// 			  `👥 Количество пассажиров: ${order.passengerCount} человек\n` +
+	// 			  `📦 Посылка: ${order.hasParcel ? 'Да' : 'Нет'}\n` +
+	// 			  `${order.parcelDescription ? `📝 Описание: ${order.parcelDescription}\n\n` : '\n'}` +
+	// 			  `Ваш заказ принят, свяжитесь с водителями.\n` +
+	// 			  `✅ Найденные водители:`
+
+	// 	// ============ INLINE KEYBOARD YARATISH ============
+	// 	const inlineKeyboard = []
+	// 	let carModelDisplay = ''
+
+	// 	if (driver.carModel) {
+	// 		if (typeof driver.carModel === 'object' && driver.carModel.name) {
+	// 			// Agar carModel population qilingan object bo'lsa
+	// 			carModelDisplay =
+	// 				user.language === 'uz'
+	// 					? driver.carModel.name
+	// 					: driver.carModel.nameRu || driver.carModel.name
+	// 		} else {
+	// 			// Agar carModel oddiy string bo'lsa
+	// 			carModelDisplay = driver.carModel
+	// 		}
+	// 	}
+
+	// 	// Har bir haydovchi uchun tugma
+	// 	drivers.forEach((driver, index) => {
+	// 		const carModelName =
+	// 			driver.carModel && typeof driver.carModel === 'object'
+	// 				? user.language === 'uz'
+	// 					? driver.carModel.name
+	// 					: driver.carModel.nameRu
+	// 				: driver.carModel
+
+	// 		const buttonText =
+	// 			user.language === 'uz'
+	// 				? `${index + 1}. ${driver.fullName} || ${carModelDisplay || "Mashina nomi yo'q"}`
+	// 				: `${index + 1}. ${driver.fullName} || ${carModelDisplay || 'Нет названия машины'}`
+
+	// 		inlineKeyboard.push([
+	// 			{
+	// 				text: buttonText,
+	// 				callback_data: `select_driver_${driver._id}_${order._id}`
+	// 			}
+	// 		])
+	// 	})
+
+	// 	// Asosiy menyu tugmasi
+	// 	inlineKeyboard.push([
+	// 		{
+	// 			text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
+	// 			callback_data: 'main_menu'
+	// 		}
+	// 	])
+
+	// 	// Bitta xabarni inline keyboard bilan chiqarish
+	// 	await ctx.reply(orderMessage, {
+	// 		reply_markup: {
+	// 			inline_keyboard: inlineKeyboard
+	// 		},
+	// 		parse_mode: 'HTML'
+	// 	})
+
+	// 	// ============ HAYDOVCHILARGA XABAR YUBORISH ============
+	// 	// for (const driver of drivers) {
+	// 	// 	try {
+	// 	// 		await ctx.telegram.sendMessage(
+	// 	// 			driver.telegramId,
+	// 	// 			`🚕 Yangi buyurtma!\n\n` +
+	// 	// 				`Yo'lovchi: @${order.username || order.userId}\n` +
+	// 	// 				`📍 Chiqish: ${order.fromRegion}\n` +
+	// 	// 				`📍 Kirish: ${order.toRegion}\n` +
+	// 	// 				`👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
+	// 	// 				`📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
+	// 	// 				`${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n` : ''}` +
+	// 	// 				`📊 Status: Yangi`
+	// 	// 		)
+	// 	// 	} catch (error) {
+	// 	// 		console.error('Driver notification error:', error)
+	// 	// 	}
+	// 	// }
+
+	// 	// Asosiy menyuga qaytish
+	// 	user.state = states.MAIN_MENU
+	// 	await user.save()
+	// },
+
 	showFoundDrivers: async (ctx, drivers, order) => {
 		const user = ctx.user
 
@@ -533,17 +608,26 @@ module.exports = {
 
 		// Har bir haydovchi uchun tugma
 		drivers.forEach((driver, index) => {
-			const carModelName =
-				driver.carModel && typeof driver.carModel === 'object'
-					? user.language === 'uz'
-						? driver.carModel.name
-						: driver.carModel.nameRu
-					: driver.carModel
+			// Har bir haydovchi uchun mashina nomini olish
+			let carModelDisplay = ''
+
+			if (driver.carModel) {
+				if (typeof driver.carModel === 'object' && driver.carModel.name) {
+					// Agar carModel population qilingan object bo'lsa
+					carModelDisplay =
+						user.language === 'uz'
+							? driver.carModel.name
+							: driver.carModel.nameRu || driver.carModel.name
+				} else {
+					// Agar carModel oddiy string bo'lsa
+					carModelDisplay = driver.carModel
+				}
+			}
 
 			const buttonText =
 				user.language === 'uz'
-					? `${index + 1}. ${driver.fullName}`
-					: `${index + 1}. ${driver.fullName}`
+					? `${index + 1}. ${driver.fullName} || ${carModelDisplay || "Mashina nomi yo'q"}`
+					: `${index + 1}. ${driver.fullName} || ${carModelDisplay || 'Нет названия машины'}`
 
 			inlineKeyboard.push([
 				{
@@ -568,25 +652,6 @@ module.exports = {
 			},
 			parse_mode: 'HTML'
 		})
-
-		// ============ HAYDOVCHILARGA XABAR YUBORISH ============
-		// for (const driver of drivers) {
-		// 	try {
-		// 		await ctx.telegram.sendMessage(
-		// 			driver.telegramId,
-		// 			`🚕 Yangi buyurtma!\n\n` +
-		// 				`Yo'lovchi: @${order.username || order.userId}\n` +
-		// 				`📍 Chiqish: ${order.fromRegion}\n` +
-		// 				`📍 Kirish: ${order.toRegion}\n` +
-		// 				`👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
-		// 				`📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
-		// 				`${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n` : ''}` +
-		// 				`📊 Status: Yangi`
-		// 		)
-		// 	} catch (error) {
-		// 		console.error('Driver notification error:', error)
-		// 	}
-		// }
 
 		// Asosiy menyuga qaytish
 		user.state = states.MAIN_MENU
@@ -702,48 +767,187 @@ module.exports = {
 	// }
 
 	// Mening buyurtmalarim
+	// showMyOrders: async ctx => {
+	// 	const user = ctx.user
+
+	// 	const orders = await Order.find({ userId: user.telegramId }).sort({ createdAt: -1 }).limit(10)
+
+	// 	if (orders.length === 0) {
+	// 		const message =
+	// 			user.language === 'uz'
+	// 				? '📭 Sizda hali buyurtmalar mavjud emas.'
+	// 				: '📭 У вас пока нет заказов.'
+
+	// 		await ctx.reply(message)
+	// 		return
+	// 	}
+
+	// 	let message = user.language === 'uz' ? '📋 Mening buyurtmalarim:\n\n' : '📋 Мои заказы:\n\n'
+
+	// 	orders.forEach((order, index) => {
+	// 		const statusText = {
+	// 			searching: '🔍 Qidirilmoqda',
+	// 			selected: '👤 Tanlangan',
+	// 			confirmed: '✅ Tasdiqlangan',
+	// 			accepted: '✅ Qabul qilingan',
+	// 			rejected: '❌ Rad etilgan',
+	// 			cancelled: '❌ Bekor qilingan',
+	// 			completed: '✅ Yakunlangan'
+	// 		}
+
+	// 		const status =
+	// 			user.language === 'uz' ? statusText[order.status] || order.status : order.status
+
+	// 		message += `${index + 1}. ${order.fromRegion} → ${order.toRegion}\n`
+	// 		message += `   👥 Yo'lovchilar: ${order.passengerCount} kishi\n`
+	// 		message += `   📅 ${new Date(order.createdAt).toLocaleDateString('uz-UZ')}\n`
+	// 		message += `   📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n`
+	// 		message += `   📊 ${status}\n`
+	// 		message += `\n`
+	// 	})
+
+	// 	await ctx.reply(message)
+	// }
+
 	showMyOrders: async ctx => {
 		const user = ctx.user
+		const orderHandler = require('./order')
+		await orderHandler.showMyOrders(ctx, 1)
 
-		const orders = await Order.find({ userId: user.telegramId }).sort({ createdAt: -1 }).limit(10)
+		try {
+			// Sahifa raqami (default 1)
+			const page = parseInt(ctx.session?.myOrdersPage) || 1
+			const limit = 5 // Har sahifada 5 ta buyurtma
+			const skip = (page - 1) * limit
 
-		if (orders.length === 0) {
-			const message =
-				user.language === 'uz'
-					? '📭 Sizda hali buyurtmalar mavjud emas.'
-					: '📭 У вас пока нет заказов.'
+			// Jami buyurtmalar soni
+			const totalOrders = await Order.countDocuments({ userId: user.telegramId })
+			const totalPages = Math.ceil(totalOrders / limit)
 
-			await ctx.reply(message)
-			return
-		}
+			// Buyurtmalarni olish
+			const orders = await Order.find({ userId: user.telegramId })
+				.sort({ createdAt: -1 })
+				.skip(skip)
+				.limit(limit)
+				.populate('driverId')
 
-		let message = user.language === 'uz' ? '📋 Mening buyurtmalarim:\n\n' : '📋 Мои заказы:\n\n'
-
-		orders.forEach((order, index) => {
-			const statusText = {
-				searching: '🔍 Qidirilmoqda',
-				selected: '👤 Tanlangan',
-				confirmed: '✅ Tasdiqlangan',
-				accepted: '✅ Qabul qilingan',
-				rejected: '❌ Rad etilgan',
-				cancelled: '❌ Bekor qilingan',
-				completed: '✅ Yakunlangan'
+			if (orders.length === 0) {
+				await ctx.reply(
+					user.language === 'uz'
+						? '📭 Sizda hali buyurtmalar mavjud emas.'
+						: '📭 У вас пока нет заказов.'
+				)
+				return
 			}
 
-			const status =
-				user.language === 'uz' ? statusText[order.status] || order.status : order.status
+			// Xabar matni
+			let message =
+				user.language === 'uz'
+					? `📋 Mening buyurtmalarim (${page}/${totalPages} sahifa)\n\n`
+					: `📋 Мои заказы (${page}/${totalPages} страница)\n\n`
 
-			message += `${index + 1}. ${order.fromRegion} → ${order.toRegion}\n`
-			message += `   👥 Yo'lovchilar: ${order.passengerCount} kishi\n`
-			message += `   📅 ${new Date(order.createdAt).toLocaleDateString('uz-UZ')}\n`
-			message += `   📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n`
-			message += `   📊 ${status}\n`
-			message += `\n`
-		})
+			orders.forEach((order, index) => {
+				const statusText = {
+					searching: '🔍 Qidirilmoqda',
+					selected: '👤 Tanlangan',
+					confirmed: '✅ Tasdiqlangan',
+					accepted: '✅ Qabul qilingan',
+					rejected: '❌ Rad etilgan',
+					cancelled: '❌ Bekor qilingan',
+					completed: '✅ Yakunlangan'
+				}
 
-		await ctx.reply(message)
+				const status =
+					user.language === 'uz' ? statusText[order.status] || order.status : order.status
+
+				const driverName = order.driverId ? order.driverId.fullName : 'Tanlanmagan'
+				const orderNumber = skip + index + 1
+
+				message += `${orderNumber}. ${order.fromRegion} → ${order.toRegion}\n`
+				message += `   👥 ${order.passengerCount} kishi\n`
+				message += `   🚗 ${driverName}\n`
+				message += `   📅 ${new Date(order.createdAt).toLocaleDateString('uz-UZ')}\n`
+				message += `   📊 ${status}\n\n`
+			})
+
+			message +=
+				user.language === 'uz'
+					? `📊 Jami: ${totalOrders} ta buyurtma`
+					: `📊 Всего: ${totalOrders} заказов`
+
+			// Inline keyboard (sahifa navigatsiyasi)
+			const inlineKeyboard = []
+
+			// Sahifa navigatsiyasi
+			if (totalPages > 1) {
+				const paginationButtons = []
+
+				if (page > 1) {
+					paginationButtons.push({
+						text: user.language === 'uz' ? '⬅️ Oldingi' : '⬅️ Назад',
+						callback_data: `myorders_page_${page - 1}`
+					})
+				}
+
+				paginationButtons.push({
+					text: user.language === 'uz' ? `📄 ${page}/${totalPages}` : `📄 ${page}/${totalPages}`,
+					callback_data: 'current_page'
+				})
+
+				if (page < totalPages) {
+					paginationButtons.push({
+						text: user.language === 'uz' ? 'Keyingi ➡️' : 'Далее ➡️',
+						callback_data: `myorders_page_${page + 1}`
+					})
+				}
+
+				inlineKeyboard.push(paginationButtons)
+			}
+
+			// Asosiy menyu tugmasi
+			inlineKeyboard.push([
+				{
+					text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
+					callback_data: 'main_menu'
+				}
+			])
+
+			await ctx.reply(message, {
+				reply_markup: {
+					inline_keyboard: inlineKeyboard
+				}
+			})
+
+			// Sessionda sahifani saqlash
+			ctx.session.myOrdersPage = page
+		} catch (error) {
+			console.error('Show my orders error:', error)
+			await ctx.reply(
+				user.language === 'uz'
+					? "❌ Buyurtmalarni ko'rsatishda xatolik yuz berdi."
+					: '❌ Ошибка при отображении заказов.'
+			)
+		}
 	}
 }
+ handleMyOrdersPage: async (ctx, callbackData) => {
+        const user = ctx.user
+        const page = parseInt(callbackData.split('_')[2])
+
+        try {
+            // Yangi sahifani ko'rsatish
+            ctx.session.myOrdersPage = page
+            await this.showMyOrders(ctx)
+
+            // Callback query ni javoblash
+            await ctx.answerCbQuery()
+        } catch (error) {
+            console.error('My orders page navigation error:', error)
+            await ctx.answerCbQuery(
+                user.language === 'uz' ? '❌ Xatolik yuz berdi' : '❌ Произошла ошибка'
+            )
+        }
+    }
 
 // Yo'lovchi buyurtma yaratish
 const createPassengerOrder = async (ctx) => {

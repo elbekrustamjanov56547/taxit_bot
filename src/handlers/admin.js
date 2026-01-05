@@ -100,7 +100,7 @@ module.exports = {
 		drivers.forEach((driver, index) => {
 			keyboardButtons.push([
 				Markup.button.callback(
-					`${skip + index + 1}. ${driver.fullName}`,
+					`${skip + index + 1}. ${driver.fullName} || ${driver.carModel}`,
 					`admin_driver_${driver.telegramId}`
 				)
 			])
@@ -171,7 +171,6 @@ module.exports = {
 				  `🚗 Mashina: ${driver.carModel}\n` +
 				  `📅 Jo'natish vaqti: ${driver.departureTime}\n` +
 				  `💳 Balans: ${driver.balance || 0} so'm\n` +
-				  `⭐ Reyting: ${driver.rating || 0}/5.0\n` +
 				  `📦 Buyurtmalar: ${driverOrders} ta\n` +
 				  `🔔 Holat: ${driver.status === 'active' ? '✅ Faol' : '❌ Nofaol'}\n` +
 				  `💰 To'lov muddati: ${
@@ -185,7 +184,6 @@ module.exports = {
 				  `🚗 Машина: ${driver.carModel}\n` +
 				  `📅 Время отправления: ${driver.departureTime}\n` +
 				  `💳 Баланс: ${driver.balance || 0} сум\n` +
-				  `⭐ Рейтинг: ${driver.rating || 0}/5.0\n` +
 				  `📦 Заказы: ${driverOrders} шт\n` +
 				  `🔔 Статус: ${driver.status === 'active' ? '✅ Активен' : '❌ Неактивен'}\n` +
 				  `💰 Срок оплаты: ${

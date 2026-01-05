@@ -240,7 +240,6 @@ const saveProfileWithPayment = async ctx => {
 			departureTime: data.departureTime,
 			status: 'inactive',
 			balance: 0,
-			rating: 5.0,
 			totalOrders: 0,
 			createdAt: new Date(),
 			registrationStep: 'completed'
@@ -1769,7 +1768,6 @@ const showDriverMenu = async ctx => {
 			  carTypeInfo +
 			  `\n📍 Yo'nalish: ${driver.fromRegion} → ${driver.toRegion}\n` +
 			  `👥 Maksimal yo'lovchilar: ${driver.maxPassengers} kishi\n` +
-			  `📊 Reyting: ${driver.rating}/5.0\n` +
 			  `📦 Jami buyurtmalar: ${driver.totalOrders}\n` +
 			  `📋 Faol buyurtmalar: ${activeOrdersCount}\n` +
 			  `💰 Balans: ${driver.balance} so'm\n` +
@@ -1783,7 +1781,6 @@ const showDriverMenu = async ctx => {
 			  carTypeInfo +
 			  `\n📍 Направление: ${driver.fromRegion} → ${driver.toRegion}\n` +
 			  `👥 Максимум пассажиров: ${driver.maxPassengers} человек\n` +
-			  `📊 Рейтинг: ${driver.rating}/5.0\n` +
 			  `📦 Всего заказов: ${driver.totalOrders}\n` +
 			  `📋 Активные заказы: ${activeOrdersCount}\n` +
 			  `💰 Баланс: ${driver.balance} сум\n` +
@@ -1822,109 +1819,214 @@ const showDriverMenu = async ctx => {
 // ====================== BUYURTMA BERISH TIZIMI ======================
 
 // Buyurtmani saqlash va haydovchilarni qidirish
-const createOrderAndFindDrivers = async (ctx, orderData) => {
-	const user = ctx.user
+// const createOrderAndFindDrivers = async (ctx, orderData) => {
+// 	const user = ctx.user
 	
-	try {
-		// Buyurtmani yaratish
-		const order = new Order({
-			passengerId: user.telegramId,
-			fromRegion: orderData.fromRegion,
-			toRegion: orderData.toRegion,
-			passengerCount: orderData.passengerCount,
-			hasPackage: orderData.hasPackage || false,
-			comment: orderData.comment || '',
-			status: 'searching',
-			createdAt: new Date()
-		})
+// 	try {
+// 		// Buyurtmani yaratish
+// 		const order = new Order({
+// 			passengerId: user.telegramId,
+// 			fromRegion: orderData.fromRegion,
+// 			toRegion: orderData.toRegion,
+// 			passengerCount: orderData.passengerCount,
+// 			hasPackage: orderData.hasPackage || false,
+// 			comment: orderData.comment || '',
+// 			status: 'searching',
+// 			createdAt: new Date()
+// 		})
 		
-		await order.save()
+// 		await order.save()
 		
-		// Yo'nalish bo'yicha faol haydovchilarni qidirish
-		const drivers = await Driver.find({
-			status: 'active',
-			fromRegion: order.fromRegion,
-			toRegion: order.toRegion,
-			maxPassengers: { $gte: order.passengerCount },
-			serviceType: order.hasPackage ? { $in: ['parcel'] } : { $in: ['road', 'route'] }
-		})
-		.sort({ rating: -1, totalOrders: 1 })
-		.limit(10)
-		.populate('carModel')
-		.populate('carType')
+// 		// Yo'nalish bo'yicha faol haydovchilarni qidirish
+// 		const drivers = await Driver.find({
+// 			status: 'active',
+// 			fromRegion: order.fromRegion,
+// 			toRegion: order.toRegion,
+// 			maxPassengers: { $gte: order.passengerCount },
+// 			serviceType: order.hasPackage ? { $in: ['parcel'] } : { $in: ['road', 'route'] }
+// 		})
+// 		.limit(10)
+// 		.populate('carModel')
+// 		.populate('carType')
 		
-		if (drivers.length === 0) {
-			// Haydovchi topilmasa
-			await ctx.reply(
-				user.language === 'uz'
-					? `❌ Sizning yo'nalishingizda haydovchilar topilmadi.\n\n` +
-					  `📍 ${order.fromRegion} → ${order.toRegion}\n` +
-					  `👥 ${order.passengerCount} kishi\n\n` +
-					  `Birozdan so'ng qayta urinib ko'ring yoki boshqa yo'nalish tanlang.`
-					: `❌ В вашем направлении не найдено водителей.\n\n` +
-					  `📍 ${order.fromRegion} → ${order.toRegion}\n` +
-					  `👥 ${order.passengerCount} человек\n\n` +
-					  `Попробуйте позже или выберите другое направление.`
-			)
-			return
-		}
+// 		if (drivers.length === 0) {
+// 			// Haydovchi topilmasa
+// 			await ctx.reply(
+// 				user.language === 'uz'
+// 					? `❌ Sizning yo'nalishingizda haydovchilar topilmadi.\n\n` +
+// 					  `📍 ${order.fromRegion} → ${order.toRegion}\n` +
+// 					  `👥 ${order.passengerCount} kishi\n\n` +
+// 					  `Birozdan so'ng qayta urinib ko'ring yoki boshqa yo'nalish tanlang.`
+// 					: `❌ В вашем направлении не найдено водителей.\n\n` +
+// 					  `📍 ${order.fromRegion} → ${order.toRegion}\n` +
+// 					  `👥 ${order.passengerCount} человек\n\n` +
+// 					  `Попробуйте позже или выберите другое направление.`
+// 			)
+// 			return
+// 		}
 		
-		// Buyurtma qabul qilingan xabari
-		const orderMessage = user.language === 'uz'
-			? `✅ Buyurtma qabul qilindi!\n\n` +
-			  `📍 Chiqish: ${order.fromRegion}\n` +
-			  `📍 Kirish: ${order.toRegion}\n` +
-			  `👥 Yo'lovchilar soni: ${order.passengerCount} kishi\n` +
-			  `📦 Pochta: ${order.hasPackage ? 'Ha' : "Yo'q"}\n` +
-			  `📝 Tavsif: ${order.comment || "Yo'q"}\n\n` +
-			  `Buyurtmangiz qabul qilindi va haydovchilar bilan bog'laning.\n` +
-			  `✅ Topilgan haydovchilar:`
-			: `✅ Заказ принят!\n\n` +
-			  `📍 Отправление: ${order.fromRegion}\n` +
-			  `📍 Прибытие: ${order.toRegion}\n` +
-			  `👥 Количество пассажиров: ${order.passengerCount} человек\n` +
-			  `📦 Посылка: ${order.hasPackage ? 'Да' : 'Нет'}\n` +
-			  `📝 Описание: ${order.comment || 'Нет'}\n\n` +
-			  `Ваш заказ принят и связан с водителями.\n` +
-			  `✅ Найденные водители:`
+// 		// Buyurtma qabul qilingan xabari
+// 		const orderMessage = user.language === 'uz'
+// 			? `✅ Buyurtma qabul qilindi!\n\n` +
+// 			  `📍 Chiqish: ${order.fromRegion}\n` +
+// 			  `📍 Kirish: ${order.toRegion}\n` +
+// 			  `👥 Yo'lovchilar soni: ${order.passengerCount} kishi\n` +
+// 			  `📦 Pochta: ${order.hasPackage ? 'Ha' : "Yo'q"}\n` +
+// 			  `📝 Tavsif: ${order.comment || "Yo'q"}\n\n` +
+// 			  `Buyurtmangiz qabul qilindi va haydovchilar bilan bog'laning.\n` +
+// 			  `✅ Topilgan haydovchilar:`
+// 			: `✅ Заказ принят!\n\n` +
+// 			  `📍 Отправление: ${order.fromRegion}\n` +
+// 			  `📍 Прибытие: ${order.toRegion}\n` +
+// 			  `👥 Количество пассажиров: ${order.passengerCount} человек\n` +
+// 			  `📦 Посылка: ${order.hasPackage ? 'Да' : 'Нет'}\n` +
+// 			  `📝 Описание: ${order.comment || 'Нет'}\n\n` +
+// 			  `Ваш заказ принят и связан с водителями.\n` +
+// 			  `✅ Найденные водители:`
 		
-		// Inline keyboard yaratish (haydovchilar ro'yxati)
-		const driverButtons = drivers.map((driver, index) => {
-			const carModelName = driver.carModel && typeof driver.carModel === 'object' 
-				? (user.language === 'uz' ? driver.carModel.name : driver.carModel.nameRu)
-				: driver.carModel
+// 		// Inline keyboard yaratish (haydovchilar ro'yxati)
+// 		const driverButtons = drivers.map((driver, index) => {
+// 			const carModelName = driver.carModel && typeof driver.carModel === 'object' 
+// 				? (user.language === 'uz' ? driver.carModel.name : driver.carModel.nameRu)
+// 				: driver.carModel
 			
-			const buttonText = user.language === 'uz'
-				? `${index + 1}. ${driver.fullName}`
-				: `${index + 1}. ${driver.fullName}`
+// 			const buttonText = user.language === 'uz'
+// 				? `${index + 1}. ${driver.fullName} || ${dirver.carModel}`
+// 				: `${index + 1}. ${driver.fullName} || ${carModelName}`
 			
-			return [{
-				text: buttonText,
-				callback_data: `select_driver_${driver._id}_${order._id}`
-			}]
-		})
+// 			return [{
+// 				text: buttonText,
+// 				callback_data: `select_driver_${driver._id}_${order._id}`
+// 			}]
+// 		})
 		
-		// Asosiy menyu tugmasi
-		driverButtons.push([{
-			text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-			callback_data: 'main_menu'
-		}])
+// 		// Asosiy menyu tugmasi
+// 		driverButtons.push([{
+// 			text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
+// 			callback_data: 'main_menu'
+// 		}])
 		
-		await ctx.reply(orderMessage, {
-			reply_markup: {
-				inline_keyboard: driverButtons
-			},
-			parse_mode: 'HTML'
-		})
+// 		await ctx.reply(orderMessage, {
+// 			reply_markup: {
+// 				inline_keyboard: driverButtons
+// 			},
+// 			parse_mode: 'HTML'
+// 		})
 		
-	} catch (error) {
-		console.error('Create order error:', error)
-		await ctx.reply(
-			user.language === 'uz'
-				? '❌ Buyurtma yaratishda xatolik yuz berdi.'
-				: '❌ Ошибка при создании заказа.'
-		)
-	}
+// 	} catch (error) {
+// 		console.error('Create order error:', error)
+// 		await ctx.reply(
+// 			user.language === 'uz'
+// 				? '❌ Buyurtma yaratishda xatolik yuz berdi.'
+// 				: '❌ Ошибка при создании заказа.'
+// 		)
+// 	}
+// }
+
+// Buyurtmani saqlash va haydovchilarni qidirish
+const createOrderAndFindDrivers = async (ctx, orderData) => {
+    const user = ctx.user
+    
+    try {
+        // Buyurtmani yaratish
+        const order = new Order({
+            passengerId: user.telegramId,
+            fromRegion: orderData.fromRegion,
+            toRegion: orderData.toRegion,
+            passengerCount: orderData.passengerCount,
+            hasPackage: orderData.hasPackage || false,
+            comment: orderData.comment || '',
+            status: 'searching',
+            createdAt: new Date()
+        })
+        
+        await order.save()
+        
+        // Yo'nalish bo'yicha faol haydovchilarni qidirish
+        const drivers = await Driver.find({
+            status: 'active',
+            fromRegion: order.fromRegion,
+            toRegion: order.toRegion,
+            maxPassengers: { $gte: order.passengerCount },
+            serviceType: order.hasPackage ? { $in: ['parcel'] } : { $in: ['road', 'route'] }
+        })
+        .limit(10)
+        .populate('carModel')
+        .populate('carType')
+        
+        if (drivers.length === 0) {
+            // Haydovchi topilmasa
+            await ctx.reply(
+                user.language === 'uz'
+                    ? `❌ Sizning yo'nalishingizda haydovchilar topilmadi.\n\n` +
+                      `📍 ${order.fromRegion} → ${order.toRegion}\n` +
+                      `👥 ${order.passengerCount} kishi\n\n` +
+                      `Birozdan so'ng qayta urinib ko'ring yoki boshqa yo'nalish tanlang.`
+                    : `❌ В вашем направлении не найдено водителей.\n\n` +
+                      `📍 ${order.fromRegion} → ${order.toRegion}\n` +
+                      `👥 ${order.passengerCount} человек\n\n` +
+                      `Попробуйте позже или выберите другое направление.`
+            )
+            return
+        }
+        
+        // Buyurtma qabul qilingan xabari
+        const orderMessage = user.language === 'uz'
+            ? `✅ Buyurtma qabul qilindi!\n\n` +
+              `📍 Chiqish: ${order.fromRegion}\n` +
+              `📍 Kirish: ${order.toRegion}\n` +
+              `👥 Yo'lovchilar soni: ${order.passengerCount} kishi\n` +
+              `📦 Pochta: ${order.hasPackage ? 'Ha' : "Yo'q"}\n` +
+              `📝 Tavsif: ${order.comment || "Yo'q"}\n\n` +
+              `Buyurtmangiz qabul qilindi va haydovchilar bilan bog'laning.\n` +
+              `✅ Topilgan haydovchilar:`
+            : `✅ Заказ принят!\n\n` +
+              `📍 Отправление: ${order.fromRegion}\n` +
+              `📍 Прибытие: ${order.toRegion}\n` +
+              `👥 Количество пассажиров: ${order.passengerCount} человек\n` +
+              `📦 Посылка: ${order.hasPackage ? 'Да' : 'Нет'}\n` +
+              `📝 Описание: ${order.comment || 'Нет'}\n\n` +
+              `Ваш заказ принят и связан с водителями.\n` +
+              `✅ Найденные водители:`
+        
+        // Inline keyboard yaratish (haydovchilar ro'yxati)
+        const driverButtons = drivers.map((driver, index) => {
+            const carModelName = driver.carModel && typeof driver.carModel === 'object' 
+                ? (user.language === 'uz' ? driver.carModel.name : driver.carModel.nameRu)
+                : driver.carModel
+            
+            // XATOLIK Tuzatilgan qism: "dirver" o'rniga "driver"
+            const buttonText = user.language === 'uz'
+                ? `${index + 1}. ${driver.fullName} || ${driver.carModel}`
+                : `${index + 1}. ${driver.fullName} || ${carModelName}`
+            
+            return [{
+                text: buttonText,
+                callback_data: `select_driver_${driver._id}_${order._id}`
+            }]
+        })
+        
+        // Asosiy menyu tugmasi
+        driverButtons.push([{
+            text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
+            callback_data: 'main_menu'
+        }])
+        
+        await ctx.reply(orderMessage, {
+            reply_markup: {
+                inline_keyboard: driverButtons
+            },
+            parse_mode: 'HTML'
+        })
+        
+    } catch (error) {
+        console.error('Create order error:', error)
+        await ctx.reply(
+            user.language === 'uz'
+                ? '❌ Buyurtma yaratishda xatolik yuz berdi.'
+                : '❌ Ошибка при создании заказа.'
+        )
+    }
 }
 
 // Haydovchini tanlash
@@ -1973,14 +2075,12 @@ const selectDriver = async (ctx, callbackData) => {
 			  `🚗 Mashina: ${carModelName}${carTypeName ? ` (${carTypeName})` : ''}\n` +
 			  `👥 Sig'im: ${driver.maxPassengers} kishi\n` +
 			  `📞 Telefon: ${driver.phone}\n` +
-			  `⭐ Reyting: ${driver.rating}/5.0\n\n` +
 			  `Haydovchi bilan bog'laning va jo'nash vaqtini kelishing.`
 			: `✅ Водитель выбран!\n\n` +
 			  `👤 Имя: ${driver.fullName}\n` +
 			  `🚗 Машина: ${carModelName}${carTypeName ? ` (${carTypeName})` : ''}\n` +
 			  `👥 Вместимость: ${driver.maxPassengers} человек\n` +
 			  `📞 Телефон: ${driver.phone}\n` +
-			  `⭐ Рейтинг: ${driver.rating}/5.0\n\n` +
 			  `Свяжитесь с водителем и договоритесь о времени отправления.`
 		
 		// Yo'lovchi uchun keyboard (buyurtma berish tugmasi)
@@ -2201,126 +2301,172 @@ const selectDriver = async (ctx, callbackData) => {
 // }
 
 // ============ BUYURTMA TASDIQLASH ============
- const confirmOrder = async (ctx, callbackData) => {
-	const user = ctx.user
-	const orderId = callbackData.split('_')[2]
+//  const confirmOrder = async (ctx, callbackData) => {
+// 	const user = ctx.user
+// 	const orderId = callbackData.split('_')[2]
 
-	try {
-		console.log(`✅ confirm_order: orderId=${orderId}`)
+// 	try {
+// 		console.log(`✅ confirm_order: orderId=${orderId}`)
 
-		const order = await Order.findById(orderId).populate('driverId')
+// 		const order = await Order.findById(orderId).populate('driverId')
 
-		if (!order) {
-			await ctx.reply(user.language === 'uz' ? '❌ Buyurtma topilmadi.' : '❌ Заказ не найден.')
-			return
-		}
+// 		if (!order) {
+// 			await ctx.reply(user.language === 'uz' ? '❌ Buyurtma topilmadi.' : '❌ Заказ не найден.')
+// 			return
+// 		}
 
-		if (order.userId !== user.telegramId) {
-			await ctx.reply(
-				user.language === 'uz'
-					? '❌ Siz bu buyurtmani tasdiqlay olmaysiz.'
-					: '❌ Вы не можете подтвердить этот заказ.'
-			)
-			return
-		}
+// 		if (order.userId !== user.telegramId) {
+// 			await ctx.reply(
+// 				user.language === 'uz'
+// 					? '❌ Siz bu buyurtmani tasdiqlay olmaysiz.'
+// 					: '❌ Вы не можете подтвердить этот заказ.'
+// 			)
+// 			return
+// 		}
 
-		order.status = 'confirmed'
-		await order.save()
+// 		order.status = 'confirmed'
+// 		await order.save()
 
-		// Yo'lovchiga xabar (haydovchi ma'lumotlari bilan)
-		const carModelName = order.driverId.carModel && typeof order.driverId.carModel === 'object'
-			? user.language === 'uz'
-				? order.driverId.carModel.name
-				: order.driverId.carModel.nameRu
-			: order.driverId.carModel
+// 		// Yo'lovchiga xabar (haydovchi ma'lumotlari bilan)
+// 		const carModelName = order.driverId.carModel && typeof order.driverId.carModel === 'object'
+// 			? user.language === 'uz'
+// 				? order.driverId.carModel.name
+// 				: order.driverId.carModel.nameRu
+// 			: order.driverId.carModel
 
-		const driverInfoForPassenger = user.language === 'uz'
-			? `✅ Buyurtma rasmiy tasdiqlandi!\n\n` +
-			  `👤 **Haydovchi ma'lumotlari:**\n` +
-			  `• Ism: ${order.driverId.fullName}\n` +
-			  `• Telefon: ${order.driverId.phone}\n` +
-			  `• Mashina: ${carModelName}\n` +
-			  `• Reyting: ${order.driverId.rating || '5.0'}/5.0\n\n` +
-			  `📞 Haydovchi bilan bog'laning va jo'nash vaqtini kelishing!`
-			: `✅ Заказ официально подтвержден!\n\n` +
-			  `👤 **Информация о водителе:**\n` +
-			  `• Имя: ${order.driverId.fullName}\n` +
-			  `• Телефон: ${order.driverId.phone}\n` +
-			  `• Машина: ${carModelName}\n` +
-			  `• Рейтинг: ${order.driverId.rating || '5.0'}/5.0\n\n` +
-			  `📞 Свяжитесь с водителем и договоритесь о времени отправления!`
+// 		const driverInfoForPassenger = user.language === 'uz'
+// 			? `✅ Buyurtma rasmiy tasdiqlandi!\n\n` +
+// 			  `👤 **Haydovchi ma'lumotlari:**\n` +
+// 			  `• Ism: ${order.driverId.fullName}\n` +
+// 			  `• Telefon: ${order.driverId.phone}\n` +
+// 			  `• Mashina: ${carModelName}\n` +
+// 			  `📞 Haydovchi bilan bog'laning va jo'nash vaqtini kelishing!`
+// 			: `✅ Заказ официально подтвержден!\n\n` +
+// 			  `👤 **Информация о водителе:**\n` +
+// 			  `• Имя: ${order.driverId.fullName}\n` +
+// 			  `• Телефон: ${order.driverId.phone}\n` +
+// 			  `• Машина: ${carModelName}\n` +
+// 			  `📞 Свяжитесь с водителем и договоритесь о времени отправления!`
 
-		await ctx.reply(driverInfoForPassenger, { 
-			parse_mode: 'HTML',
-			disable_web_page_preview: true 
-		})
+// 		await ctx.reply(driverInfoForPassenger, { 
+// 			parse_mode: 'HTML',
+// 			disable_web_page_preview: true 
+// 		})
 
-		// ============ HAYDOVCHIGA YO'LOVCHI MA'LUMOTLARI ============
-		if (order.driverId) {
-			const passenger = await User.findOne({ telegramId: order.userId })
+// 		// ============ HAYDOVCHIGA YO'LOVCHI MA'LUMOTLARI ============
+// 		if (order.driverId) {
+// 			const passenger = await User.findOne({ telegramId: order.userId })
 			
-			const passengerName = passenger?.fullName || passenger?.firstName || 'Nomalum'
-			const passengerUsername = passenger?.username ? '@' + passenger.username : 'Yo`q'
-			const passengerPhone = passenger?.phone || 'Korsatilmagan'
+// 			const passengerName = passenger?.fullName || passenger?.firstName || 'Nomalum'
+// 			const passengerUsername = passenger?.username ? '@' + passenger.username : 'Yo`q'
+// 			const passengerPhone = passenger?.phone || 'Korsatilmagan'
 
-			const orderForDriverMessage = user.language === 'uz'
-    ? `🚖 Sizga yangi buyurtma biriktirildi!\n\n` +
-      `📋 **Buyurtma ma'lumotlari:**\n` +
-      `📍 Yo'nalish: ${order.fromRegion} → ${order.toRegion}\n` +
-      `👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
-      `📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
-      `📝 Tavsif: ${order.parcelDescription || "Yo'q"}\n\n` +
-      `👤 **Yo'lovchi ma'lumotlari:**\n` +
-      `• Ism: ${passengerName}\n` +
-      `• Username: ${passengerUsername}\n` +
-      `• Telefon: ${passengerPhone}\n\n` +
-      `✅ Yo'lovchi buyurtmani tasdiqladi. Endi siz qabul qilishingiz mumkin.`
-    : `🚖 Вам назначен новый заказ!\n\n` +
-      `📋 **Информация о заказе:**\n` +
-      `📍 Отправление: ${order.fromRegion}\n` +
-      `📍 Прибытие: ${order.toRegion}\n` +
-      `👥 Пассажиры: ${order.passengerCount} человек\n` +
-      `📦 Посылка: ${order.hasParcel ? 'Да' : 'Нет'}\n` +
-      `📝 Описание: ${order.parcelDescription || 'Нет'}\n\n` +
-      `👤 **Информация о пассажире:**\n` +
-      `• Имя: ${passengerName}\n` +
-      `• Username: ${passengerUsername}\n` +
-      `• Телефон: ${passengerPhone}\n\n` +
-      `✅ Пассажир подтвердил заказ. Теперь вы можете принять его.`
+// 			const orderForDriverMessage = user.language === 'uz'
+//     ? `🚖 Sizga yangi buyurtma biriktirildi!\n\n` +
+//       `📋 **Buyurtma ma'lumotlari:**\n` +
+//       `📍 Yo'nalish: ${order.fromRegion} → ${order.toRegion}\n` +
+//       `👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
+//       `📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
+//       `📝 Tavsif: ${order.parcelDescription || "Yo'q"}\n\n` +
+//       `👤 **Yo'lovchi ma'lumotlari:**\n` +
+//       `• Ism: ${passengerName}\n` +
+//       `• Username: ${passengerUsername}\n` +
+//       `• Telefon: ${passengerPhone}\n\n` +
+//       `✅ Yo'lovchi buyurtmani tasdiqladi. Endi siz qabul qilishingiz mumkin.`
+//     : `🚖 Вам назначен новый заказ!\n\n` +
+//       `📋 **Информация о заказе:**\n` +
+//       `📍 Отправление: ${order.fromRegion}\n` +
+//       `📍 Прибытие: ${order.toRegion}\n` +
+//       `👥 Пассажиры: ${order.passengerCount} человек\n` +
+//       `📦 Посылка: ${order.hasParcel ? 'Да' : 'Нет'}\n` +
+//       `📝 Описание: ${order.parcelDescription || 'Нет'}\n\n` +
+//       `👤 **Информация о пассажире:**\n` +
+//       `• Имя: ${passengerName}\n` +
+//       `• Username: ${passengerUsername}\n` +
+//       `• Телефон: ${passengerPhone}\n\n` +
+//       `✅ Пассажир подтвердил заказ. Теперь вы можете принять его.`
 
 
-await ctx.telegram.sendMessage(order.driverId.telegramId, orderForDriverMessage, {
-    reply_markup: driverKeyboard,
-    parse_mode: 'HTML',
-    disable_web_page_preview: true
-})
+// await ctx.telegram.sendMessage(order.driverId.telegramId, orderForDriverMessage, {
+//     reply_markup: driverKeyboard,
+//     parse_mode: 'HTML',
+//     disable_web_page_preview: true
+// })
 				
-			const driverKeyboard = {
-				inline_keyboard: [
-					[
-						{
-							text: user.language === 'uz' ? '✅ Qabul qilish' : '✅ Принять',
-							callback_data: `driver_accept_${order._id}`
-						}
-					],
-					[
-						{
-							text: user.language === 'uz' ? '❌ Rad etish' : '❌ Отклонить',
-							callback_data: `driver_reject_${order._id}`
-						}
-					]
-				]
-			}
-		}
-	} catch (error) {
-		console.error('Confirm order error:', error)
-		await ctx.reply(
-			user.language === 'uz'
-				? '❌ Buyurtma tasdiqlashda xatolik yuz berdi.'
-				: '❌ Ошибка при подтверждении заказа.'
-		)
-	}
-}
+// 			const driverKeyboard = {
+// 				inline_keyboard: [
+// 					[
+// 						{
+// 							text: user.language === 'uz' ? '✅ Qabul qilish' : '✅ Принять',
+// 							callback_data: `driver_accept_${order._id}`
+// 						}
+// 					],
+// 					[
+// 						{
+// 							text: user.language === 'uz' ? '❌ Rad etish' : '❌ Отклонить',
+// 							callback_data: `driver_reject_${order._id}`
+// 						}
+// 					]
+// 				]
+// 			}
+// 		}
+// 	} catch (error) {
+// 		console.error('Confirm order error:', error)
+// 		await ctx.reply(
+// 			user.language === 'uz'
+// 				? '❌ Buyurtma tasdiqlashda xatolik yuz berdi.'
+// 				: '❌ Ошибка при подтверждении заказа.'
+// 		)
+// 	}
+// }
+
+const confirmOrder = async (ctx, callbackData) => {
+        const user = ctx.user
+        const orderId = callbackData.split('_')[2]
+
+        try {
+            const order = await Order.findById(orderId).populate('driverId')
+
+            if (!order) {
+                await ctx.reply(user.language === 'uz' ? '❌ Buyurtma topilmadi.' : '❌ Заказ не найден.')
+                return
+            }
+
+            if (order.userId !== user.telegramId) {
+                await ctx.reply(
+                    user.language === 'uz'
+                        ? '❌ Siz bu buyurtmani tasdiqlay olmaysiz.'
+                        : '❌ Вы не можете подтвердить этот заказ.'
+                )
+                return
+            }
+
+            order.status = 'confirmed'
+            await order.save()
+
+            await ctx.reply(
+                user.language === 'uz'
+                    ? "✅ Buyurtma rasmiy tasdiqlandi! Haydovchi bilan bog'laning."
+                    : '✅ Заказ официально подтвержден! Свяжитесь с водителем.'
+            )
+
+            if (order.driverId) {
+                await ctx.telegram.sendMessage(
+                    order.driverId.telegramId,
+                    user.language === 'uz'
+                        ? "✅ Yo'lovchi buyurtmani tasdiqladi! Endi siz jo'nash vaqtini kelishingiz mumkin."
+                        : '✅ Пассажир подтвердил заказ! Теперь вы можете договориться о времени отправления.'
+                )
+            }
+        } catch (error) {
+            console.error('Confirm order error:', error)
+            await ctx.reply(
+                user.language === 'uz'
+                    ? '❌ Buyurtma tasdiqlashda xatolik yuz berdi.'
+                    : '❌ Ошибка при подтверждении заказа.'
+            )
+        }
+    }
 // Buyurtmani bekor qilish
 const cancelOrder = async (ctx, callbackData) => {
 	const user = ctx.user
@@ -2633,7 +2779,6 @@ const cancelOrder = async (ctx, callbackData) => {
 			  `• Username: @${order.driverId.username || 'Nomalum'}\n` +
 			  `• Telefon: ${order.driverId.phone}\n` +
 			  `• Mashina: ${carModelName}\n` +
-			  `• Reyting: ${order.driverId.rating || '5.0'}/5.0\n\n` +
 			  `📋 **Buyurtma ma'lumotlari:**\n` +
 			  `📍 Yo'nalish: ${order.fromRegion} → ${order.toRegion}\n` +
 			  `👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
@@ -2647,7 +2792,6 @@ const cancelOrder = async (ctx, callbackData) => {
 			  `• Username: @${order.driverId.username || 'Неизвестно'}\n` +
 			  `• Телефон: ${order.driverId.phone}\n` +
 			  `• Машина: ${carModelName}\n` +
-			  `• Рейтинг: ${order.driverId.rating || '5.0'}/5.0\n\n` +
 			  `📋 **Информация о заказе:**\n` +
 			  `📍 Направление: ${order.fromRegion} → ${order.toRegion}\n` +
 			  `👥 Пассажиры: ${order.passengerCount} человек\n` +
@@ -2789,9 +2933,8 @@ module.exports = {
 	saveEditedTime,
 	createOrderAndFindDrivers,
 	selectDriver,
-	confirmOrder ,
-	cancelOrder ,
-	driverAcceptOrder ,
-	driverRejectOrder ,
-	
+	confirmOrder,
+	cancelOrder,
+	driverAcceptOrder,
+	driverRejectOrder
 }
