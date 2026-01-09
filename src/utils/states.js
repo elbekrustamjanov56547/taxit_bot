@@ -46,5 +46,9 @@ module.exports = {
 	DRIVER_EDIT_ROUTE_TO: 'driver_edit_route_to',
 	DRIVER_EDIT_SERVICES: 'driver_edit_services',
 	DRIVER_EDIT_TIME_DATE: 'driver_edit_time_date',
-	DRIVER_EDIT_TIME_TIME: 'driver_edit_time_time'
+	DRIVER_EDIT_TIME_TIME: 'driver_edit_time_time',
+	// states.js fayliga qo'shing:
+	DRIVER_REG_WORK_HOURS: 'driver_reg_work_hours',
+	DRIVER_REG_WORK_HOURS_CUSTOM: 'driver_reg_work_hours_custom',
+	DRIVER_REG_TIME_INPUT: 'driver_reg_time_input'
 }

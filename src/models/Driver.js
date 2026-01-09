@@ -51,11 +51,11 @@ const driverSchema = new mongoose.Schema({
 	status: {
 		type: String,
 		enum: ['active', 'inactive'],
-		default: 'inactive'
+		default: 'active'
 	},
 	balance: {
 		type: Number,
-		default: 0
+		default: 100000
 	},
 	totalOrders: {
 		type: Number,

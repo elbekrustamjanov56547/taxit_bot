@@ -361,6 +361,121 @@ module.exports = {
 		])
 	},
 
+	// main.js fayliga qo'shing:
+	// keyboards/main.js fayliga qo'shamiz:
+	// workHoursKeyboard: (lang = 'uz') => {
+	//     return {
+	//         inline_keyboard: [
+	//             [
+	//                 {
+	//                     text: lang === 'uz' ? '🌅 10:00 - 18:00 (Kunduzi)' : '🌅 10:00 - 18:00 (Дневное)',
+	//                     callback_data: 'work_1000_1800'
+	//                 }
+	//             ],
+	//             [
+	//                 {
+	//                     text: lang === 'uz' ? '🌆 18:00 - 02:00 (Kechqurun)' : '🌆 18:00 - 02:00 (Вечернее)',
+	//                     callback_data: 'work_1800_0200'
+	//                 }
+	//             ],
+	//             [
+	//                 {
+	//                     text: lang === 'uz' ? '🌃 02:00 - 10:00 (Tungi)' : '🌃 02:00 - 10:00 (Ночное)',
+	//                     callback_data: 'work_0200_1000'
+	//                 }
+	//             ],
+	//             [
+	//                 {
+	//                     text: lang === 'uz' ? '✏️ Qo\'lda kiritish' : '✏️ Ввести вручную',
+	//                     callback_data: 'work_custom'
+	//                 }
+	//             ]
+	//         ]
+	//     }
+	// },
+
+	// keyboards/main.js faylida workHoursKeyboard funksiyasini tekshiring:
+
+	workHoursKeyboard: (lang = 'uz') => {
+		return Markup.inlineKeyboard([
+			[
+				Markup.button.callback(
+					lang === 'uz' ? '🌅 10:00 - 18:00 (Kunduzi)' : '🌅 10:00 - 18:00 (Дневное)',
+					'work_1000_1800'
+				)
+			],
+			[
+				Markup.button.callback(
+					lang === 'uz' ? '🌆 18:00 - 02:00 (Kechqurun)' : '🌆 18:00 - 02:00 (Вечернее)',
+					'work_1800_0200'
+				)
+			],
+			[
+				Markup.button.callback(
+					lang === 'uz' ? '🌃 02:00 - 10:00 (Tungi)' : '🌃 02:00 - 10:00 (Ночное)',
+					'work_0200_1000'
+				)
+			],
+			[
+				Markup.button.callback(
+					lang === 'uz' ? "✏️ Qo'lda kiritish" : '✏️ Ввести вручную',
+					'work_custom'
+				)
+			]
+		])
+	},
+	customWorkHoursKeyboard: (lang = 'uz') => {
+		return {
+			inline_keyboard: [
+				[
+					{
+						text: lang === 'uz' ? '08:00 - 20:00' : '08:00 - 20:00',
+						callback_data: 'work_custom_08:00_20:00'
+					},
+					{
+						text: lang === 'uz' ? '22:00 - 06:00' : '22:00 - 06:00',
+						callback_data: 'work_custom_22:00_06:00'
+					}
+				],
+				[
+					{
+						text: lang === 'uz' ? '09:00 - 17:00' : '09:00 - 17:00',
+						callback_data: 'work_custom_09:00_17:00'
+					},
+					{
+						text: lang === 'uz' ? '07:00 - 19:00' : '07:00 - 19:00',
+						callback_data: 'work_custom_07:00_19:00'
+					}
+				],
+				[
+					{
+						text: lang === 'uz' ? '✏️ Boshqa vaqt kiritish' : '✏️ Другое время',
+						callback_data: 'work_custom_enter'
+					}
+				]
+			]
+		}
+	},
+	// keyboards/main.js faylida confirmKeyboard funksiyasi:
+	confirmKeyboard: (lang = 'uz') => {
+		const texts = {
+			uz: {
+				confirm: "✅ Ha, to'g'ri",
+				cancel: "❌ Yo'q, o'zgartirish"
+			},
+			ru: {
+				confirm: '✅ Да, верно',
+				cancel: '❌ Нет, изменить'
+			}
+		}
+
+		const t = texts[lang]
+
+		return Markup.inlineKeyboard([
+			[Markup.button.callback(t.confirm, 'confirm')],
+			[Markup.button.callback(t.cancel, 'cancel')]
+		])
+	},
 	passengerCountKeyboard,
 	maxPassengersKeyboard
 }
