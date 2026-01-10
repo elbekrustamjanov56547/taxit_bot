@@ -4686,6 +4686,175 @@ const showWorkHoursSelection = async (ctx) => {
 };
 
 // ====================== PROFILNI TO'LIQ SAQLASH ======================
+// const completeDriverRegistration = async ctx => {
+// 	const user = ctx.user
+
+// 	console.log('🔵 ========== completeDriverRegistration START ==========')
+// 	console.log('👤 User ID:', user.telegramId)
+
+// 	if (!ctx.session || !ctx.session.driverData) {
+// 		console.log("❌ Session yoki driverData yo'q")
+// 		await ctx.reply(
+// 			user.language === 'uz'
+// 				? "❌ Ma'lumotlar topilmadi. Iltimos, qayta boshlang."
+// 				: '❌ Данные не найдены. Пожалуйста, начните заново.'
+// 		)
+// 		user.state = states.MAIN_MENU
+// 		await user.save()
+// 		return
+// 	}
+
+// 	const data = ctx.session.driverData
+
+// 	try {
+// 		// Avval mavjud haydovchini tekshirish
+// 		const existingDriver = await Driver.findOne({ telegramId: user.telegramId })
+
+// 		if (existingDriver) {
+// 			console.log('⚠️ Mavjud driver topildi:', existingDriver._id)
+// 			await ctx.reply(
+// 				user.language === 'uz'
+// 					? "❌ Siz allaqachon haydovchi sifatida ro'yxatdan o'tgansiz"
+// 					: '❌ Вы уже зарегистрированы как водитель'
+// 			)
+// 			user.state = states.MAIN_MENU
+// 			await user.save()
+// 			return
+// 		}
+
+// 		// Car model ni tekshirish
+// 		let carModelId = data.carId
+// 		if (!carModelId && data.carModel) {
+// 			console.log('🔍 Car model qidirilmoqda:', data.carModel)
+// 			const car = await Car.findOne({
+// 				$or: [{ name: data.carModel }, { nameRu: data.carModel }]
+// 			})
+
+// 			if (car) {
+// 				carModelId = car._id
+// 				console.log('✅ Car model topildi:', car.name)
+// 			} else {
+// 				// Yangi car model yaratish
+// 				console.log('➕ Yangi car model yaratilmoqda:', data.carModel)
+// 				const newCar = new Car({
+// 					name: data.carModel,
+// 					nameRu: data.carModel,
+// 					isActive: true
+// 				})
+// 				await newCar.save()
+// 				carModelId = newCar._id
+// 				console.log('✅ Yangi car model yaratildi:', data.carModel)
+// 			}
+// 		}
+
+// 		// Haydovchi ma'lumotlarini tayyorlash
+// 		const driverData = {
+// 			telegramId: user.telegramId,
+// 			fullName: data.fullName,
+// 			phone: data.phone,
+// 			fromRegion: data.fromRegion,
+// 			toRegion: data.toRegion,
+// 			carModel: carModelId,
+// 			carType: data.carType || null,
+// 			maxPassengers: data.maxPassengers,
+// 			serviceType: data.serviceType,
+// 			workHours: data.workHours,
+// 			departureTime: data.departureTime || "Yo'lovchi bilan kelishiladi",
+// 			status: 'inactive',
+// 			balance: 0,
+// 			totalOrders: 0,
+// 			registrationStep: 'completed',
+// 			createdAt: new Date(),
+// 			updatedAt: new Date()
+// 		}
+
+// 		console.log('📝 Driver yaratilmoqda:', driverData)
+
+// 		// Driver yaratish
+// 		const driver = new Driver(driverData)
+// 		await driver.save()
+
+// 		console.log('✅ Driver saqlandi. ID:', driver._id)
+
+// 		// User rolini yangilash
+// 		user.role = 'driver'
+// 		user.state = states.MAIN_MENU
+// 		await user.save()
+
+// 		console.log('✅ User roli yangilandi')
+
+// 		// Muvaffaqiyatli xabar
+// 		const serviceNames = {
+// 			road: user.language === 'uz' ? "Yo'l-yo'lakay" : 'Попутка',
+// 			route: user.language === 'uz' ? "Yo'nalish" : 'Направление',
+// 			parcel: user.language === 'uz' ? 'Pochta' : 'Посылка'
+// 		}
+
+// 		const services = data.serviceType.map(type => serviceNames[type] || type).join(', ')
+
+// 		const carModelName = data.carModel || "Noma'lum"
+
+// 		const successMessage =
+// 			user.language === 'uz'
+// 				? `✅ <b>Tabriklaymiz! Profilingiz muvaffaqiyatli yaratildi!</b>\n\n` +
+// 				  `<b>Profil ma'lumotlari:</b>\n` +
+// 				  `👤 <b>Ism:</b> ${data.fullName}\n` +
+// 				  `📍 <b>Yo'nalish:</b> ${data.fromRegion} → ${data.toRegion}\n` +
+// 				  `🚗 <b>Mashina:</b> ${carModelName}\n` +
+// 				  `👥 <b>Sig'im:</b> ${data.maxPassengers} kishi\n` +
+// 				  `🎯 <b>Xizmatlar:</b> ${services}\n` +
+// 				  `🏪 <b>Ish vaqti:</b> ${data.workHours}\n` +
+// 				  (data.departureTime ? `⏰ <b>Jo'nash vaqti:</b> ${data.departureTime}\n\n` : '\n') +
+// 				  `✅ Profilingiz yaratildi`
+// 				: `✅ <b>Поздравляем! Ваш профиль успешно создан!</b>\n\n` +
+// 				  `<b>Данные профиля:</b>\n` +
+// 				  `👤 <b>Имя:</b> ${data.fullName}\n` +
+// 				  `📍 <b>Направление:</b> ${data.fromRegion} → ${data.toRegion}\n` +
+// 				  `🚗 <b>Машина:</b> ${carModelName}\n` +
+// 				  `👥 <b>Вместимость:</b> ${data.maxPassengers} человек\n` +
+// 				  `🎯 <b>Услуги:</b> ${services}\n` +
+// 				  `🏪 <b>Время работы:</b> ${data.workHours}\n` +
+// 				  (data.departureTime ? `⏰ <b>Время отправления:</b> ${data.departureTime}\n\n` : '\n') +
+// 				  `✅ Ваш профиль создан, теперь вы можете активировать его, совершив оплату.`
+
+// 		await ctx.reply(successMessage, {
+// 			parse_mode: 'HTML',
+// 			reply_markup: { remove_keyboard: true }
+// 		})
+
+// 		// Sessionni tozalash
+// 		delete ctx.session.driverData
+// 		console.log('✅ Session tozalandi')
+
+// 		// To'lov menyusini ko'rsatish (2 soniyadan keyin)
+// 		// console.log("💰 To'lov sahifasi ko'rsatilmoqda...")
+// 		// setTimeout(async () => {
+// 		// 	await handleDriverPayment(ctx)
+// 		// }, 2000)
+
+// 	} catch (error) {
+// 		console.error('❌ Complete registration error:', error)
+// 		console.error('❌ Error stack:', error.stack)
+
+// 		// MongoDB xatoliklarini tekshirish
+// 		if (error.name === 'ValidationError') {
+// 			console.error('❌ Validation error details:', error.errors)
+// 		}
+
+// 		await ctx.reply(
+// 			user.language === 'uz'
+// 				? `❌ Profilni saqlashda xatolik yuz berdi.\n\n` +
+// 						`Xato: ${error.message}\n\n` +
+// 						`Iltimos, qayta urinib ko'ring.`
+// 				: `❌ Ошибка при сохранении профиля.\n\n` +
+// 						`Ошибка: ${error.message}\n\n` +
+// 						`Пожалуйста, попробуйте еще раз.`
+// 		)
+// 	}
+
+// 	console.log('🔵 ========== completeDriverRegistration END ==========')
+// }
+
 const completeDriverRegistration = async ctx => {
 	const user = ctx.user
 
@@ -4747,7 +4916,7 @@ const completeDriverRegistration = async ctx => {
 			}
 		}
 
-		// Haydovchi ma'lumotlarini tayyorlash
+		// Haydovchi ma'lumotlarini tayyorlash (status: 'active' qilib o'zgartiring)
 		const driverData = {
 			telegramId: user.telegramId,
 			fullName: data.fullName,
@@ -4760,8 +4929,8 @@ const completeDriverRegistration = async ctx => {
 			serviceType: data.serviceType,
 			workHours: data.workHours,
 			departureTime: data.departureTime || "Yo'lovchi bilan kelishiladi",
-			status: 'inactive',
-			balance: 0,
+			status: 'active', // BU YERNI 'active' QILING
+			balance: 10000,
 			totalOrders: 0,
 			registrationStep: 'completed',
 			createdAt: new Date(),
@@ -4805,7 +4974,7 @@ const completeDriverRegistration = async ctx => {
 				  `🎯 <b>Xizmatlar:</b> ${services}\n` +
 				  `🏪 <b>Ish vaqti:</b> ${data.workHours}\n` +
 				  (data.departureTime ? `⏰ <b>Jo'nash vaqti:</b> ${data.departureTime}\n\n` : '\n') +
-				  `✅ Profilingiz yaratildi`
+				  `✅ Profilingiz faollashtirildi. Endi buyurtma qabul qilishni boshlashingiz mumkin!`
 				: `✅ <b>Поздравляем! Ваш профиль успешно создан!</b>\n\n` +
 				  `<b>Данные профиля:</b>\n` +
 				  `👤 <b>Имя:</b> ${data.fullName}\n` +
@@ -4815,7 +4984,7 @@ const completeDriverRegistration = async ctx => {
 				  `🎯 <b>Услуги:</b> ${services}\n` +
 				  `🏪 <b>Время работы:</b> ${data.workHours}\n` +
 				  (data.departureTime ? `⏰ <b>Время отправления:</b> ${data.departureTime}\n\n` : '\n') +
-				  `✅ Ваш профиль создан, теперь вы можете активировать его, совершив оплату.`
+				  `✅ Ваш профиль активирован. Теперь вы можете начать принимать заказы!`
 
 		await ctx.reply(successMessage, {
 			parse_mode: 'HTML',
@@ -4825,13 +4994,6 @@ const completeDriverRegistration = async ctx => {
 		// Sessionni tozalash
 		delete ctx.session.driverData
 		console.log('✅ Session tozalandi')
-
-		// To'lov menyusini ko'rsatish (2 soniyadan keyin)
-		// console.log("💰 To'lov sahifasi ko'rsatilmoqda...")
-		// setTimeout(async () => {
-		// 	await handleDriverPayment(ctx)
-		// }, 2000)
-
 	} catch (error) {
 		console.error('❌ Complete registration error:', error)
 		console.error('❌ Error stack:', error.stack)

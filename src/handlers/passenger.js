@@ -373,9 +373,46 @@ module.exports = {
 	// },
 
 	// searchDrivers funksiyasini quyidagicha o'zgartiring:
+	// searchDrivers: async (ctx, order) => {
+	// 	const user = ctx.user
+
+	// 	if (order.status !== 'searching') {
+	// 		order.status = 'searching'
+	// 		await order.save()
+	// 	}
+
+	// 	console.log(`🔍 Qidirilayotgan yo'nalish: ${order.fromRegion} -> ${order.toRegion}`)
+	// 	console.log(`👥 Yo'lovchilar soni: ${order.passengerCount}`)
+
+	// 	// POPULATE QO'SHILDI
+	// 	const drivers = await Driver.find({
+	// 		fromRegion: order.fromRegion,
+	// 		toRegion: order.toRegion,
+	// 		status: 'active',
+	// 		maxPassengers: { $gte: order.passengerCount },
+	// 		$or: [
+	// 			{ paidUntil: { $gte: new Date() } },
+	// 			{ paidUntil: null },
+	// 			{ paidUntil: { $exists: false } }
+	// 		]
+	// 	})
+	// 		.populate('carModel') // BU QATORNI QO'SHING
+	// 		.populate('carType') // Agar carType ham bo'lsa
+
+	// 	console.log(`📊 Topilgan haydovchilar: ${drivers.length} ta`)
+
+	// 	if (drivers.length > 0) {
+	// 		await module.exports.showFoundDrivers(ctx, drivers, order)
+	// 	} else {
+	// 		// ... qolgan kod
+	// 	}
+	// },
+
+	// ============ HAYDOVCHI QIDIRISH (YO'LOVCHILAR SONI HISOBGA OLINADI) ============
 	searchDrivers: async (ctx, order) => {
 		const user = ctx.user
 
+		// Statusni 'searching' ga o'rnatish
 		if (order.status !== 'searching') {
 			order.status = 'searching'
 			await order.save()
@@ -384,7 +421,7 @@ module.exports = {
 		console.log(`🔍 Qidirilayotgan yo'nalish: ${order.fromRegion} -> ${order.toRegion}`)
 		console.log(`👥 Yo'lovchilar soni: ${order.passengerCount}`)
 
-		// POPULATE QO'SHILDI
+		// Haydovchilarni qidirish
 		const drivers = await Driver.find({
 			fromRegion: order.fromRegion,
 			toRegion: order.toRegion,
@@ -396,15 +433,122 @@ module.exports = {
 				{ paidUntil: { $exists: false } }
 			]
 		})
-			.populate('carModel') // BU QATORNI QO'SHING
-			.populate('carType') // Agar carType ham bo'lsa
+			.populate('carModel')
+			.populate('carType')
 
 		console.log(`📊 Topilgan haydovchilar: ${drivers.length} ta`)
 
 		if (drivers.length > 0) {
+			// Haydovchilarni ko'rsatish
 			await module.exports.showFoundDrivers(ctx, drivers, order)
 		} else {
-			// ... qolgan kod
+			// ============ HAYDOVCHI TOPILMAGANDA ============
+			console.log('❌ Haydovchi topilmadi, kanalga xabar yuborilmoqda...')
+
+			// Buyurtma statusini yangilash
+			order.status = 'pending'
+			await order.save()
+
+			// 1. Avval yo'lovchiga xabar berish
+			const userMessage =
+				user.language === 'uz'
+					? `❌ Siz tanlagan yo'nalish bo'yicha (${order.passengerCount} kishi uchun) hozircha mashina topilmadi.\n\n` +
+					  `📍 Chiqish: ${order.fromRegion}\n` +
+					  `📍 Kirish: ${order.toRegion}\n` +
+					  `👥 Yo'lovchilar: ${order.passengerCount} kishi\n\n` +
+					  `Buyurtmangiz adminlarga yuborildi, tez orada aloqaga chiqishadi.\n\n` +
+					  `Kuting yoki boshqa vaqtda qayta urinib ko'ring.`
+					: `❌ По выбранному направлению (для ${order.passengerCount} человек) машины не найдены.\n\n` +
+					  `📍 Отправление: ${order.fromRegion}\n` +
+					  `📍 Прибытие: ${order.toRegion}\n` +
+					  `👥 Пассажиры: ${order.passengerCount} человек\n\n` +
+					  `Ваш заказ отправлен администраторам, они свяжутся с вами в ближайшее время.\n\n` +
+					  `Подождите или попробуйте в другое время.`
+
+			await ctx.reply(userMessage)
+
+			// 2. Kanalga xabar yuborish
+			try {
+				console.log('📤 Kanalga xabar yuborilmoqda...')
+
+				const channelId = process.env.ORDER_CHANNEL_ID
+
+				if (channelId && channelId !== '@your_channel') {
+					const channelMessage =
+						`🚕 YANGI BUYURTMA - HAYDOVCHI TOPILMADI\n\n` +
+						`📍 Chiqish: ${order.fromRegion}\n` +
+						`📍 Kirish: ${order.toRegion}\n` +
+						`👥 Yo'lovchilar soni: ${order.passengerCount} kishi\n` +
+						`📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
+						`${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n` : ''}` +
+						`👤 Foydalanuvchi: @${order.username || 'username_yoq'}\n` +
+						`🆔 User ID: ${order.userId}\n` +
+						`⏰ Vaqt: ${new Date(order.createdAt).toLocaleString('uz-UZ')}\n\n` +
+						`⚠️ Iltimos, bu buyurtma uchun haydovchi toping!`
+
+					await ctx.telegram.sendMessage(channelId, channelMessage)
+					console.log('✅ Kanalga xabar yuborildi:', channelId)
+				} else {
+					console.log("⚠️ ORDER_CHANNEL_ID mavjud emas yoki noto'g'ri:", channelId)
+
+					// Agar kanal ID bo'lmasa, adminlarga shaxsiy xabar yuborish
+					const adminIds = process.env.ADMIN_IDS ? process.env.ADMIN_IDS.split(',') : []
+
+					if (adminIds.length > 0) {
+						for (const adminId of adminIds) {
+							try {
+								const adminMessage =
+									`🚕 YANGI BUYURTMA (Kanal yo'q)\n\n` +
+									`📍 Chiqish: ${order.fromRegion}\n` +
+									`📍 Kirish: ${order.toRegion}\n` +
+									`👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
+									`📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
+									`${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n` : ''}` +
+									`👤 Foydalanuvchi: @${order.username || 'N/A'}\n` +
+									`🆔 User ID: ${order.userId}\n` +
+									`⏰ Vaqt: ${new Date().toLocaleString('uz-UZ')}\n\n` +
+									`⚠️ KANALGA YUBORILMADI! ORDER_CHANNEL_ID tekshiring.`
+
+								await ctx.telegram.sendMessage(adminId.trim(), adminMessage)
+							} catch (adminError) {
+								console.error(`Admin ${adminId} ga xabar yuborishda xatolik:`, adminError.message)
+							}
+						}
+					}
+				}
+			} catch (error) {
+				console.error('❌ Kanalga yuborishda xatolik:', error.message)
+
+				// Xatolik haqida adminlarga xabar berish
+				const adminIds = process.env.ADMIN_IDS ? process.env.ADMIN_IDS.split(',') : []
+
+				for (const adminId of adminIds) {
+					try {
+						const errorMessage =
+							`❌ KANALGA XABAR YUBORISHDA XATOLIK\n\n` +
+							`Xato: ${error.message}\n` +
+							`Buyurtma: ${order.fromRegion} → ${order.toRegion}\n` +
+							`User: @${order.username || order.userId}`
+
+						await ctx.telegram.sendMessage(adminId.trim(), errorMessage)
+					} catch (adminError) {
+						console.error(`Admin xatolik xabarini yuborishda:`, adminError.message)
+					}
+				}
+			}
+
+			// 3. Asosiy menyuga qaytish
+			user.state = states.MAIN_MENU
+			await user.save()
+
+			const menuMessage = user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню'
+			await ctx.reply(menuMessage, keyboards.mainMenuKeyboard(user.language))
+
+			// 4. Sessionni tozalash
+			if (ctx.session) {
+				delete ctx.session.orderId
+				delete ctx.session.orderData
+			}
 		}
 	},
 
@@ -930,29 +1074,27 @@ module.exports = {
 		}
 	}
 }
- handleMyOrdersPage: async (ctx, callbackData) => {
-        const user = ctx.user
-        const page = parseInt(callbackData.split('_')[2])
+handleMyOrdersPage: async (ctx, callbackData) => {
+	const user = ctx.user
+	const page = parseInt(callbackData.split('_')[2])
 
-        try {
-            // Yangi sahifani ko'rsatish
-            ctx.session.myOrdersPage = page
-            await this.showMyOrders(ctx)
+	try {
+		// Yangi sahifani ko'rsatish
+		ctx.session.myOrdersPage = page
+		await this.showMyOrders(ctx)
 
-            // Callback query ni javoblash
-            await ctx.answerCbQuery()
-        } catch (error) {
-            console.error('My orders page navigation error:', error)
-            await ctx.answerCbQuery(
-                user.language === 'uz' ? '❌ Xatolik yuz berdi' : '❌ Произошла ошибка'
-            )
-        }
-    }
+		// Callback query ni javoblash
+		await ctx.answerCbQuery()
+	} catch (error) {
+		console.error('My orders page navigation error:', error)
+		await ctx.answerCbQuery(user.language === 'uz' ? '❌ Xatolik yuz berdi' : '❌ Произошла ошибка')
+	}
+}
 
 // Yo'lovchi buyurtma yaratish
-const createPassengerOrder = async (ctx) => {
+const createPassengerOrder = async ctx => {
 	const user = ctx.user
-	
+
 	// Session ma'lumotlarini tekshirish
 	ctx.session = ctx.session || {}
 	if (!ctx.session.orderData) {
@@ -963,22 +1105,20 @@ const createPassengerOrder = async (ctx) => {
 		)
 		return
 	}
-	
+
 	const orderData = ctx.session.orderData
-	
+
 	// OrderData tekshirish
 	if (!orderData.fromRegion || !orderData.toRegion || !orderData.passengerCount) {
 		await ctx.reply(
-			user.language === 'uz'
-				? "❌ Barcha maydonlar to'ldirilmagan."
-				: '❌ Не все поля заполнены.'
+			user.language === 'uz' ? "❌ Barcha maydonlar to'ldirilmagan." : '❌ Не все поля заполнены.'
 		)
 		return
 	}
-	
+
 	// Buyurtmani yaratish va haydovchilarni qidirish
 	await createOrderAndFindDrivers(ctx, orderData)
-	
+
 	// Sessionni tozalash
 	delete ctx.session.orderData
 }
