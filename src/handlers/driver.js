@@ -106,107 +106,6 @@ const getSimplePaymentMessage = (userLanguage = 'uz') => {
 	}
 }
 
-// Main payment function
-// const handleDriverPayment = async ctx => {
-// 	console.log('🔵 handleDriverPayment FUNKSIYASI CHAQIRILDI')
-// 	console.log('User:', ctx.user?.telegramId)
-
-// 	try {
-// 		const user = ctx.user
-
-// 		if (!user) {
-// 			console.log('❌ User not found')
-// 			return
-// 		}
-
-// 		// Avval oldingi xabarni o'chirishga urinamiz
-// 		try {
-// 			if (ctx.callbackQuery?.message?.message_id) {
-// 				await ctx.deleteMessage()
-// 			}
-// 		} catch (error) {
-// 			console.log('Delete previous message error:', error.message)
-// 		}
-
-// 		// Oddiy payment xabarini chiqaramiz
-// 		const message = getSimplePaymentMessage(user.language)
-// 		const keyboard = createSimplePaymentKeyboard(user.language)
-
-// 		console.log('📤 Xabar yuborilmoqda...')
-
-// 		await ctx.reply(message, {
-// 			reply_markup: keyboard,
-// 			parse_mode: 'HTML'
-// 		})
-
-// 		console.log('✅ Xabar muvaffaqiyatli yuborildi')
-// 	} catch (error) {
-// 		console.error('❌ handleDriverPayment da xatolik:', error)
-
-// 		try {
-// 			await ctx.reply(
-// 				ctx.user?.language === 'uz'
-// 					? "❌ Xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
-// 					: '❌ Произошла ошибка. Пожалуйста, попробуйте еще раз.',
-// 				{ parse_mode: 'HTML' }
-// 			)
-// 		} catch (replyError) {
-// 			console.error('Failed to send error message:', replyError)
-// 		}
-// 	}
-// }
-
-// Main payment function
-// const handleDriverPayment = async ctx => {
-// 	console.log('🔵 handleDriverPayment FUNKSIYASI CHAQIRILDI')
-// 	console.log('User:', ctx.user?.telegramId)
-
-// 	try {
-// 		const user = ctx.user
-
-// 		if (!user) {
-// 			console.log('❌ User not found')
-// 			return
-// 		}
-
-// 		// Avval oldingi xabarni o'chirishga urinamiz
-// 		try {
-// 			if (ctx.callbackQuery?.message?.message_id) {
-// 				await ctx.deleteMessage()
-// 			}
-// 		} catch (error) {
-// 			console.log('Delete previous message error:', error.message)
-// 			// Xabarni o'chirishda xatolik bo'lsa ham davom etamiz
-// 		}
-
-// 		// Oddiy payment xabarini chiqaramiz
-// 		const message = getSimplePaymentMessage(user.language)
-// 		const keyboard = createSimplePaymentKeyboard(user.language)
-
-// 		console.log('📤 Xabar yuborilmoqda...')
-
-// 		await ctx.reply(message, {
-// 			reply_markup: keyboard,
-// 			parse_mode: 'HTML'
-// 		})
-
-// 		console.log('✅ Xabar muvaffaqiyatli yuborildi')
-// 	} catch (error) {
-// 		console.error('❌ handleDriverPayment da xatolik:', error)
-
-// 		try {
-// 			await ctx.reply(
-// 				ctx.user?.language === 'uz'
-// 					? "❌ Xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
-// 					: '❌ Произошла ошибка. Пожалуйста, попробуйте еще раз.',
-// 				{ parse_mode: 'HTML' }
-// 			)
-// 		} catch (replyError) {
-// 			console.error('Failed to send error message:', replyError)
-// 		}
-// 	}
-// }
-
 const handleDriverPayment = async ctx => {
 	console.log('🔵 handleDriverPayment FUNKSIYASI CHAQIRILDI')
 	console.log('User:', ctx.user?.telegramId)
@@ -263,671 +162,6 @@ const handleDriverPayment = async ctx => {
 		}
 	}
 }
-
-// ====================== PROFIL SAQLASH FUNKSIYASI ======================
-// const saveProfileWithPayment = async ctx => {
-// 	const user = ctx.user
-
-// 	// Sessionni tekshirish
-// 	if (!ctx.session || !ctx.session.driverData) {
-// 		await ctx.reply(
-// 			user.language === 'uz'
-// 				? "❌ Ma'lumotlar topilmadi. Iltimos, qaytadan boshlang."
-// 				: '❌ Данные не найдены. Пожалуйста, начните заново.'
-// 		)
-// 		user.state = states.MAIN_MENU
-// 		await user.save()
-// 		return
-// 	}
-
-// 	const data = ctx.session.driverData
-
-// 	try {
-// 		// Haydovchi yaratish
-// 		const driverData = {
-// 			telegramId: user.telegramId,
-// 			fullName: data.fullName,
-// 			phone: data.phone,
-// 			fromRegion: data.fromRegion,
-// 			toRegion: data.toRegion,
-// 			carModel: data.carId || data.carModel,
-// 			carType: data.carType || null,
-// 			maxPassengers: data.maxPassengers || 4,
-// 			serviceType: data.serviceType,
-// 			departureTime: data.departureTime,
-// 			status: 'inactive',
-// 			balance: 0,
-// 			totalOrders: 0,
-// 			createdAt: new Date(),
-// 			registrationStep: 'completed'
-// 		}
-
-// 		// Agar carModel string bo'lsa va Model ObjectId talab qilsa
-// 		let carModelForDriver = data.carModel
-// 		if (data.carId) {
-// 			carModelForDriver = data.carId
-// 		} else {
-// 			const existingCar = await Car.findOne({ name: data.carModel })
-// 			if (existingCar) {
-// 				carModelForDriver = existingCar._id
-// 			} else {
-// 				const newCar = new Car({
-// 					name: data.carModel,
-// 					nameRu: data.carModel,
-// 					isActive: true
-// 				})
-// 				await newCar.save()
-// 				carModelForDriver = newCar._id
-// 			}
-// 		}
-
-// 		driverData.carModel = carModelForDriver
-
-// 		const driver = new Driver(driverData)
-// 		await driver.save()
-
-// 		// User rolini yangilash
-// 		user.role = 'driver'
-// 		user.state = states.MAIN_MENU
-// 		await user.save()
-
-// 		// Muvaffaqiyatli xabar
-// 		const successMessage =
-// 			user.language === 'uz'
-// 				? `✅ <b>Tabriklaymiz! Profilingiz muvaffaqiyatli yaratildi!</b>\n\n` +
-// 				  `<b>Profil ma'lumotlari:</b>\n` +
-// 				  `👤 <b>Ism:</b> ${data.fullName}\n` +
-// 				  `📍 <b>Yo'nalish:</b> ${data.fromRegion} → ${data.toRegion}\n` +
-// 				  `🚗 <b>Mashina:</b> ${data.carModel}\n` +
-// 				  `👥 <b>Sig'im:</b> ${data.maxPassengers} kishi\n` +
-// 				  `🎯 <b>Xizmatlar:</b> ${data.serviceType.join(', ')}\n` +
-// 				  `⏰ <b>Jo'nash vaqti:</b> ${data.departureTime}\n\n` +
-// 				  `✅ Profilingiz yaratildi, endi to'lov qilish orqali faollashtirishingiz mumkin.`
-// 				: `✅ <b>Поздравляем! Ваш профиль успешно создан!</b>\n\n` +
-// 				  `<b>Данные профиля:</b>\n` +
-// 				  `👤 <b>Имя:</b> ${data.fullName}\n` +
-// 				  `📍 <b>Направление:</b> ${data.fromRegion} → ${data.toRegion}\n` +
-// 				  `🚗 <b>Машина:</b> ${data.carModel}\n` +
-// 				  `👥 <b>Вместимость:</b> ${data.maxPassengers} человек\n` +
-// 				  `🎯 <b>Услуги:</b> ${data.serviceType.join(', ')}\n` +
-// 				  `⏰ <b>Время отправления:</b> ${data.departureTime}\n\n` +
-// 				  `✅ Ваш профиль создан, теперь вы можете активировать его, совершив оплату.`
-
-// 		await ctx.reply(successMessage, { parse_mode: 'HTML' })
-
-// 		// To'lov menyusini ko'rsatish
-// 		setTimeout(async () => {
-// 			await handleDriverPayment(ctx)
-// 		}, 2000)
-
-// 		// Sessionni tozalash
-// 		delete ctx.session.driverData
-// 	} catch (error) {
-// 		console.error('Save profile error:', error)
-// 		await ctx.reply(
-// 			user.language === 'uz'
-// 				? `❌ Profilni saqlashda xatolik yuz berdi: ${error.message}\n\nIltimos, qayta urinib ko'ring.`
-// 				: `❌ Ошибка при сохранении профиля: ${error.message}\n\nПожалуйста, попробуйте еще раз.`
-// 		)
-// 	}
-// }
-
-// ====================== PROFIL SAQLASH FUNKSIYASI ======================
-// const saveProfileWithPayment = async ctx => {
-//     const user = ctx.user
-
-//     console.log('🔵 saveProfileWithPayment FUNKSIYASI CHAQIRILDI')
-//     console.log('User ID:', user?.telegramId)
-//     console.log('Session data:', JSON.stringify(ctx.session?.driverData, null, 2))
-
-//     // Sessionni tekshirish
-//     if (!ctx.session || !ctx.session.driverData) {
-//         await ctx.reply(
-//             user.language === 'uz'
-//                 ? "❌ Ma'lumotlar topilmadi. Iltimos, qayta boshlang."
-//                 : '❌ Данные не найдены. Пожалуйста, начните заново.'
-//         )
-//         user.state = states.MAIN_MENU
-//         await user.save()
-//         return
-//     }
-
-//     const data = ctx.session.driverData
-
-//     // Barcha kerakli ma'lumotlar mavjudligini tekshirish
-//     const requiredFields = [
-//         'fromRegion', 'toRegion', 'fullName', 'phone',
-//         'carModel', 'maxPassengers', 'serviceType'
-//     ]
-
-//     const missingFields = requiredFields.filter(field => !data[field])
-
-//     if (missingFields.length > 0) {
-//         console.log('❌ Yetishmayotgan maydonlar:', missingFields)
-//         await ctx.reply(
-//             user.language === 'uz'
-//                 ? `❌ Quyidagi maydonlar to'ldirilmagan: ${missingFields.join(', ')}`
-//                 : `❌ Следующие поля не заполнены: ${missingFields.join(', ')}`
-//         )
-//         return
-//     }
-
-//     try {
-//         // carModel ni qayta ishlash
-//         let carModelForDriver = data.carId || data.carModel
-
-//         // Agar carModel string bo'lsa va Car modeli ObjectId talab qilsa
-//         if (typeof carModelForDriver === 'string') {
-//             // Avval mavjud mashinani qidirish
-//             const existingCar = await Car.findOne({
-//                 $or: [
-//                     { name: carModelForDriver },
-//                     { nameRu: carModelForDriver }
-//                 ]
-//             })
-
-//             if (existingCar) {
-//                 carModelForDriver = existingCar._id
-//                 console.log('✅ Mavjud mashina topildi:', existingCar.name)
-//             } else {
-//                 // Yangi mashina yaratish
-//                 const newCar = new Car({
-//                     name: data.carModel,
-//                     nameRu: data.carModel,
-//                     isActive: true
-//                 })
-//                 await newCar.save()
-//                 carModelForDriver = newCar._id
-//                 console.log('✅ Yangi mashina yaratildi:', data.carModel)
-//             }
-//         }
-
-//         // carType ni qayta ishlash
-//         let carTypeForDriver = null
-//         if (data.carTypeId) {
-//             const carType = await CarType.findById(data.carTypeId)
-//             if (carType) {
-//                 carTypeForDriver = carType._id
-//             }
-//         }
-
-//         // Haydovchi yaratish (departureTime bo'lmasa, "Belgilanmagan" qo'yamiz)
-//         const driverData = {
-//             telegramId: user.telegramId,
-//             fullName: data.fullName,
-//             phone: data.phone,
-//             fromRegion: data.fromRegion,
-//             toRegion: data.toRegion,
-//             carModel: carModelForDriver,
-//             carType: carTypeForDriver,
-//             maxPassengers: data.maxPassengers,
-//             serviceType: data.serviceType,
-//             departureTime: data.departureTime || "Yo'lovchi bilan kelishiladi",
-//             workHours: data.workHours || '10:00 - 18:00',
-//             status: 'inactive',
-//             balance: 0,
-//             totalOrders: 0,
-//             createdAt: new Date(),
-//             registrationStep: 'completed'
-//         }
-
-//         console.log('📝 Driver yaratilmoqda:', driverData)
-
-//         // Haydovchini MongoDB'ga saqlash
-//         const driver = new Driver(driverData)
-//         await driver.save()
-
-//         console.log('✅ Driver muvaffaqiyatli saqlandi. ID:', driver._id)
-
-//         // User rolini yangilash
-//         user.role = 'driver'
-//         user.state = states.MAIN_MENU
-//         await user.save()
-
-//         console.log('✅ User roli yangilandi')
-
-//         // Muvaffaqiyatli xabar
-//         const serviceNames = {
-//             road: user.language === 'uz' ? "Yo'l-yo'lakay" : 'Попутка',
-//             route: user.language === 'uz' ? "Yo'nalish" : 'Направление',
-//             parcel: user.language === 'uz' ? 'Pochta' : 'Посылка'
-//         }
-
-//         const services = data.serviceType.map(type => serviceNames[type] || type).join(', ')
-
-//         const successMessage =
-//             user.language === 'uz'
-//                 ? `✅ <b>Tabriklaymiz! Profilingiz muvaffaqiyatli yaratildi!</b>\n\n` +
-//                   `<b>Profil ma'lumotlari:</b>\n` +
-//                   `👤 <b>Ism:</b> ${data.fullName}\n` +
-//                   `📍 <b>Yo'nalish:</b> ${data.fromRegion} → ${data.toRegion}\n` +
-//                   `🚗 <b>Mashina:</b> ${data.carModel}\n` +
-//                   (data.carTypeName ? `🚗 <b>Mashina turi:</b> ${data.carTypeName}\n` : '') +
-//                   `👥 <b>Sig'im:</b> ${data.maxPassengers} kishi\n` +
-//                   `🎯 <b>Xizmatlar:</b> ${services}\n` +
-//                   (data.departureTime ? `⏰ <b>Jo'nash vaqti:</b> ${data.departureTime}\n` : '') +
-//                   `\n✅ Profilingiz yaratildi, endi to'lov qilish orqali faollashtirishingiz mumkin.`
-//                 : `✅ <b>Поздравляем! Ваш профиль успешно создан!</b>\n\n` +
-//                   `<b>Данные профиля:</b>\n` +
-//                   `👤 <b>Имя:</b> ${data.fullName}\n` +
-//                   `📍 <b>Направление:</b> ${data.fromRegion} → ${data.toRegion}\n` +
-//                   `🚗 <b>Машина:</b> ${data.carModel}\n` +
-//                   (data.carTypeNameRu ? `🚗 <b>Тип машины:</b> ${data.carTypeNameRu}\n` : '') +
-//                   `👥 <b>Вместимость:</b> ${data.maxPassengers} человек\n` +
-//                   `🎯 <b>Услуги:</b> ${services}\n` +
-//                   (data.departureTime ? `⏰ <b>Время отправления:</b> ${data.departureTime}\n` : '') +
-//                   `\n✅ Ваш профиль создан, теперь вы можете активировать его, совершив оплату.`
-
-//         await ctx.reply(successMessage, { parse_mode: 'HTML' })
-
-//         // Sessionni tozalash
-//         delete ctx.session.driverData
-//         console.log('✅ Session tozalandi')
-
-//         // To'lov menyusini ko'rsatish (2 soniyadan keyin)
-//         setTimeout(async () => {
-//             await handleDriverPayment(ctx)
-//         }, 2000)
-
-//     } catch (error) {
-//         console.error('❌ Save profile error:', error)
-//         console.error('❌ Error stack:', error.stack)
-
-//         await ctx.reply(
-//             user.language === 'uz'
-//                 ? `❌ Profilni saqlashda xatolik yuz berdi.\n\n` +
-//                   `Xato: ${error.message}\n\n` +
-//                   `Iltimos, qayta urinib ko'ring.`
-//                 : `❌ Ошибка при сохранении профиля.\n\n` +
-//                   `Ошибка: ${error.message}\n\n` +
-//                   `Пожалуйста, попробуйте еще раз.`
-//         )
-//     }
-// }
-
-// ====================== PROFIL SAQLASH FUNKSIYASI ======================
-// const saveProfileWithPayment = async ctx => {
-// 	const user = ctx.user
-
-// 	console.log('🔵 saveProfileWithPayment FUNKSIYASI CHAQIRILDI')
-// 	console.log('User ID:', user?.telegramId)
-// 	console.log('Session data:', JSON.stringify(ctx.session?.driverData, null, 2))
-
-// 	// Sessionni tekshirish
-// 	if (!ctx.session || !ctx.session.driverData) {
-// 		await ctx.reply(
-// 			user.language === 'uz'
-// 				? "❌ Ma'lumotlar topilmadi. Iltimos, qayta boshlang."
-// 				: '❌ Данные не найдены. Пожалуйста, начните заново.'
-// 		)
-// 		user.state = states.MAIN_MENU
-// 		await user.save()
-// 		return
-// 	}
-
-// 	const data = ctx.session.driverData
-
-// 	// Barcha kerakli ma'lumotlar mavjudligini tekshirish
-// 	const requiredFields = [
-// 		'fromRegion',
-// 		'toRegion',
-// 		'fullName',
-// 		'phone',
-// 		'carModel',
-// 		'maxPassengers',
-// 		'serviceType',
-// 		'workHours'
-// 	]
-
-// 	const missingFields = requiredFields.filter(field => !data[field])
-
-// 	if (missingFields.length > 0) {
-// 		console.log('❌ Yetishmayotgan maydonlar:', missingFields)
-// 		await ctx.reply(
-// 			user.language === 'uz'
-// 				? `❌ Quyidagi maydonlar to'ldirilmagan: ${missingFields.join(', ')}`
-// 				: `❌ Следующие поля не заполнены: ${missingFields.join(', ')}`
-// 		)
-// 		return
-// 	}
-
-// 	try {
-// 		// carModel ni qayta ishlash
-// 		let carModelForDriver = data.carId || data.carModel
-
-// 		// Agar carModel string bo'lsa va Car modeli ObjectId talab qilsa
-// 		if (typeof carModelForDriver === 'string') {
-// 			// Avval mavjud mashinani qidirish
-// 			const existingCar = await Car.findOne({
-// 				$or: [{ name: carModelForDriver }, { nameRu: carModelForDriver }]
-// 			})
-
-// 			if (existingCar) {
-// 				carModelForDriver = existingCar._id
-// 				console.log('✅ Mavjud mashina topildi:', existingCar.name)
-// 			} else {
-// 				// Yangi mashina yaratish
-// 				const newCar = new Car({
-// 					name: data.carModel,
-// 					nameRu: data.carModel,
-// 					isActive: true
-// 				})
-// 				await newCar.save()
-// 				carModelForDriver = newCar._id
-// 				console.log('✅ Yangi mashina yaratildi:', data.carModel)
-// 			}
-// 		}
-
-// 		// carType ni qayta ishlash
-// 		let carTypeForDriver = null
-// 		if (data.carTypeId) {
-// 			const carType = await CarType.findById(data.carTypeId)
-// 			if (carType) {
-// 				carTypeForDriver = carType._id
-// 			}
-// 		}
-
-// 		// Haydovchi yaratish
-// 		const driverData = {
-// 			telegramId: user.telegramId,
-// 			fullName: data.fullName,
-// 			phone: data.phone,
-// 			fromRegion: data.fromRegion,
-// 			toRegion: data.toRegion,
-// 			carModel: carModelForDriver,
-// 			carType: carTypeForDriver,
-// 			maxPassengers: data.maxPassengers,
-// 			serviceType: data.serviceType,
-// 			departureTime: data.departureTime || "Yo'lovchi bilan kelishiladi",
-// 			workHours: data.workHours,
-// 			status: 'inactive',
-// 			balance: 0,
-// 			totalOrders: 0,
-// 			createdAt: new Date(),
-// 			registrationStep: 'completed'
-// 		}
-
-// 		console.log('📝 Driver yaratilmoqda:', driverData)
-
-// 		// Haydovchini MongoDB'ga saqlash
-// 		const driver = new Driver(driverData)
-// 		await driver.save()
-
-// 		console.log('✅ Driver muvaffaqiyatli saqlandi. ID:', driver._id)
-
-// 		// User rolini yangilash
-// 		user.role = 'driver'
-// 		user.state = states.MAIN_MENU
-// 		await user.save()
-
-// 		console.log('✅ User roli yangilandi')
-
-// 		// Muvaffaqiyatli xabar
-// 		const serviceNames = {
-// 			road: user.language === 'uz' ? "Yo'l-yo'lakay" : 'Попутка',
-// 			route: user.language === 'uz' ? "Yo'nalish" : 'Направление',
-// 			parcel: user.language === 'uz' ? 'Pochta' : 'Посылка'
-// 		}
-
-// 		const services = data.serviceType.map(type => serviceNames[type] || type).join(', ')
-
-// 		const successMessage =
-// 			user.language === 'uz'
-// 				? `✅ <b>Tabriklaymiz! Profilingiz muvaffaqiyatli yaratildi!</b>\n\n` +
-// 				  `<b>Profil ma'lumotlari:</b>\n` +
-// 				  `👤 <b>Ism:</b> ${data.fullName}\n` +
-// 				  `📍 <b>Yo'nalish:</b> ${data.fromRegion} → ${data.toRegion}\n` +
-// 				  `🚗 <b>Mashina:</b> ${data.carModel}\n` +
-// 				  (data.carTypeName ? `🚗 <b>Mashina turi:</b> ${data.carTypeName}\n` : '') +
-// 				  `👥 <b>Sig'im:</b> ${data.maxPassengers} kishi\n` +
-// 				  `🎯 <b>Xizmatlar:</b> ${services}\n` +
-// 				  `🏪 <b>Ish vaqti:</b> ${data.workHours}\n` +
-// 				  (data.departureTime ? `⏰ <b>Jo'nash vaqti:</b> ${data.departureTime}\n` : '') +
-// 				  `\n✅ Profilingiz yaratildi, endi to'lov qilish orqali faollashtirishingiz mumkin.`
-// 				: `✅ <b>Поздравляем! Ваш профиль успешно создан!</b>\n\n` +
-// 				  `<b>Данные профиля:</b>\n` +
-// 				  `👤 <b>Имя:</b> ${data.fullName}\n` +
-// 				  `📍 <b>Направление:</b> ${data.fromRegion} → ${data.toRegion}\n` +
-// 				  `🚗 <b>Машина:</b> ${data.carModel}\n` +
-// 				  (data.carTypeNameRu ? `🚗 <b>Тип машины:</b> ${data.carTypeNameRu}\n` : '') +
-// 				  `👥 <b>Вместимость:</b> ${data.maxPassengers} человек\n` +
-// 				  `🎯 <b>Услуги:</b> ${services}\n` +
-// 				  `🏪 <b>Время работы:</b> ${data.workHours}\n` +
-// 				  (data.departureTime ? `⏰ <b>Время отправления:</b> ${data.departureTime}\n` : '') +
-// 				  `\n✅ Ваш профиль создан, теперь вы можете активировать его, совершив оплату.`
-
-// 		await ctx.reply(successMessage, { parse_mode: 'HTML' })
-
-// 		// Sessionni tozalash
-// 		delete ctx.session.driverData
-// 		console.log('✅ Session tozalandi')
-
-// 		// To'lov menyusini ko'rsatish (2 soniyadan keyin)
-// 		setTimeout(async () => {
-// 			await handleDriverPayment(ctx)
-// 		}, 2000)
-// 	} catch (error) {
-// 		console.error('❌ Save profile error:', error)
-// 		console.error('❌ Error stack:', error.stack)
-
-// 		await ctx.reply(
-// 			user.language === 'uz'
-// 				? `❌ Profilni saqlashda xatolik yuz berdi.\n\n` +
-// 						`Xato: ${error.message}\n\n` +
-// 						`Iltimos, qayta urinib ko'ring.`
-// 				: `❌ Ошибка при сохранении профиля.\n\n` +
-// 						`Ошибка: ${error.message}\n\n` +
-// 						`Пожалуйста, попробуйте еще раз.`
-// 		)
-// 	}
-// }
-
-// const saveProfileWithPayment = async ctx => {
-// 	const user = ctx.user
-
-// 	console.log('🔵 saveProfileWithPayment FUNKSIYASI CHAQIRILDI')
-// 	console.log('User ID:', user?.telegramId)
-// 	console.log('Session data:', JSON.stringify(ctx.session?.driverData, null, 2))
-
-// 	// Sessionni tekshirish
-// 	if (!ctx.session || !ctx.session.driverData) {
-// 		await ctx.reply(
-// 			user.language === 'uz'
-// 				? "❌ Ma'lumotlar topilmadi. Iltimos, qayta boshlang."
-// 				: '❌ Данные не найдены. Пожалуйста, начните заново.'
-// 		)
-// 		user.state = states.MAIN_MENU
-// 		await user.save()
-// 		return
-// 	}
-
-// 	const data = ctx.session.driverData
-
-// 	// Required fields tekshirish
-// 	const requiredFields = [
-// 		'fullName',
-// 		'phone',
-// 		'fromRegion',
-// 		'toRegion',
-// 		'maxPassengers',
-// 		'serviceType',
-// 		'workHours'
-// 	]
-
-// 	for (const field of requiredFields) {
-// 		if (!data[field]) {
-// 			console.log(`❌ ${field} maydoni to'ldirilmagan`)
-// 			await ctx.reply(
-// 				user.language === 'uz'
-// 					? `❌ ${field} maydoni to'ldirilmagan`
-// 					: `❌ Поле ${field} не заполнено`
-// 			)
-// 			return
-// 		}
-// 	}
-
-// 	try {
-// 		// Avval mavjud haydovchini tekshirish
-// 		const existingDriver = await Driver.findOne({ telegramId: user.telegramId })
-
-// 		if (existingDriver) {
-// 			await ctx.reply(
-// 				user.language === 'uz'
-// 					? "❌ Siz allaqachon haydovchi sifatida ro'yxatdan o'tgansiz"
-// 					: '❌ Вы уже зарегистрированы как водитель'
-// 			)
-// 			user.state = states.MAIN_MENU
-// 			await user.save()
-// 			return
-// 		}
-
-// 		// Car model ni tekshirish
-// 		let carModelId = data.carId
-// 		if (!carModelId && data.carModel) {
-// 			// Agar carModel string bo'lsa, Car collection dan qidirish
-// 			const car = await Car.findOne({
-// 				$or: [{ name: data.carModel }, { nameRu: data.carModel }]
-// 			})
-
-// 			if (car) {
-// 				carModelId = car._id
-// 				console.log('✅ Car model topildi:', car.name)
-// 			} else {
-// 				// Yangi car model yaratish
-// 				const newCar = new Car({
-// 					name: data.carModel,
-// 					nameRu: data.carModel,
-// 					isActive: true
-// 				})
-// 				await newCar.save()
-// 				carModelId = newCar._id
-// 				console.log('✅ Yangi car model yaratildi:', data.carModel)
-// 			}
-// 		}
-
-// 		// Car type ni tekshirish
-// 		let carTypeId = data.carType
-// 		if (carTypeId && typeof carTypeId === 'string') {
-// 			const carType = await CarType.findOne({
-// 				$or: [{ name: carTypeId }, { nameRu: carTypeId }]
-// 			})
-
-// 			if (carType) {
-// 				carTypeId = carType._id
-// 			}
-// 		}
-
-// 		// Haydovchi ma'lumotlarini tayyorlash
-// 		const driverData = {
-// 			telegramId: user.telegramId,
-// 			fullName: data.fullName,
-// 			phone: data.phone,
-// 			fromRegion: data.fromRegion,
-// 			toRegion: data.toRegion,
-// 			carModel: carModelId,
-// 			carType: carTypeId || null,
-// 			maxPassengers: data.maxPassengers,
-// 			serviceType: data.serviceType,
-// 			workHours: data.workHours,
-// 			departureTime: data.departureTime || "Yo'lovchi bilan kelishiladi",
-// 			status: 'inactive',
-// 			balance: 0,
-// 			totalOrders: 0,
-// 			registrationStep: 'completed',
-// 			createdAt: new Date(),
-// 			updatedAt: new Date()
-// 		}
-
-// 		console.log('📝 Driver yaratilmoqda:', driverData)
-
-// 		// Driver yaratish
-// 		const driver = new Driver(driverData)
-// 		await driver.save()
-
-// 		console.log('✅ Driver saqlandi. ID:', driver._id)
-
-// 		// User rolini yangilash
-// 		user.role = 'driver'
-// 		user.state = states.MAIN_MENU
-// 		await user.save()
-
-// 		console.log('✅ User roli yangilandi')
-
-// 		// Muvaffaqiyatli xabar
-// 		const serviceNames = {
-// 			road: user.language === 'uz' ? "Yo'l-yo'lakay" : 'Попутка',
-// 			route: user.language === 'uz' ? "Yo'nalish" : 'Направление',
-// 			parcel: user.language === 'uz' ? 'Pochta' : 'Посылка'
-// 		}
-
-// 		const services = data.serviceType.map(type => serviceNames[type] || type).join(', ')
-
-// 		const carModelName = data.carModel || "Noma'lum"
-// 		const carTypeName = data.carTypeName
-// 			? user.language === 'uz'
-// 				? data.carTypeName
-// 				: data.carTypeNameRu
-// 			: ''
-
-// 		const successMessage =
-// 			user.language === 'uz'
-// 				? `✅ <b>Tabriklaymiz! Profilingiz muvaffaqiyatli yaratildi!</b>\n\n` +
-// 				  `<b>Profil ma'lumotlari:</b>\n` +
-// 				  `👤 <b>Ism:</b> ${data.fullName}\n` +
-// 				  `📍 <b>Yo'nalish:</b> ${data.fromRegion} → ${data.toRegion}\n` +
-// 				  `🚗 <b>Mashina:</b> ${carModelName}\n` +
-// 				  (carTypeName ? `🚗 <b>Mashina turi:</b> ${carTypeName}\n` : '') +
-// 				  `👥 <b>Sig'im:</b> ${data.maxPassengers} kishi\n` +
-// 				  `🎯 <b>Xizmatlar:</b> ${services}\n` +
-// 				  `🏪 <b>Ish vaqti:</b> ${data.workHours}\n` +
-// 				  (data.departureTime ? `⏰ <b>Jo'nash vaqti:</b> ${data.departureTime}\n` : '') +
-// 				  `\n✅ Profilingiz yaratildi, endi to'lov qilish orqali faollashtirishingiz mumkin.`
-// 				: `✅ <b>Поздравляем! Ваш профиль успешно создан!</b>\n\n` +
-// 				  `<b>Данные профиля:</b>\n` +
-// 				  `👤 <b>Имя:</b> ${data.fullName}\n` +
-// 				  `📍 <b>Направление:</b> ${data.fromRegion} → ${data.toRegion}\n` +
-// 				  `🚗 <b>Машина:</b> ${carModelName}\n` +
-// 				  (carTypeName ? `🚗 <b>Тип машины:</b> ${carTypeName}\n` : '') +
-// 				  `👥 <b>Вместимость:</b> ${data.maxPassengers} человек\n` +
-// 				  `🎯 <b>Услуги:</b> ${services}\n` +
-// 				  `🏪 <b>Время работы:</b> ${data.workHours}\n` +
-// 				  (data.departureTime ? `⏰ <b>Время отправления:</b> ${data.departureTime}\n` : '') +
-// 				  `\n✅ Ваш профиль создан, теперь вы можете активировать его, совершив оплату.`
-
-// 		await ctx.reply(successMessage, {
-// 			parse_mode: 'HTML',
-// 			reply_markup: { remove_keyboard: true }
-// 		})
-
-// 		// Sessionni tozalash
-// 		delete ctx.session.driverData
-// 		console.log('✅ Session tozalandi')
-
-// 		// To'lov menyusini ko'rsatish (2 soniyadan keyin)
-// 		setTimeout(async () => {
-// 			await handleDriverPayment(ctx)
-// 		}, 2000)
-// 	} catch (error) {
-// 		console.error('❌ Save profile error:', error)
-// 		console.error('❌ Error stack:', error.stack)
-
-// 		// MongoDB xatoliklarini tekshirish
-// 		if (error.name === 'ValidationError') {
-// 			console.error('❌ Validation error details:', error.errors)
-// 		}
-
-// 		await ctx.reply(
-// 			user.language === 'uz'
-// 				? `❌ Profilni saqlashda xatolik yuz berdi.\n\n` +
-// 						`Xato: ${error.message}\n\n` +
-// 						`Iltimos, qayta urinib ko'ring.`
-// 				: `❌ Ошибка при сохранении профиля.\n\n` +
-// 						`Ошибка: ${error.message}\n\n` +
-// 						`Пожалуйста, попробуйте еще раз.`
-// 		)
-// 	}
-// }
-
 // ====================== PROFIL SAQLASH FUNKSIYASI ======================
 const saveProfileWithPayment = async ctx => {
 	const user = ctx.user
@@ -959,6 +193,16 @@ const saveProfileWithPayment = async ctx => {
 	}
 
 	const data = ctx.session.driverData
+
+	if (!data.carNumber) {
+		console.log('❌ Mashina raqami kiritilmagan')
+		await ctx.reply(
+			user.language === 'uz'
+				? '❌ Mashina raqami kiritilmagan. Iltimos, mashina raqamini kiriting.'
+				: '❌ Номер машины не введен. Пожалуйста, введите номер машины.'
+		)
+		return
+	}
 
 	// Required fields tekshirish
 	console.log('📊 Required fields tekshirish:')
@@ -1252,39 +496,42 @@ const showInactiveDriverMenu = async (ctx, driver) => {
 	}
 
 	const adminUsername = validateAndFormatAdminUsername()
+	 const carNumberInfo = populatedDriver.carNumber 
+        ? `\n🚘 <b>Mashina raqami:</b> ${populatedDriver.carNumber}` 
+        : '';
 
 	const message =
-    user.language === 'uz'
-        ? `🚘 <b>Haydovchi profili (Nofaol)</b>\n\n` +
-          `<b>Sizning ma'lumotlaringiz:</b>\n` +
-          `👤 <b>Ism:</b> ${populatedDriver.fullName}\n` +
-          `🚗 <b>Mashina:</b> ${carModelInfo}${carTypeInfo}\n` +
-          `📍 <b>Yo'nalish:</b> ${populatedDriver.fromRegion} → ${populatedDriver.toRegion}\n` +
-          `👥 <b>Sig'im:</b> ${populatedDriver.maxPassengers} kishi\n\n` +
-          (populatedDriver.status === 'inactive' 
-            ? `💳 <b>Holat:</b> Profilingiz faol emas\n` +
-              `📞 <b>Sabab:</b> Oylik to'lov amalga oshirilmagan\n\n`
-            : `✅ <b>Holat:</b> Profilingiz faol\n\n`) +
-          `✅ <b>Qanday faollashtirish:</b>\n` +
-          `1. "To'lov qilish" tugmasini bosing\n` +
-          `2. Admin bilan Telegram chat ochiladi\n` +
-          `3. Adminga "To'lov qilmoqchiman" deb yozing\n` +
-          `4. To'lov qiling va profilingiz faollashadi`
-        : `🚘 <b>Профиль водителя (Неактивен)</b>\n\n` +
-          `<b>Ваши данные:</b>\n` +
-          `👤 <b>Имя:</b> ${populatedDriver.fullName}\n` +
-          `🚗 <b>Машина:</b> ${carModelInfo}${carTypeInfo}\n` +
-          `📍 <b>Направление:</b> ${populatedDriver.fromRegion} → ${populatedDriver.toRegion}\n` +
-          `👥 <b>Вместимость:</b> ${populatedDriver.maxPassengers} человек\n\n` +
-          (populatedDriver.status === 'inactive'
-            ? `💳 <b>Статус:</b> Ваш профиль не активен\n` +
-              `📞 <b>Причина:</b> Ежемесячный платеж не произведен\n\n`
-            : `✅ <b>Статус:</b> Ваш профиль активен\n\n`) +
-          `✅ <b>Как активировать:</b>\n` +
-          `1. Нажмите кнопку "Оплатить"\n` +
-          `2. Откроется чат в Telegram с администратором\n` +
-          `3. Напишите администратору "Хочу оплатить"\n` +
-          `4. Оплатите и ваш профиль активируется`
+		user.language === 'uz'
+			? `🚘 <b>Haydovchi profili (Nofaol)</b>\n\n` +
+			  `<b>Sizning ma'lumotlaringiz:</b>\n` +
+			  `👤 <b>Ism:</b> ${populatedDriver.fullName}\n` +
+			  `🚗 <b>Mashina:</b> ${carModelInfo}${carTypeInfo}${carNumberInfo}\n` +
+			  `📍 <b>Yo'nalish:</b> ${populatedDriver.fromRegion} → ${populatedDriver.toRegion}\n` +
+			  `👥 <b>Sig'im:</b> ${populatedDriver.maxPassengers} kishi\n\n` +
+			  (populatedDriver.status === 'inactive'
+					? `💳 <b>Holat:</b> Profilingiz faol emas\n` +
+					  `📞 <b>Sabab:</b> Oylik to'lov amalga oshirilmagan\n\n`
+					: `✅ <b>Holat:</b> Profilingiz faol\n\n`) +
+			  `✅ <b>Qanday faollashtirish:</b>\n` +
+			  `1. "To'lov qilish" tugmasini bosing\n` +
+			  `2. Admin bilan Telegram chat ochiladi\n` +
+			  `3. Adminga "To'lov qilmoqchiman" deb yozing\n` +
+			  `4. To'lov qiling va profilingiz faollashadi`
+			: `🚘 <b>Профиль водителя (Неактивен)</b>\n\n` +
+			  `<b>Ваши данные:</b>\n` +
+			  `👤 <b>Имя:</b> ${populatedDriver.fullName}\n` +
+			  `🚗 <b>Машина:</b> ${carModelInfo}${carTypeInfo}${carNumberInfo}\n` +
+			  `📍 <b>Направление:</b> ${populatedDriver.fromRegion} → ${populatedDriver.toRegion}\n` +
+			  `👥 <b>Вместимость:</b> ${populatedDriver.maxPassengers} человек\n\n` +
+			  (populatedDriver.status === 'inactive'
+					? `💳 <b>Статус:</b> Ваш профиль не активен\n` +
+					  `📞 <b>Причина:</b> Ежемесячный платеж не произведен\n\n`
+					: `✅ <b>Статус:</b> Ваш профиль активен\n\n`) +
+			  `✅ <b>Как активировать:</b>\n` +
+			  `1. Нажмите кнопку "Оплатить"\n` +
+			  `2. Откроется чат в Telegram с администратором\n` +
+			  `3. Напишите администратору "Хочу оплатить"\n` +
+			  `4. Оплатите и ваш профиль активируется`
 
 	const keyboard = {
 		inline_keyboard: [
@@ -1478,135 +725,71 @@ const savePhone = async (ctx, phone) => {
 }
 
 // Mashinalarni tanlashni ko'rsatish
-const showCarSelection = async ctx => {
-	const user = ctx.user
+// const showCarSelection = async ctx => {
+// 	const user = ctx.user
 
-	const cars = await Car.find({ isActive: true }).sort({ name: 1 })
+// 	const cars = await Car.find({ isActive: true }).sort({ name: 1 })
 
-	if (cars.length === 0) {
-		const message =
-			user.language === 'uz'
-				? "🚗 Mashina modellari topilmadi. Mashina modelini qo'lda kiriting:"
-				: '🚗 Модели машин не найдены. Введите модель машины вручную:'
+// 	if (cars.length === 0) {
+// 		const message =
+// 			user.language === 'uz'
+// 				? "🚗 Mashina modellari topilmadi. Mashina modelini qo'lda kiriting:"
+// 				: '🚗 Модели машин не найдены. Введите модель машины вручную:'
 
-		user.state = states.DRIVER_REG_CAR_MODEL
-		await user.save()
+// 		user.state = states.DRIVER_REG_CAR_MODEL
+// 		await user.save()
 
-		await ctx.reply(message, {
-			reply_markup: {
-				remove_keyboard: true
-			}
-		})
-		return
-	}
+// 		await ctx.reply(message, {
+// 			reply_markup: {
+// 				remove_keyboard: true
+// 			}
+// 		})
+// 		return
+// 	}
 
-	const message =
-		user.language === 'uz' ? '🚗 Mashina modelini tanlang:' : '🚗 Выберите модель машины:'
+// 	const message =
+// 		user.language === 'uz' ? '🚗 Mashina modelini tanlang:' : '🚗 Выберите модель машины:'
 
-	const keyboardButtons = []
+// 	const keyboardButtons = []
 
-	for (let i = 0; i < cars.length; i += 3) {
-		const row = []
+// 	for (let i = 0; i < cars.length; i += 3) {
+// 		const row = []
 
-		for (let j = 0; j < 3; j++) {
-			if (cars[i + j]) {
-				const car = cars[i + j]
-				const displayName = user.language === 'uz' ? car.name : car.nameRu
-				row.push(Markup.button.callback(displayName, `car_select_${car._id}`))
-			}
-		}
+// 		for (let j = 0; j < 3; j++) {
+// 			if (cars[i + j]) {
+// 				const car = cars[i + j]
+// 				const displayName = user.language === 'uz' ? car.name : car.nameRu
+// 				row.push(Markup.button.callback(displayName, `car_select_${car._id}`))
+// 			}
+// 		}
 
-		if (row.length > 0) {
-			keyboardButtons.push(row)
-		}
-	}
+// 		if (row.length > 0) {
+// 			keyboardButtons.push(row)
+// 		}
+// 	}
 
-	const keyboard = Markup.inlineKeyboard(keyboardButtons)
+// 	const keyboard = Markup.inlineKeyboard(keyboardButtons)
 
-	await ctx.reply(message, keyboard)
-}
+// 	await ctx.reply(message, keyboard)
+// }
 
-// Mashina modelini tanlash callback
-const selectCarCallback = async (ctx, callbackData) => {
-	const user = ctx.user
-
-	ctx.session = ctx.session || {}
-	ctx.session.driverData = ctx.session.driverData || {}
-
-	const carId = callbackData.replace('car_select_', '')
-	const car = await Car.findById(carId)
-
-	if (!car) {
-		await ctx.reply(
-			user.language === 'uz' ? '❌ Mashina modeli topilmadi' : '❌ Модель машины не найдена'
-		)
-		await showCarSelection(ctx)
-		return
-	}
-
-	ctx.session.driverData.carId = car._id
-	ctx.session.driverData.carModel = car.name
-	ctx.session.driverData.carModelRu = car.nameRu
-
-	user.state = states.DRIVER_REG_CAR_TYPE
-	await user.save()
-
-	const successMessage =
-		user.language === 'uz'
-			? `✅ Mashina modeli tanlandi: ${car.name}`
-			: `✅ Модель машины выбрана: ${car.nameRu}`
-
-	await ctx.reply(successMessage)
-
-	await selectCarType(ctx)
-}
-
-// Mashina modelini qo'lda kiritish
-const saveCarModel = async (ctx, text) => {
-	const user = ctx.user
-
-	ctx.session = ctx.session || {}
-	ctx.session.driverData = ctx.session.driverData || {}
-
-	if (text.length < 2) {
-		const message =
-			user.language === 'uz'
-				? "❌ Mashina modeli kamida 2 ta belgidan iborat bo'lishi kerak."
-				: '❌ Модель машины должна содержать не менее 2 символов.'
-
-		await ctx.reply(message)
-		return
-	}
-
-	ctx.session.driverData.carModel = text
-
-	user.state = states.DRIVER_REG_CAR_TYPE
-	await user.save()
-
-	await selectCarType(ctx)
-}
-
-// Mashina turini tanlash
 const selectCarType = async ctx => {
 	const user = ctx.user
 
 	const carTypes = await CarType.find({ isActive: true }).sort({ name: 1 })
 
 	if (carTypes.length === 0) {
-		user.state = states.DRIVER_REG_MAX_PASSENGERS
-		await user.save()
+		// Agar mashina turlari bo'lmasa, mashina raqamini so'rash
+		console.log('⚠️ No car types found, asking for car number directly')
 
-		const carModelDisplay =
-			user.language === 'uz'
-				? ctx.session.driverData.carModel
-				: ctx.session.driverData.carModelRu || ctx.session.driverData.carModel
+		// Avval xabarni o'chirish
+		try {
+			await ctx.deleteMessage()
+		} catch (error) {
+			console.log('Delete message error:', error.message)
+		}
 
-		const message =
-			user.language === 'uz'
-				? `🚗 Mashinangiz modeli: ${carModelDisplay}\n\n👥 Necha kishigacha olib ketasiz?`
-				: `🚗 Модель вашей машины: ${carModelDisplay}\n\n👥 Сколько человек вы можете взять?`
-
-		await ctx.reply(message, keyboards.maxPassengersKeyboard(user.language))
+		await askCarNumber(ctx)
 		return
 	}
 
@@ -1650,54 +833,54 @@ const selectCarType = async ctx => {
 	await ctx.reply(message, keyboard)
 }
 
-// Mashina turini tanlash callback
-const selectCarTypeCallback = async (ctx, callbackData) => {
-	const user = ctx.user
+// // Mashina turini tanlash callback
+// const selectCarTypeCallback = async (ctx, callbackData) => {
+// 	const user = ctx.user
 
-	ctx.session = ctx.session || {}
-	ctx.session.driverData = ctx.session.driverData || {}
+// 	ctx.session = ctx.session || {}
+// 	ctx.session.driverData = ctx.session.driverData || {}
 
-	if (callbackData === 'car_type_skip') {
-		ctx.session.driverData.carType = null
-		ctx.session.driverData.carTypeName = null
-		ctx.session.driverData.carTypeNameRu = null
+// 	if (callbackData === 'car_type_skip') {
+// 		ctx.session.driverData.carType = null
+// 		ctx.session.driverData.carTypeName = null
+// 		ctx.session.driverData.carTypeNameRu = null
 
-		user.state = states.DRIVER_REG_MAX_PASSENGERS
-		await user.save()
+// 		user.state = states.DRIVER_REG_MAX_PASSENGERS
+// 		await user.save()
 
-		const message =
-			user.language === 'uz'
-				? '👥 Necha kishigacha olib ketasiz?'
-				: '👥 Сколько человек вы можете взять?'
+// 		const message =
+// 			user.language === 'uz'
+// 				? '👥 Necha kishigacha olib ketasiz?'
+// 				: '👥 Сколько человек вы можете взять?'
 
-		await ctx.reply(message, keyboards.maxPassengersKeyboard(user.language))
-		return
-	}
+// 		await ctx.reply(message, keyboards.maxPassengersKeyboard(user.language))
+// 		return
+// 	}
 
-	const carTypeId = callbackData.replace('car_type_', '')
-	const carType = await CarType.findById(carTypeId)
+// 	const carTypeId = callbackData.replace('car_type_', '')
+// 	const carType = await CarType.findById(carTypeId)
 
-	if (!carType) {
-		await ctx.reply(
-			user.language === 'uz' ? '❌ Mashina turi topilmadi' : '❌ Тип машины не найден'
-		)
-		return
-	}
+// 	if (!carType) {
+// 		await ctx.reply(
+// 			user.language === 'uz' ? '❌ Mashina turi topilmadi' : '❌ Тип машины не найден'
+// 		)
+// 		return
+// 	}
 
-	ctx.session.driverData.carType = carType._id
-	ctx.session.driverData.carTypeName = carType.name
-	ctx.session.driverData.carTypeNameRu = carType.nameRu
+// 	ctx.session.driverData.carType = carType._id
+// 	ctx.session.driverData.carTypeName = carType.name
+// 	ctx.session.driverData.carTypeNameRu = carType.nameRu
 
-	user.state = states.DRIVER_REG_MAX_PASSENGERS
-	await user.save()
+// 	user.state = states.DRIVER_REG_MAX_PASSENGERS
+// 	await user.save()
 
-	const successMessage =
-		user.language === 'uz'
-			? `✅ Mashina turi tanlandi: ${carType.name}\n\n👥 Necha kishigacha olib ketasiz?`
-			: `✅ Тип машины выбран: ${carType.nameRu}\n\n👥 Сколько человек вы можете взять?`
+// 	const successMessage =
+// 		user.language === 'uz'
+// 			? `✅ Mashina turi tanlandi: ${carType.name}\n\n👥 Necha kishigacha olib ketasiz?`
+// 			: `✅ Тип машины выбран: ${carType.nameRu}\n\n👥 Сколько человек вы можете взять?`
 
-	await ctx.reply(successMessage, keyboards.maxPassengersKeyboard(user.language))
-}
+// 	await ctx.reply(successMessage, keyboards.maxPassengersKeyboard(user.language))
+// }
 
 // Maksimal yo'lovchilar sonini tanlash
 const selectMaxPassengers = async (ctx, callbackData) => {
@@ -1860,26 +1043,26 @@ const selectServiceType = async (ctx, callbackData) => {
 
 // ====================== VAQT VA SANA TANLASH ======================
 const generateDateKeyboard = (lang = 'uz') => {
-	const days = []
-	const today = new Date()
+    const days = []
+    const today = new Date()
 
-	for (let i = 0; i < 7; i++) {
-		const date = new Date(today)
-		date.setDate(today.getDate() + i)
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(today)
+        date.setDate(today.getDate() + i)
 
-		const dayName = date.toLocaleDateString(lang === 'uz' ? 'uz-UZ' : 'ru-RU', { weekday: 'short' })
-		const dateStr = date.toLocaleDateString(lang === 'uz' ? 'uz-UZ' : 'ru-RU', {
-			day: 'numeric',
-			month: 'long'
-		})
+        const dayName = date.toLocaleDateString(lang === 'uz' ? 'uz-UZ' : 'ru-RU', { weekday: 'short' })
+        const dateStr = date.toLocaleDateString(lang === 'uz' ? 'uz-UZ' : 'ru-RU', {
+            day: 'numeric',
+            month: 'long'
+        })
 
-		const buttonText = `${dayName}, ${dateStr}`
-		const callbackData = `date_${date.toISOString().split('T')[0]}`
+        const buttonText = `${dayName}, ${dateStr}`
+        const callbackData = `date_${date.toISOString().split('T')[0]}`
 
-		days.push([Markup.button.callback(buttonText, callbackData)])
-	}
+        days.push([Markup.button.callback(buttonText, callbackData)])
+    }
 
-	return Markup.inlineKeyboard(days)
+    return Markup.inlineKeyboard(days)
 }
 
 const generateTimeKeyboard = (lang = 'uz') => {
@@ -1901,7 +1084,6 @@ const generateTimeKeyboard = (lang = 'uz') => {
 
 	return Markup.inlineKeyboard(rows)
 }
-
 const showDateTimeSelection = async ctx => {
 	const user = ctx.user
 
@@ -1910,141 +1092,206 @@ const showDateTimeSelection = async ctx => {
 
 	const message =
 		user.language === 'uz'
-			? "📅 Jo'nash sanasini tanlang (keyingi 7 kun):"
-			: '📅 Выберите дату отправления (следующие 7 дней):'
+			? "📅 Jo'nash sanasini tanlang (keyingi 7 kun):\n\n" +
+			  "Yoki qo'lda sanani kiriting:\n" +
+			  '📝 Format: <code>YYYY-MM-DD</code>\n' +
+			  '✅ Masalan: <code>2024-12-25</code>\n' +
+			  '✅ Masalan: <code>2024-12-31</code>'
+			: '📅 Выберите дату отправления (следующие 7 дней):\n\n' +
+			  'Или введите дату вручную:\n' +
+			  '📝 Формат: <code>YYYY-MM-DD</code>\n' +
+			  '✅ Например: <code>2024-12-25</code>\n' +
+			  '✅ Например: <code>2024-12-31</code>'
 
-	await ctx.reply(message, generateDateKeyboard(user.language))
+	// Kalendar tugmalari - TO'G'RI FORMATDA OLISH
+    const dateKeyboard = generateDateKeyboard(user.language)
+
+	const keyboardButtons = dateKeyboard.reply_markup
+		? [...dateKeyboard.reply_markup.inline_keyboard]
+		: []
+
+	// Qo'lda kiritish tugmasini qo'shish
+	keyboardButtons.push([
+		Markup.button.callback(
+			user.language === 'uz' ? "✏️ Qo'lda kiritish" : '✏️ Ввести вручную',
+			'date_manual_input'
+		)
+	])
+
+	// Orqaga tugmasi
+	keyboardButtons.push([
+		Markup.button.callback(user.language === 'uz' ? '⬅️ Orqaga' : '⬅️ Назад', 'back_to_work_hours')
+	])
+
+	const keyboard = Markup.inlineKeyboard(keyboardButtons)
+
+	await ctx.reply(message, keyboard)
 }
 
-// const selectWorkHoursCallback = async (ctx, callbackData) => {
-//     const user = ctx.user
+const handleDateManualInput = async ctx => {
+    const user = ctx.user
 
-//     console.log('🕒 selectWorkHoursCallback chaqirildi, callbackData:', callbackData)
+    user.state = states.DRIVER_REG_DATE_MANUAL
+    await user.save()
 
-//     try {
-//         await ctx.answerCbQuery()
-//     } catch (error) {
-//         console.log('⚠️ answerCbQuery error:', error.message)
-//     }
+    const today = new Date()
+    const tomorrow = new Date(today)
+    tomorrow.setDate(today.getDate() + 1)
+    const nextWeek = new Date(today)
+    nextWeek.setDate(today.getDate() + 30) // 30 kun ichida istalgan sana
 
-//     ctx.session = ctx.session || {}
-//     ctx.session.driverData = ctx.session.driverData || {}
+    const todayStr = today.toISOString().split('T')[0]
+    const tomorrowStr = tomorrow.toISOString().split('T')[0]
+    const nextWeekStr = nextWeek.toISOString().split('T')[0]
 
-//     console.log('🔍 Session driverData:', JSON.stringify(ctx.session.driverData, null, 2))
+    const message = user.language === 'uz'
+        ? "✏️ Sanani quyidagi formatda kiriting:\n" +
+          "📝 <code>YYYY-MM-DD</code>\n\n" +
+          "✅ Masalan:\n" +
+          `• Bugun: <code>${todayStr}</code>\n` +
+          `• Ertaga: <code>${tomorrowStr}</code>\n` +
+          `• Keyingi hafta: <code>${nextWeekStr}</code>\n\n` +
+          "ℹ️ Faqat kelajakdagi sanalarni kiritishingiz mumkin (o'tgan kunlar yo'q)\n" +
+          "ℹ️ Maksimal 30 kun ichidagi sanalar"
+        : "✏️ Введите дату в формате:\n" +
+          "📝 <code>YYYY-MM-DD</code>\n\n" +
+          "✅ Например:\n" +
+          `• Сегодня: <code>${todayStr}</code>\n` +
+          `• Завтра: <code>${tomorrowStr}</code>\n` +
+          `• Следующая неделя: <code>${nextWeekStr}</code>\n\n` +
+          "ℹ️ Можно вводить только будущие даты (прошедшие дни нельзя)\n" +
+          "ℹ️ Даты в пределах 30 дней"
 
-//     if (callbackData === 'work_custom' || callbackData === 'work_custom_enter') {
-//         // ... existing code ...
-//         return
-//     }
+    await ctx.reply(message, {
+        parse_mode: 'HTML',
+        reply_markup: { remove_keyboard: true }
+    })
+}
 
-//     // Callback datani parse qilish
-//     let workHours = ''
-//     if (callbackData === 'work_1000_1800') {
-//         workHours = '10:00 - 18:00'
-//     } else if (callbackData === 'work_1800_0200') {
-//         workHours = '18:00 - 02:00'
-//     } else if (callbackData === 'work_0200_1000') {
-//         workHours = '02:00 - 10:00'
-//     } else if (callbackData.startsWith('work_custom_')) {
-//         const times = callbackData.replace('work_custom_', '').split('_')
-//         if (times.length === 2) {
-//             workHours = `${times[0]} - ${times[1]}`
-//         }
-//     }
+// ====================== QO'LDA KIRITILGAN SANANI SAQLASH ======================
+const saveManualDateInput = async (ctx, text) => {
+    const user = ctx.user
 
-//     console.log('📝 Parsed work hours:', workHours)
+    console.log('📅 Qo\'lda sana kiritildi:', text)
 
-//     // Tanlanli vaqtni saqlash
-//     if (workHours) {
-//         ctx.session.driverData.workHours = workHours
+    // Sana formatini tekshirish (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+    
+    if (!dateRegex.test(text)) {
+        await ctx.reply(
+            user.language === 'uz'
+                ? "❌ Noto'g'ri sana formati! Iltimos, YYYY-MM-DD formatida kiriting.\nMasalan: 2024-12-25"
+                : '❌ Неправильный формат даты! Пожалуйста, введите в формате YYYY-MM-DD.\nНапример: 2024-12-25'
+        )
+        return
+    }
 
-//         console.log('✅ Ish vaqti sessionga saqlandi:', ctx.session.driverData.workHours)
+    // Sana obyektini yaratish
+    const inputDate = new Date(text)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // Faqat sanani solishtirish uchun
+    
+    const maxDate = new Date()
+    maxDate.setDate(today.getDate() + 30) // Maksimal 30 kun
 
-//         // Avval xabarni o'chirish
-//         try {
-//             await ctx.deleteMessage()
-//         } catch (error) {
-//             console.log('Delete message error:', error.message)
-//         }
+    // Sana noto'g'ri bo'lsa
+    if (isNaN(inputDate.getTime())) {
+        await ctx.reply(
+            user.language === 'uz'
+                ? "❌ Noto'g'ri sana! Iltimos, to'g'ri sanani kiriting."
+                : '❌ Неправильная дата! Пожалуйста, введите правильную дату.'
+        )
+        return
+    }
 
-//         // Keyingi qadamga o'tish (sana va vaqt tanlash)
-//         await showDateTimeSelection(ctx)
-//     } else {
-//         console.error('❌ Work hours not parsed properly')
-//         await ctx.reply(
-//             user.language === 'uz'
-//                 ? "❌ Xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
-//                 : '❌ Произошла ошибка. Пожалуйста, попробуйте еще раз.'
-//         )
-//     }
-// }
+    // O'tgan sana bo'lmasligi kerak
+    if (inputDate < today) {
+        await ctx.reply(
+            user.language === 'uz'
+                ? "❌ O'tgan sanani kiritish mumkin emas! Faqat kelajakdagi sanalar."
+                : '❌ Нельзя вводить прошедшие даты! Только будущие даты.'
+        )
+        return
+    }
 
-// const selectDate = async (ctx, callbackData) => {
-// 	const user = ctx.user
-// 	const dateStr = callbackData.replace('date_', '')
+    // 30 kundan keyingi sana bo'lmasligi kerak
+    if (inputDate > maxDate) {
+        await ctx.reply(
+            user.language === 'uz'
+                ? `❌ Sana 30 kundan keyin bo'lishi mumkin emas! Iltimos, ${maxDate.toISOString().split('T')[0]} dan oldingi sanani kiriting.`
+                : `❌ Дата не может быть позже чем через 30 дней! Пожалуйста, введите дату до ${maxDate.toISOString().split('T')[0]}.`
+        )
+        return
+    }
 
-// 	ctx.session = ctx.session || {}
-// 	ctx.session.driverData = ctx.session.driverData || {}
+    // Sessionga sana saqlash
+    ctx.session = ctx.session || {}
+    ctx.session.driverData = ctx.session.driverData || {}
+    ctx.session.selectedDate = inputDate.toISOString().split('T')[0]
 
-// 	ctx.session.selectedDate = dateStr
+    console.log('✅ Sana sessionga saqlandi:', ctx.session.selectedDate)
 
-// 	user.state = states.DRIVER_REG_TIME_SELECTION
-// 	await user.save()
+    // Sana formatlash
+    const formattedDate = inputDate.toLocaleDateString(user.language === 'uz' ? 'uz-UZ' : 'ru-RU', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    })
 
-// 	const date = new Date(dateStr)
-// 	const formattedDate = date.toLocaleDateString(user.language === 'uz' ? 'uz-UZ' : 'ru-RU', {
-// 		weekday: 'long',
-// 		day: 'numeric',
-// 		month: 'long'
-// 	})
+    // Vaqtni so'rash
+    const successMessage = user.language === 'uz'
+        ? `✅ Sana tanlandi: ${formattedDate}\n\n⏰ Endi jo'nash vaqtini kiriting (masalan: 14:30 yoki 08:00):`
+        : `✅ Дата выбрана: ${formattedDate}\n\n⏰ Теперь введите время отправления (например: 14:30 или 08:00):`
 
-// 	const message =
-// 		user.language === 'uz'
-// 			? `📅 Tanlangan sana: ${formattedDate}\n\n⏰ Jo'nash vaqtini tanlang:`
-// 			: `📅 Выбранная дата: ${formattedDate}\n\n⏰ Выберите время отправления:`
+    user.state = states.DRIVER_REG_TIME_INPUT
+    await user.save()
 
-// 	await ctx.reply(message, generateTimeKeyboard(user.language))
-// }
+    await ctx.reply(successMessage, {
+        reply_markup: { remove_keyboard: true }
+    })
+}
 
-// const selectTime = async (ctx, callbackData) => {
-// 	const user = ctx.user
-// 	const timeStr = callbackData.replace('time_', '')
+// ====================== ORQAGA QAYTISH (ISH VAQTI TANLASHGA) ======================
+const handleBackToWorkHours = async ctx => {
+    const user = ctx.user
+    
+    console.log('⬅️ Orqaga qaytish: Ish vaqti tanlashga')
+    
+    user.state = states.DRIVER_REG_WORK_HOURS
+    await user.save()
+    
+    // Work hours tanlash sahifasiga qaytish
+    await showWorkHoursSelection(ctx)
+}
 
-// 	ctx.session = ctx.session || {}
-// 	ctx.session.driverData = ctx.session.driverData || {}
-
-// 	const selectedDate = ctx.session.selectedDate
-// 	const date = new Date(selectedDate)
-// 	const formattedDate = date.toLocaleDateString(user.language === 'uz' ? 'uz-UZ' : 'ru-RU', {
-// 		weekday: 'long',
-// 		day: 'numeric',
-// 		month: 'long'
-// 	})
-
-// 	ctx.session.driverData.departureTime = `${formattedDate}, ${timeStr}`
-
-// 	delete ctx.session.selectedDate
-
-// 	await showConfirmation(ctx)
-// }
-
+// ====================== EXISTING selectDate FUNKSIYASINI YANGILASH ======================
 const selectDate = async (ctx, callbackData) => {
-	const user = ctx.user
-	const dateStr = callbackData.replace('date_', '')
+    const user = ctx.user
+    
+    // Agar qo'lda kiritish tugmasi bosilsa
+    if (callbackData === 'date_manual_input') {
+        await handleDateManualInput(ctx)
+        return
+    }
+    
+    // Oddiy sana tanlash (callbackData format: date_2024-12-25)
+    const dateStr = callbackData.replace('date_', '')
 
-	console.log('📞 selectDate chaqirildi, callbackData:', callbackData)
-	console.log('📅 Ajratilgan sana:', dateStr)
+    console.log('📞 selectDate chaqirildi, callbackData:', callbackData)
+    console.log('📅 Ajratilgan sana:', dateStr)
 
-	ctx.session = ctx.session || {}
-	ctx.session.driverData = ctx.session.driverData || {}
+    ctx.session = ctx.session || {}
+    ctx.session.driverData = ctx.session.driverData || {}
 
-	// Sana sessionga saqlash
-	ctx.session.selectedDate = dateStr
-	console.log('✅ Session selectedDate ga saqlandi:', ctx.session.selectedDate)
+    // Sana sessionga saqlash
+    ctx.session.selectedDate = dateStr
+    console.log('✅ Session selectedDate ga saqlandi:', ctx.session.selectedDate)
 
-	// Vaqtni so'rash
-	await showTimeInput(ctx)
+    // Vaqtni so'rash
+    await showTimeInput(ctx)
 }
+
 // generateTimeKeyboard o'rniga qo'lda vaqt kiritish uchun funksiya
 const showTimeInput = async ctx => {
 	const user = ctx.user
@@ -2210,219 +1457,52 @@ const saveTimeInput = async (ctx, text) => {
 	console.log('⏰ ========== saveTimeInput END ==========')
 }
 
-// ====================== TASDIQLASH VA PROFIL SAQLASH ======================
-// const showConfirmation = async ctx => {
-// 	const user = ctx.user
-
-// 	if (!ctx.session || !ctx.session.driverData) {
-// 		await ctx.reply("❌ Ma'lumotlar topilmadi. Iltimos, qaytadan boshlang.")
-// 		user.state = states.MAIN_MENU
-// 		await user.save()
-// 		return
-// 	}
-
-// 	const data = ctx.session.driverData
-
-// 	if (
-// 		!data.fromRegion ||
-// 		!data.toRegion ||
-// 		!data.fullName ||
-// 		!data.phone ||
-// 		!data.carModel ||
-// 		!data.maxPassengers ||
-// 		!data.serviceType ||
-// 		data.serviceType.length === 0 ||
-// 		!data.departureTime
-// 	) {
-// 		await ctx.reply("❌ Barcha maydonlar to'ldirilmagan. Iltimos, qaytadan boshlang.")
-// 		user.state = states.MAIN_MENU
-// 		await user.save()
-// 		return
-// 	}
-
-// 	const serviceNames = {
-// 		road: user.language === 'uz' ? "Yo'l-yo'lakay" : 'Попутка',
-// 		route: user.language === 'uz' ? "Yo'nalish" : 'Направление',
-// 		parcel: user.language === 'uz' ? 'Pochta' : 'Посылка'
-// 	}
-
-// 	const services = data.serviceType.map(type => serviceNames[type]).join(', ')
-
-// 	const carTypeInfo = data.carTypeName
-// 		? `\n🚗 Mashina turi: ${user.language === 'uz' ? data.carTypeName : data.carTypeNameRu}`
-// 		: ''
-
-// 	const carModelDisplay = user.language === 'uz' ? data.carModel : data.carModelRu || data.carModel
-
-// 	const message =
-// 		user.language === 'uz'
-// 			? `📋 Ma'lumotlaringizni tekshiring:\n\n` +
-// 			  `📍 Chiqish: ${data.fromRegion}\n` +
-// 			  `📍 Kirish: ${data.toRegion}\n` +
-// 			  `👤 Ism-familiya: ${data.fullName}\n` +
-// 			  `📞 Telefon: ${data.phone}\n` +
-// 			  `🚗 Mashina: ${carModelDisplay}` +
-// 			  carTypeInfo +
-// 			  `\n👥 Maksimal yo'lovchilar: ${data.maxPassengers} kishi\n` +
-// 			  `🎯 Xizmatlar: ${services}\n` +
-// 			  `⏰ Jo'nash vaqti: ${data.departureTime}\n\n` +
-// 			  `Barchasi to'g'rimi?`
-// 			: `📋 Проверьте ваши данные:\n\n` +
-// 			  `📍 Отправление: ${data.fromRegion}\n` +
-// 			  `📍 Прибытие: ${data.toRegion}\n` +
-// 			  `👤 Имя-фамилия: ${data.fullName}\n` +
-// 			  `📞 Телефон: ${data.phone}\n` +
-// 			  `🚗 Машина: ${carModelDisplay}` +
-// 			  carTypeInfo +
-// 			  `\n👥 Максимум пассажиров: ${data.maxPassengers} человек\n` +
-// 			  `🎯 Услуги: ${services}\n` +
-// 			  `⏰ Время отправления: ${data.departureTime}\n\n` +
-// 			  `Все верно?`
-
-// 	user.state = states.DRIVER_REG_CONFIRM
-// 	await user.save()
-
-// 	await ctx.reply(message, keyboards.confirmKeyboard(user.language))
-// }
-
-// ====================== TASDIQLASH VA PROFIL SAQLASH ======================
-// ====================== TASDIQLASH VA PROFIL SAQLASH ======================
-// const showConfirmation = async ctx => {
-// 	const user = ctx.user
-
-// 	console.log(
-// 		'🔍 showConfirmation called, session data:',
-// 		JSON.stringify(ctx.session?.driverData, null, 2)
-// 	)
-
-// 	if (!ctx.session || !ctx.session.driverData) {
-// 		await ctx.reply("❌ Ma'lumotlar topilmadi. Iltimos, qaytadan boshlang.")
-// 		user.state = states.MAIN_MENU
-// 		await user.save()
-// 		return
-// 	}
-
-// 	const data = ctx.session.driverData
-
-// 	// Tekshirish (faqat kerakli maydonlar)
-// 	const requiredFields = [
-// 		'fromRegion',
-// 		'toRegion',
-// 		'fullName',
-// 		'phone',
-// 		'carModel',
-// 		'maxPassengers',
-// 		'serviceType',
-// 		'workHours'
-// 	]
-
-// 	const missingFields = requiredFields.filter(field => !data[field])
-
-// 	if (missingFields.length > 0 || !data.serviceType || data.serviceType.length === 0) {
-// 		console.log('❌ Yetishmayotgan maydonlar:', missingFields)
-// 		await ctx.reply(
-// 			user.language === 'uz'
-// 				? `❌ Quyidagi maydonlar to'ldirilmagan: ${missingFields.join(', ')}`
-// 				: `❌ Следующие поля не заполнены: ${missingFields.join(', ')}`
-// 		)
-// 		user.state = states.MAIN_MENU
-// 		await user.save()
-// 		return
-// 	}
-
-// 	const serviceNames = {
-// 		road: user.language === 'uz' ? "Yo'l-yo'lakay" : 'Попутка',
-// 		route: user.language === 'uz' ? "Yo'nalish" : 'Направление',
-// 		parcel: user.language === 'uz' ? 'Pochta' : 'Посылка'
-// 	}
-
-// 	const services = data.serviceType.map(type => serviceNames[type]).join(', ')
-
-// 	const carTypeInfo = data.carTypeName
-// 		? `\n🚗 Mashina turi: ${user.language === 'uz' ? data.carTypeName : data.carTypeNameRu}`
-// 		: ''
-
-// 	const carModelDisplay = user.language === 'uz' ? data.carModel : data.carModelRu || data.carModel
-
-// 	// departureTime bo'lmasa, shunchaki ko'rsatmaymiz
-// 	const departureTimeInfo = data.departureTime ? `\n⏰ Jo'nash vaqti: ${data.departureTime}` : ''
-
-// 	const message =
-// 		user.language === 'uz'
-// 			? `📋 Ma'lumotlaringizni tekshiring:\n\n` +
-// 			  `📍 Chiqish: ${data.fromRegion}\n` +
-// 			  `📍 Kirish: ${data.toRegion}\n` +
-// 			  `👤 Ism-familiya: ${data.fullName}\n` +
-// 			  `📞 Telefon: ${data.phone}\n` +
-// 			  `🚗 Mashina: ${carModelDisplay}` +
-// 			  carTypeInfo +
-// 			  `\n👥 Maksimal yo'lovchilar: ${data.maxPassengers} kishi\n` +
-// 			  `🎯 Xizmatlar: ${services}\n` +
-// 			  `🏪 Ish vaqti: ${data.workHours}` +
-// 			  departureTimeInfo +
-// 			  `\n\nBarchasi to'g'rimi?`
-// 			: `📋 Проверьте ваши данные:\n\n` +
-// 			  `📍 Отправление: ${data.fromRegion}\n` +
-// 			  `📍 Прибытие: ${data.toRegion}\n` +
-// 			  `👤 Имя-фамилия: ${data.fullName}\n` +
-// 			  `📞 Телефон: ${data.phone}\n` +
-// 			  `🚗 Машина: ${carModelDisplay}` +
-// 			  carTypeInfo +
-// 			  `\n👥 Максимум пассажиров: ${data.maxPassengers} человек\n` +
-// 			  `🎯 Услуги: ${services}\n` +
-// 			  `🏪 Время работы: ${data.workHours}` +
-// 			  departureTimeInfo +
-// 			  `\n\nВсе верно?`
-
-// 	user.state = states.DRIVER_REG_CONFIRM
-// 	await user.save()
-
-// 	console.log('✅ Sending confirmation message...')
-// 	await ctx.reply(message, keyboards.confirmKeyboard(user.language))
-// }
-
 const showConfirmation = async ctx => {
-	const user = ctx.user
+	const user = ctx.user;
 
-	console.log('✅ ========== showConfirmation START ==========')
-	console.log('👤 User state:', user.state)
-	console.log('🔍 Full session:', JSON.stringify(ctx.session, null, 2))
+	console.log('✅ ========== showConfirmation START ==========');
+	console.log('👤 User state:', user.state);
+	console.log('🔍 Full session:', JSON.stringify(ctx.session, null, 2));
 
 	if (!ctx.session || !ctx.session.driverData) {
-		console.log("❌ Session yoki driverData yo'q")
+		console.log("❌ Session yoki driverData yo'q");
 		await ctx.reply(
 			user.language === 'uz'
 				? "❌ Ma'lumotlar topilmadi. Iltimos, qaytadan boshlang."
 				: '❌ Данные не найдены. Пожалуйста, начните заново.'
-		)
-		user.state = states.MAIN_MENU
-		await user.save()
-		return
+		);
+		user.state = states.MAIN_MENU;
+		await user.save();
+		return;
 	}
 
-	const data = ctx.session.driverData
+	const data = ctx.session.driverData;
 
-	console.log("📊 Barcha ma'lumotlar tekshirilmoqda:")
-	console.log('1. fullName:', data.fullName || "YO'Q")
-	console.log('2. phone:', data.phone || "YO'Q")
-	console.log('3. fromRegion:', data.fromRegion || "YO'Q")
-	console.log('4. toRegion:', data.toRegion || "YO'Q")
-	console.log('5. carModel:', data.carModel || "YO'Q")
-	console.log('6. maxPassengers:', data.maxPassengers || "YO'Q")
-	console.log('7. serviceType:', data.serviceType || "YO'Q")
-	console.log('8. workHours:', data.workHours || "YO'Q")
-	console.log('9. departureTime:', data.departureTime || "YO'Q")
+	console.log("📊 Barcha ma'lumotlar tekshirilmoqda:");
+	console.log('1. fullName:', data.fullName || "YO'Q");
+	console.log('2. phone:', data.phone || "YO'Q");
+	console.log('3. fromRegion:', data.fromRegion || "YO'Q");
+	console.log('4. toRegion:', data.toRegion || "YO'Q");
+	console.log('5. carModel:', data.carModel || "YO'Q");
+	console.log('6. carNumber:', data.carNumber || "YO'Q"); // Mashina raqami
+	console.log('7. maxPassengers:', data.maxPassengers || "YO'Q");
+	console.log('8. serviceType:', data.serviceType || "YO'Q");
+	console.log('9. workHours:', data.workHours || "YO'Q");
+	console.log('10. departureTime:', data.departureTime || "YO'Q");
 
 	// Tasdiqlash xabari
 	const serviceNames = {
 		road: user.language === 'uz' ? "Yo'l-yo'lakay" : 'Попутка',
 		route: user.language === 'uz' ? "Yo'nalish" : 'Направление',
 		parcel: user.language === 'uz' ? 'Pochta' : 'Посылка'
-	}
+	};
 
 	const services = data.serviceType
 		? data.serviceType.map(type => serviceNames[type] || type).join(', ')
-		: 'Tanlanmagan'
+		: 'Tanlanmagan';
+
+	// Mashina raqamini ko'rsatish
+	const carNumberInfo = data.carNumber ? `🚘 <b>Mashina raqami:</b> ${data.carNumber}\n` : '';
 
 	const message =
 		user.language === 'uz'
@@ -2432,6 +1512,7 @@ const showConfirmation = async ctx => {
 			  `👤 <b>Ism-familiya:</b> ${data.fullName || 'Tanlanmagan'}\n` +
 			  `📞 <b>Telefon:</b> ${data.phone || 'Tanlanmagan'}\n` +
 			  `🚗 <b>Mashina:</b> ${data.carModel || 'Tanlanmagan'}\n` +
+			  carNumberInfo + // Mashina raqami qo'shildi
 			  `👥 <b>Sig'im:</b> ${data.maxPassengers || 'Tanlanmagan'} kishi\n` +
 			  `🎯 <b>Xizmatlar:</b> ${services}\n` +
 			  `🏪 <b>Ish vaqti:</b> ${data.workHours || 'Tanlanmagan'}\n` +
@@ -2443,11 +1524,12 @@ const showConfirmation = async ctx => {
 			  `👤 <b>Имя-фамилия:</b> ${data.fullName || 'Не выбрано'}\n` +
 			  `📞 <b>Телефон:</b> ${data.phone || 'Не выбрано'}\n` +
 			  `🚗 <b>Машина:</b> ${data.carModel || 'Не выбрано'}\n` +
+			  carNumberInfo + // Mashina raqami qo'shildi
 			  `👥 <b>Вместимость:</b> ${data.maxPassengers || 'Не выбрано'} человек\n` +
 			  `🎯 <b>Услуги:</b> ${services}\n` +
 			  `🏪 <b>Время работы:</b> ${data.workHours || 'Не выбрано'}\n` +
 			  (data.departureTime ? `⏰ <b>Время отправления:</b> ${data.departureTime}\n\n` : '\n') +
-			  `<b>Все верно?</b>`
+			  `<b>Все верно?</b>`;
 
 	// TASDIQLASH KLAVIATURASI
 	const confirmKeyboard = {
@@ -2463,97 +1545,22 @@ const showConfirmation = async ctx => {
 				}
 			]
 		]
-	}
+	};
 
-	console.log('📤 Xabar yuborilmoqda...')
+	console.log('📤 Xabar yuborilmoqda...');
 
 	try {
 		await ctx.reply(message, {
 			reply_markup: confirmKeyboard,
 			parse_mode: 'HTML'
-		})
-		console.log('✅ Tasdiqlash xabari yuborildi')
+		});
+		console.log('✅ Tasdiqlash xabari yuborildi');
 	} catch (error) {
-		console.error('❌ Xabar yuborishda xatolik:', error)
+		console.error('❌ Xabar yuborishda xatolik:', error);
 	}
 
-	console.log('✅ ========== showConfirmation END ==========')
-}
-
-// ====================== PROFIL TAHRIRLASH FUNKSIYALARI ======================
-const showDriverEditMenu = async ctx => {
-	const user = ctx.user
-
-	const driver = await Driver.findOne({ telegramId: user.telegramId })
-
-	if (!driver) {
-		await ctx.reply(user.language === 'uz' ? '❌ Profil topilmadi' : '❌ Профиль не найден')
-		return
-	}
-
-	const message =
-		user.language === 'uz'
-			? `✏️ <b>Profil tahrirlash</b>\n\n` + `Qaysi ma'lumotni tahrirlamoqchisiz?`
-			: `✏️ <b>Редактирование профиля</b>\n\n` + `Какую информацию вы хотите редактировать?`
-
-	const keyboard = {
-		inline_keyboard: [
-			[
-				{
-					text: user.language === 'uz' ? '👤 Ism-familiya' : '👤 Имя-фамилия',
-					callback_data: 'edit_fullname'
-				}
-			],
-			[
-				{
-					text: user.language === 'uz' ? '📞 Telefon raqam' : '📞 Номер телефона',
-					callback_data: 'edit_phone'
-				},
-				{
-					text: user.language === 'uz' ? '🚗 Mashina' : '🚗 Машина',
-					callback_data: 'edit_car'
-				}
-			],
-			[
-				{
-					text: user.language === 'uz' ? "👥 Yo'lovchilar soni" : '👥 Количество пассажиров',
-					callback_data: 'edit_passengers'
-				},
-				{
-					text: user.language === 'uz' ? "📍 Yo'nalish" : '📍 Направление',
-					callback_data: 'edit_route'
-				}
-			],
-			[
-				{
-					text: user.language === 'uz' ? '🎯 Xizmat turlari' : '🎯 Типы услуг',
-					callback_data: 'edit_services'
-				}
-			],
-			[
-				{
-					text: user.language === 'uz' ? "⏰ Jo'nash vaqti" : '⏰ Время отправления',
-					callback_data: 'edit_time'
-				}
-			],
-			[
-				{
-					text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-					callback_data: 'main_menu'
-				},
-				{
-					text: user.language === 'uz' ? '❌ Bekor qilish' : '❌ Отмена',
-					callback_data: 'driver_info'
-				}
-			]
-		]
-	}
-
-	await ctx.reply(message, {
-		reply_markup: keyboard,
-		parse_mode: 'HTML'
-	})
-}
+	console.log('✅ ========== showConfirmation END ==========');
+};
 
 const editFullName = async ctx => {
 	const user = ctx.user
@@ -2723,36 +1730,36 @@ const editServices = async ctx => {
 	}
 }
 
-const editTime = async ctx => {
-	const user = ctx.user
+// const editTime = async ctx => {
+// 	const user = ctx.user
 
-	user.state = states.DRIVER_EDIT_TIME_DATE
-	await user.save()
+// 	user.state = states.DRIVER_EDIT_TIME_DATE
+// 	await user.save()
 
-	const driver = await Driver.findOne({ telegramId: user.telegramId })
+// 	const driver = await Driver.findOne({ telegramId: user.telegramId })
 
-	if (driver && driver.departureTime) {
-		const currentTime =
-			user.language === 'uz'
-				? `⏰ Joriy jo'nash vaqti: ${driver.departureTime}\n\n`
-				: `⏰ Текущее время отправления: ${driver.departureTime}\n\n`
+// 	if (driver && driver.departureTime) {
+// 		const currentTime =
+// 			user.language === 'uz'
+// 				? `⏰ Joriy jo'nash vaqti: ${driver.departureTime}\n\n`
+// 				: `⏰ Текущее время отправления: ${driver.departureTime}\n\n`
 
-		await ctx.reply(
-			currentTime +
-				(user.language === 'uz'
-					? "Yangi jo'nash sanasini tanlang (keyingi 7 kun):"
-					: 'Выберите новую дату отправления (следующие 7 дней):'),
-			generateDateKeyboard(user.language)
-		)
-	} else {
-		await ctx.reply(
-			user.language === 'uz'
-				? "📅 Jo'nash sanasini tanlang (keyingi 7 kun):"
-				: '📅 Выберите дату отправления (следующие 7 дней):',
-			generateDateKeyboard(user.language)
-		)
-	}
-}
+// 		await ctx.reply(
+// 			currentTime +
+// 				(user.language === 'uz'
+// 					? "Yangi jo'nash sanasini tanlang (keyingi 7 kun):"
+// 					: 'Выберите новую дату отправления (следующие 7 дней):'),
+// 			generateDateKeyboard(user.language)
+// 		)
+// 	} else {
+// 		await ctx.reply(
+// 			user.language === 'uz'
+// 				? "📅 Jo'nash sanasini tanlang (keyingi 7 kun):"
+// 				: '📅 Выберите дату отправления (следующие 7 дней):',
+// 			generateDateKeyboard(user.language)
+// 		)
+// 	}
+// }
 
 const saveEditedFullName = async (ctx, text) => {
 	const user = ctx.user
@@ -3017,47 +2024,330 @@ const saveEditedCar = async (ctx, callbackData) => {
 }
 
 // Vaqtni saqlash (edit uchun)
+// const saveEditedTime = async (ctx, callbackData) => {
+// 	const user = ctx.user
+// 	const timeStr = callbackData.replace('time_', '')
+
+// 	ctx.session = ctx.session || {}
+// 	const selectedDate = ctx.session.selectedDate
+
+// 	if (!selectedDate) {
+// 		await ctx.reply(
+// 			user.language === 'uz'
+// 				? '❌ Xatolik yuz berdi. Iltimos, qaytadan boshlang.'
+// 				: '❌ Произошла ошибка. Пожалуйста, начните заново.'
+// 		)
+// 		return
+// 	}
+
+// 	const date = new Date(selectedDate)
+// 	const formattedDate = date.toLocaleDateString(user.language === 'uz' ? 'uz-UZ' : 'ru-RU', {
+// 		weekday: 'long',
+// 		day: 'numeric',
+// 		month: 'long'
+// 	})
+
+// 	const driver = await Driver.findOne({ telegramId: user.telegramId })
+// 	if (driver) {
+// 		driver.departureTime = `${formattedDate}, ${timeStr}`
+// 		await driver.save()
+
+// 		delete ctx.session.selectedDate
+
+// 		await ctx.reply(
+// 			user.language === 'uz'
+// 				? `✅ Jo'nash vaqti muvaffaqiyatli o'zgartirildi: ${formattedDate}, ${timeStr}`
+// 				: `✅ Время отправления успешно изменено: ${formattedDate}, ${timeStr}`
+// 		)
+
+// 		user.state = states.MAIN_MENU
+// 		await user.save()
+
+// 		await showDriverMenu(ctx)
+// 	}
+// }
+
+// ====================== VAQTNI SAQLASH (EDIT uchun - CALLBACK bilan) ======================
 const saveEditedTime = async (ctx, callbackData) => {
-	const user = ctx.user
-	const timeStr = callbackData.replace('time_', '')
+    const user = ctx.user
+    const timeStr = callbackData.replace('time_', '')
 
-	ctx.session = ctx.session || {}
-	const selectedDate = ctx.session.selectedDate
+    ctx.session = ctx.session || {}
+    const selectedDate = ctx.session.selectedDate
 
-	if (!selectedDate) {
-		await ctx.reply(
-			user.language === 'uz'
-				? '❌ Xatolik yuz berdi. Iltimos, qaytadan boshlang.'
-				: '❌ Произошла ошибка. Пожалуйста, начните заново.'
-		)
-		return
-	}
+    if (!selectedDate) {
+        await ctx.reply(
+            user.language === 'uz'
+                ? '❌ Xatolik yuz berdi. Iltimos, qaytadan boshlang.'
+                : '❌ Произошла ошибка. Пожалуйста, начните сначала.'
+        )
+        return
+    }
 
-	const date = new Date(selectedDate)
-	const formattedDate = date.toLocaleDateString(user.language === 'uz' ? 'uz-UZ' : 'ru-RU', {
-		weekday: 'long',
-		day: 'numeric',
-		month: 'long'
-	})
+    const date = new Date(selectedDate)
+    const formattedDate = date.toLocaleDateString(user.language === 'uz' ? 'uz-UZ' : 'ru-RU', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    })
 
-	const driver = await Driver.findOne({ telegramId: user.telegramId })
-	if (driver) {
-		driver.departureTime = `${formattedDate}, ${timeStr}`
-		await driver.save()
+    const fullDateTime = `${formattedDate}, ${timeStr}`
 
-		delete ctx.session.selectedDate
+    const driver = await Driver.findOne({ telegramId: user.telegramId })
+    if (driver) {
+        driver.departureTime = fullDateTime
+        await driver.save()
 
-		await ctx.reply(
-			user.language === 'uz'
-				? `✅ Jo'nash vaqti muvaffaqiyatli o'zgartirildi: ${formattedDate}, ${timeStr}`
-				: `✅ Время отправления успешно изменено: ${formattedDate}, ${timeStr}`
-		)
+        delete ctx.session.selectedDate
 
-		user.state = states.MAIN_MENU
-		await user.save()
+        await ctx.reply(
+            user.language === 'uz'
+                ? `✅ Jo'nash vaqti muvaffaqiyatli o'zgartirildi: ${fullDateTime}`
+                : `✅ Время отправления успешно изменено: ${fullDateTime}`
+        )
 
-		await showDriverMenu(ctx)
-	}
+        user.state = states.MAIN_MENU
+        await user.save()
+
+        await showDriverMenu(ctx)
+    }
+}
+// ====================== VAQTNIKI QO'LDA KIRITISH (EDIT) ======================
+const editTimeManual = async ctx => {
+    const user = ctx.user
+
+    user.state = states.DRIVER_EDIT_TIME_MANUAL
+    await user.save()
+
+    const driver = await Driver.findOne({ telegramId: user.telegramId })
+
+    if (driver && driver.departureTime) {
+        const currentTime =
+            user.language === 'uz'
+                ? `⏰ Joriy jo'nash vaqti: ${driver.departureTime}\n\n`
+                : `⏰ Текущее время отправления: ${driver.departureTime}\n\n`
+
+        await ctx.reply(
+            currentTime +
+                (user.language === 'uz'
+                    ? "✏️ Yangi jo'nash vaqtini quyidagi formatda kiriting:\nMisol: 14:30\nMisol: 08:00\n\n" +
+                      "📝 Sana avtomatik ravishda bugungi kunga o'rnatiladi"
+                    : '✏️ Введите новое время отправления в формате:\nПример: 14:30\nПример: 08:00\n\n' +
+                      '📝 Дата будет автоматически установлена на сегодня'),
+            {
+                reply_markup: {
+                    remove_keyboard: true
+                }
+            }
+        )
+    } else {
+        await ctx.reply(
+            user.language === 'uz'
+                ? "✏️ Jo'nash vaqtini quyidagi formatda kiriting:\nMisol: 14:30\nMisol: 08:00\n\n" +
+                  "📝 Sana avtomatik ravishda bugungi kunga o'rnatiladi"
+                : '✏️ Введите время отправления в формате:\nПример: 14:30\nПример: 08:00\n\n' +
+                  '📝 Дата будет автоматически установлена на сегодня',
+            {
+                reply_markup: {
+                    remove_keyboard: true
+                }
+            }
+        )
+    }
+}
+
+// ====================== O'ZGARTIRILGAN EDIT_TIME FUNKSIYASI ======================
+const editTime = async ctx => {
+    const user = ctx.user
+
+    // Tugmalar bilan xabar yuborish
+    const message = user.language === 'uz'
+        ? `⏰ Jo'nash vaqtini o'zgartirish\n\n` +
+          `Qanday usulda o'zgartirmoqchisiz?`
+        : `⏰ Изменение времени отправления\n\n` +
+          `Как вы хотите изменить время?`
+
+    const keyboard = {
+        inline_keyboard: [
+            [
+                {
+                    text: user.language === 'uz' ? '📅 Sanani tanlash' : '📅 Выбрать дату',
+                    callback_data: 'edit_time_select_date'
+                }
+            ],
+            [
+                {
+                    text: user.language === 'uz' ? '✏️ Qo\'lda kiritish' : '✏️ Ввести вручную',
+                    callback_data: 'edit_time_manual'
+                }
+            ],
+            [
+                {
+                    text: user.language === 'uz' ? '⬅️ Orqaga' : '⬅️ Назад',
+                    callback_data: 'driver_edit'
+                }
+            ]
+        ]
+    }
+
+    await ctx.reply(message, {
+        reply_markup: keyboard,
+        parse_mode: 'HTML'
+    })
+}
+
+// ====================== VAQTNI QO'LDA SAQLASH (EDIT) ======================
+const saveEditedTimeManual = async (ctx, text) => {
+    const user = ctx.user
+
+    // Vaqt formatini tekshirish (HH:mm)
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+
+    if (!timeRegex.test(text)) {
+        await ctx.reply(
+            user.language === 'uz'
+                ? "❌ Noto'g'ri vaqt formati! Iltimos, HH:mm formatida kiriting.\nMasalan: 14:30"
+                : '❌ Неправильный формат времени! Пожалуйста, введите в формате HH:mm.\nНапример: 14:30'
+        )
+        return
+    }
+
+    // Bugungi sana bilan vaqtni birlashtirish
+    const today = new Date()
+    const formattedDate = today.toLocaleDateString(user.language === 'uz' ? 'uz-UZ' : 'ru-RU', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    })
+
+    const fullDateTime = `${formattedDate}, ${text}`
+
+    const driver = await Driver.findOne({ telegramId: user.telegramId })
+    if (driver) {
+        driver.departureTime = fullDateTime
+        await driver.save()
+
+        await ctx.reply(
+            user.language === 'uz'
+                ? `✅ Jo'nash vaqti muvaffaqiyatli o'zgartirildi:\n${fullDateTime}`
+                : `✅ Время отправления успешно изменено:\n${fullDateTime}`
+        )
+
+        user.state = states.MAIN_MENU
+        await user.save()
+
+        await showDriverMenu(ctx)
+    }
+}
+
+// ====================== VAQT TANLASHGA QAYTISH (EDIT) ======================
+const editTimeSelectDate = async ctx => {
+    const user = ctx.user
+
+    user.state = states.DRIVER_EDIT_TIME_DATE
+    await user.save()
+
+    const driver = await Driver.findOne({ telegramId: user.telegramId })
+
+    if (driver && driver.departureTime) {
+        const currentTime =
+            user.language === 'uz'
+                ? `⏰ Joriy jo'nash vaqti: ${driver.departureTime}\n\n`
+                : `⏰ Текущее время отправления: ${driver.departureTime}\n\n`
+
+        await ctx.reply(
+            currentTime +
+                (user.language === 'uz'
+                    ? "Yangi jo'nash sanasini tanlang (keyingi 7 kun):"
+                    : 'Выберите новую дату отправления (следующие 7 дней):'),
+            generateDateKeyboard(user.language)
+        )
+    } else {
+        await ctx.reply(
+            user.language === 'uz'
+                ? "📅 Jo'nash sanasini tanlang (keyingi 7 kun):"
+                : '📅 Выберите дату отправления (следующие 7 дней):',
+            generateDateKeyboard(user.language)
+        )
+    }
+}
+
+// ====================== VAQT EDIT HANDLERLARINI QAYTA ISHLASH ======================
+// Driver edit menyusiga qo'shimcha tugma qo'shish
+const showDriverEditMenu = async ctx => {
+    const user = ctx.user
+
+    const driver = await Driver.findOne({ telegramId: user.telegramId })
+
+    if (!driver) {
+        await ctx.reply(user.language === 'uz' ? '❌ Profil topilmadi' : '❌ Профиль не найден')
+        return
+    }
+
+    const message =
+        user.language === 'uz'
+            ? `✏️ <b>Profil tahrirlash</b>\n\n` + `Qaysi ma'lumotni tahrirlamoqchisiz?`
+            : `✏️ <b>Редактирование профиля</b>\n\n` + `Какую информацию вы хотите редактировать?`
+
+    const keyboard = {
+        inline_keyboard: [
+            [
+                {
+                    text: user.language === 'uz' ? '👤 Ism-familiya' : '👤 Имя-фамилия',
+                    callback_data: 'edit_fullname'
+                }
+            ],
+            [
+                {
+                    text: user.language === 'uz' ? '📞 Telefon raqam' : '📞 Номер телефона',
+                    callback_data: 'edit_phone'
+                },
+                {
+                    text: user.language === 'uz' ? '🚗 Mashina' : '🚗 Машина',
+                    callback_data: 'edit_car'
+                }
+            ],
+            [
+                {
+                    text: user.language === 'uz' ? "👥 Yo'lovchilar soni" : '👥 Количество пассажиров',
+                    callback_data: 'edit_passengers'
+                },
+                {
+                    text: user.language === 'uz' ? "📍 Yo'nalish" : '📍 Направление',
+                    callback_data: 'edit_route'
+                }
+            ],
+            [
+                {
+                    text: user.language === 'uz' ? '🎯 Xizmat turlari' : '🎯 Типы услуг',
+                    callback_data: 'edit_services'
+                }
+            ],
+            [
+                {
+                    text: user.language === 'uz' ? "⏰ Jo'nash vaqti" : '⏰ Время отправления',
+                    callback_data: 'edit_time'
+                }
+            ],
+            [
+                {
+                    text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
+                    callback_data: 'main_menu'
+                },
+                {
+                    text: user.language === 'uz' ? '❌ Bekor qilish' : '❌ Отмена',
+                    callback_data: 'driver_info'
+                }
+            ]
+        ]
+    }
+
+    await ctx.reply(message, {
+        reply_markup: keyboard,
+        parse_mode: 'HTML'
+    })
 }
 
 // ====================== HAYDOVCHI BUYURTMALARI ======================
@@ -3146,103 +2436,6 @@ const showDriverOrders = async ctx => {
 		)
 	}
 }
-
-// ====================== HAYDOVCHI MENYUSI ======================
-// const showDriverMenu = async ctx => {
-// 	const user = ctx.user
-
-// 	const driver = await Driver.findOne({ telegramId: user.telegramId })
-// 		.populate('carModel')
-// 		.populate('carType')
-
-// 	if (!driver) {
-// 		await ctx.reply(
-// 			user.language === 'uz'
-// 				? "❌ Profil topilmadi. Iltimos, qaytadan ro'yxatdan o'ting."
-// 				: '❌ Профиль не найден. Пожалуйста, зарегистрируйтесь заново.'
-// 		)
-// 		return
-// 	}
-
-// 	// Driverning faol buyurtmalari soni
-// 	const activeOrdersCount = await Order.countDocuments({
-// 		driverId: driver._id,
-// 		status: { $in: ['found', 'searching'] }
-// 	})
-
-// 	let carModelInfo = ''
-// 	if (driver.carModel) {
-// 		if (typeof driver.carModel === 'object' && driver.carModel.name) {
-// 			carModelInfo = user.language === 'uz' ? driver.carModel.name : driver.carModel.nameRu
-// 		} else {
-// 			carModelInfo = driver.carModel
-// 		}
-// 	}
-
-// 	let carTypeInfo = ''
-// 	if (driver.carType) {
-// 		carTypeInfo = `\n🚗 Mashina turi: ${
-// 			user.language === 'uz' ? driver.carType.name : driver.carType.nameRu
-// 		}`
-// 	}
-
-// 	const message =
-// 		user.language === 'uz'
-// 			? `🚘 Haydovchi menyusi\n\n` +
-// 			  `👤 ${driver.fullName}\n` +
-// 			  `🚗 Mashina: ${carModelInfo}` +
-// 			  carTypeInfo +
-// 			  `\n📍 Yo'nalish: ${driver.fromRegion} → ${driver.toRegion}\n` +
-// 			  `👥 Maksimal yo'lovchilar: ${driver.maxPassengers} kishi\n` +
-// 			  `📦 Jami buyurtmalar: ${driver.totalOrders}\n` +
-// 			  `📋 Faol buyurtmalar: ${activeOrdersCount}\n` +
-// 			  `💰 Balans: ${driver.balance} so'm\n` +
-// 			  `⏰ Obuna: ${
-// 					driver.paidUntil ? new Date(driver.paidUntil).toLocaleDateString('uz-UZ') : "Yo'q"
-// 			  }\n` +
-// 			  `🔔 Holat: ${driver.status === 'active' ? 'Faol' : 'Nofaol'}`
-// 			: `🚘 Меню водителя\n\n` +
-// 			  `👤 ${driver.fullName}\n` +
-// 			  `🚗 Машина: ${carModelInfo}` +
-// 			  carTypeInfo +
-// 			  `\n📍 Направление: ${driver.fromRegion} → ${driver.toRegion}\n` +
-// 			  `👥 Максимум пассажиров: ${driver.maxPassengers} человек\n` +
-// 			  `📦 Всего заказов: ${driver.totalOrders}\n` +
-// 			  `📋 Активные заказы: ${activeOrdersCount}\n` +
-// 			  `💰 Баланс: ${driver.balance} сум\n` +
-// 			  `⏰ Подписка: ${
-// 					driver.paidUntil ? new Date(driver.paidUntil).toLocaleDateString('ru-RU') : 'Нет'
-// 			  }\n` +
-// 			  `🔔 Статус: ${driver.status === 'active' ? 'Активен' : 'Неактивен'}`
-
-// 	const keyboard = {
-// 		inline_keyboard: [
-// 			[
-// 				{
-// 					text: user.language === 'uz' ? '✏️ Profilni tahrirlash' : '✏️ Редактировать профиль',
-// 					callback_data: 'driver_edit'
-// 				}
-
-// 			],
-// 			[
-// 				{
-// 					text: user.language === 'uz' ? "💳 To'lov qilish" : '💳 Оплатить',
-// 					callback_data: 'driver_payment'
-// 				}
-// 			],
-// 			[
-// 				{
-// 					text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-// 					callback_data: 'main_menu'
-// 				}
-// 			]
-// 		]
-// 	}
-
-// 	await ctx.reply(message, { reply_markup: keyboard })
-// }
-
-// ====================== HAYDOVCHI MENYUSI ======================
 const showDriverMenu = async ctx => {
 	const user = ctx.user
 
@@ -3281,42 +2474,28 @@ const showDriverMenu = async ctx => {
 		}`
 	}
 
-	// departureTime bo'lmasa, ko'rsatmaymiz
-	const departureTimeInfo =
-		driver.departureTime && driver.departureTime !== "Yo'lovchi bilan kelishiladi"
-			? `\n⏰ Jo'nash vaqti: ${driver.departureTime}`
-			: ''
+	// Mashina raqami ma'lumotini qo'shing - TO'G'RI JOYLASHGAN
+	const carNumberInfo = driver.carNumber ? `\n🚘 Mashina raqami: ${driver.carNumber}` : ''
 
-const message =
-    user.language === 'uz'
-        ? `🚘 Haydovchi menyusi\n\n` +
-          `👤 ${driver.fullName}\n` +
-          `🚗 Mashina: ${carModelInfo}` +
-          carTypeInfo +
-          `\n📍 Yo'nalish: ${driver.fromRegion} → ${driver.toRegion}\n` +
-          `👥 Maksimal yo'lovchilar: ${driver.maxPassengers} kishi` +
-          departureTimeInfo 
-          // `\n📦 Jami buyurtmalar: ${driver.totalOrders}\n` +
-          // `📋 Faol buyurtmalar: ${activeOrdersCount}\n`
-          // `💰 Balans: ${driver.balance} so'm\n` +
-          // `⏰ Obuna: ${
-          //     driver.paidUntil ? new Date(driver.paidUntil).toLocaleDateString('uz-UZ') : "Yo'q"
-          // }\n` +
-          // `🔔 Holat: ${driver.status === 'active' ? 'Faol' : 'Nofaol'}`
-        : `🚘 Меню водителя\n\n` +
-          `👤 ${driver.fullName}\n` +
-          `🚗 Машина: ${carModelInfo}` +
-          carTypeInfo +
-          `\n📍 Направление: ${driver.fromRegion} → ${driver.toRegion}\n` +
-          `👥 Максимум пассажиров: ${driver.maxPassengers} человек` +
-          departureTimeInfo 
-          // `\n📦 Всего заказов: ${driver.totalOrders}\n` +
-          // `📋 Активные заказы: ${activeOrdersCount}\n`
-          // `💰 Баланс: ${driver.balance} сум\n` +
-          // `⏰ Подписка: ${
-          //     driver.paidUntil ? new Date(driver.paidUntil).toLocaleDateString('ru-RU') : 'Нет'
-          // }\n` +
-          // `🔔 Статус: ${driver.status === 'active' ? 'Активен' : 'Неактивен'}`
+	const message =
+		user.language === 'uz'
+			? `🚘 <b>Haydovchi menyusi</b>\n\n` +
+			  `👤 <b>Ism:</b> ${driver.fullName}\n` +
+			  `🚗 <b>Mashina:</b> ${carModelInfo}` +
+			  carTypeInfo +
+			  carNumberInfo + // Mashina raqami bu yerda ko'rsatiladi
+			  `\n📍 <b>Yo'nalish:</b> ${driver.fromRegion} → ${driver.toRegion}\n` +
+			  `👥 <b>Maksimal yo'lovchilar:</b> ${driver.maxPassengers} kishi` +
+			  (activeOrdersCount > 0 ? `\n📋 <b>Faol buyurtmalar:</b> ${activeOrdersCount} ta` : '')
+			: `🚘 <b>Меню водителя</b>\n\n` +
+			  `👤 <b>Имя:</b> ${driver.fullName}\n` +
+			  `🚗 <b>Машина:</b> ${carModelInfo}` +
+			  carTypeInfo +
+			  carNumberInfo + // Mashina raqami bu yerda ko'rsatiladi
+			  `\n📍 <b>Направление:</b> ${driver.fromRegion} → ${driver.toRegion}\n` +
+			  `👥 <b>Максимум пассажиров:</b> ${driver.maxPassengers} человек` +
+			  (activeOrdersCount > 0 ? `\n📋 <b>Активные заказы:</b> ${activeOrdersCount}` : '')
+
 	const keyboard = {
 		inline_keyboard: [
 			[
@@ -3324,25 +2503,15 @@ const message =
 					text: user.language === 'uz' ? '✏️ Profilni tahrirlash' : '✏️ Редактировать профиль',
 					callback_data: 'driver_edit'
 				}
-			],
-			// [
-			// 	{
-			// 		text: user.language === 'uz' ? "💳 To'lov qilish" : '💳 Оплатить',
-			// 		callback_data: 'driver_payment'
-			// 	}
-			// ],
-			// [
-			// 	{
-			// 		text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-			// 		callback_data: 'main_menu'
-			// 	}
-			// ]
+			]
 		]
 	}
 
-	await ctx.reply(message, { reply_markup: keyboard })
+	await ctx.reply(message, {
+		reply_markup: keyboard,
+		parse_mode: 'HTML' // HTML format uchun qo'shildi
+	})
 }
-
 // ====================== BUYURTMA BERISH TIZIMI ======================
 
 // Buyurtmani saqlash va haydovchilarni qidirish
@@ -3565,196 +2734,350 @@ const createOrderAndFindDrivers = async (ctx, orderData) => {
 }
 
 // Haydovchini tanlash
-const selectDriver = async (ctx, callbackData) => {
-	const user = ctx.user
-
-	try {
-		// Callback datani ajratish
-		const parts = callbackData.split('_')
-		const driverId = parts[2]
-		const orderId = parts[3]
-
-		// Haydovchi va buyurtmani topish
-		const driver = await Driver.findById(driverId).populate('carModel').populate('carType')
-		const order = await Order.findById(orderId)
-
-		if (!driver || !order) {
-			await ctx.reply(
-				user.language === 'uz' ? "❌ Ma'lumotlar topilmadi." : '❌ Данные не найдены.'
-			)
-			return
-		}
-
-		// Buyurtmani yangilash
-		order.driverId = driver._id
-		order.status = 'selected'
-		await order.save()
-
-		// Haydovchi ma'lumotlari
-		const carModelName =
-			driver.carModel && typeof driver.carModel === 'object'
-				? user.language === 'uz'
-					? driver.carModel.name
-					: driver.carModel.nameRu
-				: driver.carModel
-
-		const carTypeName = driver.carType
-			? user.language === 'uz'
-				? driver.carType.name
-				: driver.carType.nameRu
-			: ''
-
-		// Yo'lovchiga batafsil xabar
-		const driverInfoMessage =
-			user.language === 'uz'
-				? `✅ Haydovchi tanlandi!\n\n` +
-				  `👤 Ism: ${driver.fullName}\n` +
-				  `🚗 Mashina: ${carModelName}${carTypeName ? ` (${carTypeName})` : ''}\n` +
-				  `👥 Sig'im: ${driver.maxPassengers} kishi\n` +
-				  `📞 Telefon: ${driver.phone}\n` +
-				  `Haydovchi bilan bog'laning va jo'nash vaqtini kelishing.`
-				: `✅ Водитель выбран!\n\n` +
-				  `👤 Имя: ${driver.fullName}\n` +
-				  `🚗 Машина: ${carModelName}${carTypeName ? ` (${carTypeName})` : ''}\n` +
-				  `👥 Вместимость: ${driver.maxPassengers} человек\n` +
-				  `📞 Телефон: ${driver.phone}\n` +
-				  `Свяжитесь с водителем и договоритесь о времени отправления.`
-
-		// Yo'lovchi uchun keyboard (buyurtma berish tugmasi)
-		const passengerKeyboard = {
-			inline_keyboard: [
-				[
-					{
-						text: user.language === 'uz' ? '✅ Buyurtma berish' : '✅ Подтвердить заказ',
-						callback_data: `confirm_order_${order._id}`
-					}
-				],
-				[
-					{
-						text: user.language === 'uz' ? '❌ Bekor qilish' : '❌ Отменить',
-						callback_data: `cancel_order_${order._id}`
-					}
-				]
-			]
-		}
-
-		// await ctx.reply(driverInfoMessage, {
-		// 	reply_markup: passengerKeyboard,
-		// 	parse_mode: 'HTML'
-		// })
-
-		// Haydovchiga xabar berish
-		const orderForDriverMessage =
-			user.language === 'uz'
-				? `🚖 Sizga yangi buyurtma biriktirildi!\n\n` +
-				  `📍 Chiqish: ${order.fromRegion}\n` +
-				  `📍 Kirish: ${order.toRegion}\n` +
-				  `👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
-				  `📦 Pochta: ${order.hasPackage ? 'Ha' : "Yo'q"}\n` +
-				  `📝 Tavsif: ${order.comment || "Yo'q"}\n\n` +
-				  `📞 Telefon: ${user.phone || 'Korsatilmagan'}\n\n` +
-				  `Buyurtmani qabul qilish uchun yo'lovchi bilan bog'laning.`
-				: `🚖 Вам назначен новый заказ!\n\n` +
-				  `📍 Отправление: ${order.fromRegion}\n` +
-				  `📍 Прибытие: ${order.toRegion}\n` +
-				  `👥 Пассажиры: ${order.passengerCount} человек\n` +
-				  `📦 Посылка: ${order.hasPackage ? 'Да' : 'Нет'}\n` +
-				  `📝 Описание: ${order.comment || 'Нет'}\n\n` +
-				  `📞 Телефон: ${user.phone || 'Не указан'}\n\n` +
-				  `Свяжитесь с пассажиром для подтверждения заказа.`
-
-		// Haydovchi uchun keyboard
-		const driverKeyboard = {
-			inline_keyboard: [
-				[
-					{
-						text: user.language === 'uz' ? '✅ Qabul qilish' : '✅ Принять',
-						callback_data: `driver_accept_${order._id}`
-					}
-				],
-				[
-					{
-						text: user.language === 'uz' ? '❌ Rad etish' : '❌ Отклонить',
-						callback_data: `driver_reject_${order._id}`
-					}
-				]
-			]
-		}
-
-		await ctx.telegram.sendMessage(driver.telegramId, orderForDriverMessage, {
-			reply_markup: driverKeyboard,
-			parse_mode: 'HTML'
-		})
-	} catch (error) {
-		console.error('Select driver error:', error)
-		await ctx.reply(
-			user.language === 'uz'
-				? '❌ Haydovchi tanlashda xatolik yuz berdi.'
-				: '❌ Ошибка при выборе водителя.'
-		)
-	}
-}
-
-// Buyurtmani tasdiqlash (yo'lovchi tomonidan)
-// const confirmOrder = async (ctx, callbackData) => {
+// const selectDriver = async (ctx, callbackData) => {
 // 	const user = ctx.user
 
 // 	try {
-// 		const orderId = callbackData.split('_')[2]
-// 		const order = await Order.findById(orderId).populate('driverId')
+// 		// Callback datani ajratish
+// 		const parts = callbackData.split('_')
+// 		const driverId = parts[2]
+// 		const orderId = parts[3]
 
-// 		if (!order) {
+// 		// Haydovchi va buyurtmani topish
+// 		const driver = await Driver.findById(driverId).populate('carModel').populate('carType')
+// 		const order = await Order.findById(orderId)
+
+// 		if (!driver || !order) {
 // 			await ctx.reply(
-// 				user.language === 'uz'
-// 					? '❌ Buyurtma topilmadi.'
-// 					: '❌ Заказ не найден.'
+// 				user.language === 'uz' ? "❌ Ma'lumotlar topilmadi." : '❌ Данные не найдены.'
 // 			)
 // 			return
 // 		}
 
-// 		// Faqat buyurtma egalari tasdiqlashi mumkin
-// 		if (order.passengerId !== user.telegramId) {
-// 			await ctx.reply(
-// 				user.language === 'uz'
-// 					? '❌ Siz bu buyurtmani tasdiqlay olmaysiz.'
-// 					: '❌ Вы не можете подтвердить этот заказ.'
-// 			)
-// 			return
-// 		}
-
-// 		// Buyurtma statusini o'zgartirish
-// 		order.status = 'confirmed'
+// 		// Buyurtmani yangilash
+// 		order.driverId = driver._id
+// 		order.status = 'selected'
 // 		await order.save()
 
-// 		// Yo'lovchiga xabar
-// 		await ctx.reply(
-// 			user.language === 'uz'
-// 				? '✅ Buyurtma rasmiy tasdiqlandi! Haydovchi bilan bog\'laning.'
-// 				: '✅ Заказ официально подтвержден! Свяжитесь с водителем.'
-// 		)
+// 		// Haydovchi ma'lumotlari
+// 		const carModelName =
+// 			driver.carModel && typeof driver.carModel === 'object'
+// 				? user.language === 'uz'
+// 					? driver.carModel.name
+// 					: driver.carModel.nameRu
+// 				: driver.carModel
 
-// 		// Haydovchiga xabar
-// 		if (order.driverId) {
-// 			await ctx.telegram.sendMessage(
-// 				order.driverId.telegramId,
-// 				user.language === 'uz'
-// 					? '✅ Buyurtma tasdiqlandi! Yo\'lovchi bilan bog\'laning.'
-// 					: '✅ Заказ подтвержден! Свяжитесь с пассажиром.'
-// 			)
+// 		const carTypeName = driver.carType
+// 			? user.language === 'uz'
+// 				? driver.carType.name
+// 				: driver.carType.nameRu
+// 			: ''
+
+// 		// Yo'lovchiga batafsil xabar
+// 		const driverInfoMessage =
+// 			user.language === 'uz'
+// 				? `✅ Haydovchi tanlandi!\n\n` +
+// 				  `👤 Ism: ${driver.fullName}\n` +
+// 				  `🚗 Mashina: ${carModelName}${carTypeName ? ` (${carTypeName})` : ''}\n` +
+// 				  `👥 Sig'im: ${driver.maxPassengers} kishi\n` +
+// 				  `📞 Telefon: ${driver.phone}\n` +
+// 				  `Haydovchi bilan bog'laning va jo'nash vaqtini kelishing.`
+// 				: `✅ Водитель выбран!\n\n` +
+// 				  `👤 Имя: ${driver.fullName}\n` +
+// 				  `🚗 Машина: ${carModelName}${carTypeName ? ` (${carTypeName})` : ''}\n` +
+// 				  `👥 Вместимость: ${driver.maxPassengers} человек\n` +
+// 				  `📞 Телефон: ${driver.phone}\n` +
+// 				  `Свяжитесь с водителем и договоритесь о времени отправления.`
+
+// 		// Yo'lovchi uchun keyboard (buyurtma berish tugmasi)
+// 		const passengerKeyboard = {
+// 			inline_keyboard: [
+// 				[
+// 					{
+// 						text: user.language === 'uz' ? '✅ Buyurtma berish' : '✅ Подтвердить заказ',
+// 						callback_data: `confirm_order_${order._id}`
+// 					}
+// 				],
+// 				[
+// 					{
+// 						text: user.language === 'uz' ? '❌ Bekor qilish' : '❌ Отменить',
+// 						callback_data: `cancel_order_${order._id}`
+// 					}
+// 				]
+// 			]
 // 		}
 
+// 		// await ctx.reply(driverInfoMessage, {
+// 		// 	reply_markup: passengerKeyboard,
+// 		// 	parse_mode: 'HTML'
+// 		// })
+
+// 		// Haydovchiga xabar berish
+// 		const orderForDriverMessage =
+// 			user.language === 'uz'
+// 				? `🚖 Sizga yangi buyurtma biriktirildi!\n\n` +
+// 				  `📍 Chiqish: ${order.fromRegion}\n` +
+// 				  `📍 Kirish: ${order.toRegion}\n` +
+// 				  `👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
+// 				  `📦 Pochta: ${order.hasPackage ? 'Ha' : "Yo'q"}\n` +
+// 				  `📝 Tavsif: ${order.comment || "Yo'q"}\n\n` +
+// 				  `📞 Telefon: ${user.phone || 'Korsatilmagan'}\n\n` +
+// 				  `Buyurtmani qabul qilish uchun yo'lovchi bilan bog'laning.`
+// 				: `🚖 Вам назначен новый заказ!\n\n` +
+// 				  `📍 Отправление: ${order.fromRegion}\n` +
+// 				  `📍 Прибытие: ${order.toRegion}\n` +
+// 				  `👥 Пассажиры: ${order.passengerCount} человек\n` +
+// 				  `📦 Посылка: ${order.hasPackage ? 'Да' : 'Нет'}\n` +
+// 				  `📝 Описание: ${order.comment || 'Нет'}\n\n` +
+// 				  `📞 Телефон: ${user.phone || 'Не указан'}\n\n` +
+// 				  `Свяжитесь с пассажиром для подтверждения заказа.`
+
+// 		// Haydovchi uchun keyboard
+// 		const driverKeyboard = {
+// 			inline_keyboard: [
+// 				[
+// 					{
+// 						text: user.language === 'uz' ? '✅ Qabul qilish' : '✅ Принять',
+// 						callback_data: `driver_accept_${order._id}`
+// 					}
+// 				],
+// 				[
+// 					{
+// 						text: user.language === 'uz' ? '❌ Rad etish' : '❌ Отклонить',
+// 						callback_data: `driver_reject_${order._id}`
+// 					}
+// 				]
+// 			]
+// 		}
+
+// 		await ctx.telegram.sendMessage(driver.telegramId, orderForDriverMessage, {
+// 			reply_markup: driverKeyboard,
+// 			parse_mode: 'HTML'
+// 		})
 // 	} catch (error) {
-// 		console.error('Confirm order error:', error)
+// 		console.error('Select driver error:', error)
 // 		await ctx.reply(
 // 			user.language === 'uz'
-// 				? '❌ Buyurtma tasdiqlashda xatolik yuz berdi.'
-// 				: '❌ Ошибка при подтверждении заказа.'
+// 				? '❌ Haydovchi tanlashda xatolik yuz berdi.'
+// 				: '❌ Ошибка при выборе водителя.'
 // 		)
 // 	}
 // }
 
-// ============ BUYURTMA TASDIQLASH ============
-// const  confirmOrder = async (ctx, callbackData) => {
+// driver.js faylida, selectDriver funksiyasini yangilang:
+
+const selectDriver = async (ctx, callbackData) => {
+    const user = ctx.user
+    
+    console.log('🚕 ========== selectDriver START ==========')
+    console.log('📞 Callback data:', callbackData)
+    
+    try {
+        // Callback datani ajratish - yangi format uchun
+        const parts = callbackData.split('_')
+        
+        if (parts.length < 4) {
+            console.log('❌ Noto\'g\'ri callback format:', callbackData)
+            await ctx.reply(
+                user.language === 'uz' ? "❌ Noto'g'ri format." : '❌ Неправильный формат.'
+            )
+            return
+        }
+        
+        // 'sel_drv_${driverId}_${orderId}' formatidan ajratish
+        const driverId = parts[2]
+        const orderId = parts[3]
+        
+        console.log('👤 Driver ID:', driverId)
+        console.log('📋 Order ID:', orderId)
+        
+        // Haydovchi va buyurtmani topish
+        const driver = await Driver.findById(driverId)
+            .populate('carModel')
+            .populate('carType')
+            .exec()
+            
+        const order = await Order.findById(orderId).exec()
+        
+        if (!driver) {
+            console.log('❌ Driver topilmadi, ID:', driverId)
+            await ctx.reply(
+                user.language === 'uz' ? '❌ Haydovchi topilmadi.' : '❌ Водитель не найден.'
+            )
+            return
+        }
+        
+        if (!order) {
+            console.log('❌ Order topilmadi, ID:', orderId)
+            await ctx.reply(
+                user.language === 'uz' ? '❌ Buyurtma topilmadi.' : '❌ Заказ не найден.'
+            )
+            return
+        }
+        
+        console.log('✅ Driver topildi:', driver.fullName)
+        console.log('✅ Order topildi:', order._id)
+        
+        // Buyurtmani yangilash
+        order.driverId = driver._id
+        order.status = 'selected'
+        await order.save()
+        
+        console.log('✅ Buyurtma yangilandi, status: selected')
+        
+        // Yo'lovchi ma'lumotlarini olish
+        const passenger = await User.findOne({ telegramId: order.userId }).exec()
+        
+        if (!passenger) {
+            console.log('❌ Passenger topilmadi, userId:', order.userId)
+        }
+        
+        // Haydovchi ma'lumotlari
+        const carModelName = driver.carModel && typeof driver.carModel === 'object'
+            ? user.language === 'uz' 
+                ? driver.carModel.name 
+                : driver.carModel.nameRu
+            : driver.carModel
+        
+        const carTypeName = driver.carType
+            ? user.language === 'uz' 
+                ? driver.carType.name 
+                : driver.carType.nameRu
+            : ''
+        
+        // ============ YO'LOVCHIGA XABAR ============
+        const driverInfoMessage = user.language === 'uz'
+            ? `✅ Haydovchi tanlandi!\n\n` +
+              `👤 **Haydovchi ma'lumotlari:**\n` +
+              `• Ism: ${driver.fullName}\n` +
+              `• Mashina: ${carModelName}${carTypeName ? ` (${carTypeName})` : ''}\n` +
+              `• Sig'im: ${driver.maxPassengers} kishi\n` +
+              `• Telefon: ${driver.phone}\n\n` +
+              `📍 **Yo'nalish:** ${order.fromRegion} → ${order.toRegion}\n` +
+              `👥 **Yo'lovchilar:** ${order.passengerCount} kishi\n` +
+              `${order.hasParcel ? `📦 **Pochta:** Ha\n` : ''}` +
+              `${order.parcelDescription ? `📝 **Tavsif:** ${order.parcelDescription}\n` : ''}\n` +
+              `📞 Endi haydovchi bilan bog'laning va jo'nash vaqtini kelishing.`
+            : `✅ Водитель выбран!\n\n` +
+              `👤 **Информация о водителе:**\n` +
+              `• Имя: ${driver.fullName}\n` +
+              `• Машина: ${carModelName}${carTypeName ? ` (${carTypeName})` : ''}\n` +
+              `• Вместимость: ${driver.maxPassengers} человек\n` +
+              `• Телефон: ${driver.phone}\n\n` +
+              `📍 **Направление:** ${order.fromRegion} → ${order.toRegion}\n` +
+              `👥 **Пассажиры:** ${order.passengerCount} человек\n` +
+              `${order.hasParcel ? `📦 **Посылка:** Да\n` : ''}` +
+              `${order.parcelDescription ? `📝 **Описание:** ${order.parcelDescription}\n` : ''}\n` +
+              `📞 Теперь свяжитесь с водителем и договоритесь о времени отправления.`
+        
+        // Yo'lovchi uchun keyboard
+        const passengerKeyboard = {
+            inline_keyboard: [
+                [
+                    {
+                        text: user.language === 'uz' ? '✅ Buyurtmani tasdiqlash' : '✅ Подтвердить заказ',
+                        callback_data: `confirm_order_${order._id}`
+                    }
+                ],
+                [
+                    {
+                        text: user.language === 'uz' ? '❌ Bekor qilish' : '❌ Отменить',
+                        callback_data: `cancel_order_${order._id}`
+                    }
+                ]
+            ]
+        }
+        
+        try {
+            await ctx.reply(driverInfoMessage, {
+                reply_markup: passengerKeyboard,
+                parse_mode: 'HTML'
+            })
+            console.log('✅ Yo\'lovchiga xabar yuborildi')
+        } catch (replyError) {
+            console.error('❌ Yo\'lovchiga xabar yuborishda xatolik:', replyError)
+        }
+        
+        // ============ HAYDOVCHIGA XABAR ============
+        const passengerName = passenger?.fullName || passenger?.username || 'Nomalum'
+        const passengerPhone = passenger?.phone || 'Korsatilmagan'
+        
+        const orderForDriverMessage = user.language === 'uz'
+            ? `🚖 Sizga yangi buyurtma biriktirildi!\n\n` +
+              `👤 **Yo'lovchi ma'lumotlari:**\n` +
+              `• Ism: ${passengerName}\n` +
+              `• Telefon: ${passengerPhone}\n\n` +
+              `📍 **Yo'nalish:** ${order.fromRegion} → ${order.toRegion}\n` +
+              `👥 **Yo'lovchilar:** ${order.passengerCount} kishi\n` +
+              `${order.hasParcel ? `📦 **Pochta:** Ha\n` : ''}` +
+              `${order.parcelDescription ? `📝 **Tavsif:** ${order.parcelDescription}\n` : ''}\n` +
+              `💰 **Buyurtma raqami:** ${order._id}\n\n` +
+              `✅ Buyurtmani qabul qilish uchun pastdagi tugmani bosing.`
+            : `🚖 Вам назначен новый заказ!\n\n` +
+              `👤 **Информация о пассажире:**\n` +
+              `• Имя: ${passengerName}\n` +
+              `• Телефон: ${passengerPhone}\n\n` +
+              `📍 **Направление:** ${order.fromRegion} → ${order.toRegion}\n` +
+              `👥 **Пассажиры:** ${order.passengerCount} человек\n` +
+              `${order.hasParcel ? `📦 **Посылка:** Да\n` : ''}` +
+              `${order.parcelDescription ? `📝 **Описание:** ${order.parcelDescription}\n` : ''}\n` +
+              `💰 **Номер заказа:** ${order._id}\n\n` +
+              `✅ Нажмите кнопку ниже, чтобы принять заказ.`
+        
+        // Haydovchi uchun keyboard
+        const driverKeyboard = {
+            inline_keyboard: [
+                [
+                    {
+                        text: user.language === 'uz' ? '✅ Qabul qilish' : '✅ Принять',
+                        callback_data: `driver_accept_${order._id}`
+                    }
+                ],
+                [
+                    {
+                        text: user.language === 'uz' ? '❌ Rad etish' : '❌ Отклонить',
+                        callback_data: `driver_reject_${order._id}`
+                    }
+                ]
+            ]
+        }
+        
+        try {
+            await ctx.telegram.sendMessage(driver.telegramId, orderForDriverMessage, {
+                reply_markup: driverKeyboard,
+                parse_mode: 'HTML'
+            })
+            console.log('✅ Haydovchiga xabar yuborildi, chatId:', driver.telegramId)
+        } catch (telegramError) {
+            console.error('❌ Haydovchiga xabar yuborishda xatolik:', telegramError)
+            
+            // Yo'lovchiga xatolik haqida xabar
+            await ctx.reply(
+                user.language === 'uz'
+                    ? `⚠️ Haydovchiga xabar yuborishda muammo yuz berdi. Iltimos, haydovchini shaxsan chaqiring:\n📞 ${driver.phone}`
+                    : `⚠️ Проблема с отправкой сообщения водителю. Пожалуйста, свяжитесь с водителем лично:\n📞 ${driver.phone}`
+            )
+        }
+        
+        // Sessionni tozalash
+        if (ctx.session) {
+            delete ctx.session.orderData
+        }
+        
+        console.log('🚕 ========== selectDriver END ==========')
+        
+    } catch (error) {
+        console.error('❌ selectDriver xatosi:', error)
+        console.error('❌ Xato stack:', error.stack)
+        
+        await ctx.reply(
+            user.language === 'uz'
+                ? '❌ Haydovchi tanlashda xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.'
+                : '❌ Ошибка при выборе водителя. Пожалуйста, попробуйте еще раз.'
+        )
+    }
+}
+// const confirmOrder = async (ctx, callbackData) => {
 // 	const user = ctx.user
 // 	const orderId = callbackData.split('_')[2]
 
@@ -3778,181 +3101,19 @@ const selectDriver = async (ctx, callbackData) => {
 // 		order.status = 'confirmed'
 // 		await order.save()
 
-// 		// Yo'lovchiga xabar
 // 		await ctx.reply(
 // 			user.language === 'uz'
 // 				? "✅ Buyurtma rasmiy tasdiqlandi! Haydovchi bilan bog'laning."
 // 				: '✅ Заказ официально подтвержден! Свяжитесь с водителем.'
 // 		)
 
-// 		// ============ HAYDOVCHIGA YO'LOVCHI MA'LUMOTLARI ============
 // 		if (order.driverId) {
-// 			const passenger = await User.findOne({ telegramId: order.userId })
-
-// 			const orderForDriverMessage = user.language === 'uz'
-// 				? `🚖 Sizga yangi buyurtma biriktirildi!\n\n` +
-// 				  `📋 Buyurtma ma'lumotlari:\n` +
-// 				  `📍 Chiqish: ${order.fromRegion}\n` +
-// 				  `📍 Kirish: ${order.toRegion}\n` +
-// 				  `👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
-// 				  `📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
-// 				  `📝 Tavsif: ${order.parcelDescription || "Yo'q"}\n\n` +
-// 				  `👤 Yo'lovchi ma'lumotlari:\n` +
-// 				  `• Username: @${order.username || passenger?.username || 'Nomalum'}\n` +
-// 				  `• Telefon: ${passenger?.phone || 'Korsatilmagan'}\n\n` +
-// 				  `✅ Yo'lovchi buyurtmani tasdiqladi. Endi siz qabul qilishingiz mumkin.`
-// 				: `🚖 Вам назначен новый заказ!\n\n` +
-// 				  `📋 Информация о заказе:\n` +
-// 				  `📍 Отправление: ${order.fromRegion}\n` +
-// 				  `📍 Прибытие: ${order.toRegion}\n` +
-// 				  `👥 Пассажиры: ${order.passengerCount} человек\n` +
-// 				  `📦 Посылка: ${order.hasParcel ? 'Да' : 'Нет'}\n` +
-// 				  `📝 Описание: ${order.parcelDescription || 'Нет'}\n\n` +
-// 				  `👤 Информация о пассажире:\n` +
-// 				  `• Username: @${order.username || passenger?.username || 'Неизвестно'}\n` +
-// 				  `• Телефон: ${passenger?.phone || 'Не указан'}\n\n` +
-// 				  `✅ Пассажир подтвердил заказ. Теперь вы можете принять его.`
-
-// 			const driverKeyboard = {
-// 				inline_keyboard: [
-// 					[
-// 						{
-// 							text: user.language === 'uz' ? '✅ Qabul qilish' : '✅ Принять',
-// 							callback_data: `driver_accept_${order._id}`
-// 						}
-// 					],
-// 					[
-// 						{
-// 							text: user.language === 'uz' ? '❌ Rad etish' : '❌ Отклонить',
-// 							callback_data: `driver_reject_${order._id}`
-// 						}
-// 					]
-// 				]
-// 			}
-
-// 			await ctx.telegram.sendMessage(order.driverId.telegramId, orderForDriverMessage, {
-// 				reply_markup: driverKeyboard,
-// 				parse_mode: 'HTML'
-// 			})
-// 		}
-// 	} catch (error) {
-// 		console.error('Confirm order error:', error)
-// 		await ctx.reply(
-// 			user.language === 'uz'
-// 				? '❌ Buyurtma tasdiqlashda xatolik yuz berdi.'
-// 				: '❌ Ошибка при подтверждении заказа.'
-// 		)
-// 	}
-// }
-
-// ============ BUYURTMA TASDIQLASH ============
-//  const confirmOrder = async (ctx, callbackData) => {
-// 	const user = ctx.user
-// 	const orderId = callbackData.split('_')[2]
-
-// 	try {
-// 		console.log(`✅ confirm_order: orderId=${orderId}`)
-
-// 		const order = await Order.findById(orderId).populate('driverId')
-
-// 		if (!order) {
-// 			await ctx.reply(user.language === 'uz' ? '❌ Buyurtma topilmadi.' : '❌ Заказ не найден.')
-// 			return
-// 		}
-
-// 		if (order.userId !== user.telegramId) {
-// 			await ctx.reply(
+// 			await ctx.telegram.sendMessage(
+// 				order.driverId.telegramId,
 // 				user.language === 'uz'
-// 					? '❌ Siz bu buyurtmani tasdiqlay olmaysiz.'
-// 					: '❌ Вы не можете подтвердить этот заказ.'
+// 					? "✅ Yo'lovchi buyurtmani tasdiqladi! Endi siz jo'nash vaqtini kelishingiz mumkin."
+// 					: '✅ Пассажир подтвердил заказ! Теперь вы можете договориться о времени отправления.'
 // 			)
-// 			return
-// 		}
-
-// 		order.status = 'confirmed'
-// 		await order.save()
-
-// 		// Yo'lovchiga xabar (haydovchi ma'lumotlari bilan)
-// 		const carModelName = order.driverId.carModel && typeof order.driverId.carModel === 'object'
-// 			? user.language === 'uz'
-// 				? order.driverId.carModel.name
-// 				: order.driverId.carModel.nameRu
-// 			: order.driverId.carModel
-
-// 		const driverInfoForPassenger = user.language === 'uz'
-// 			? `✅ Buyurtma rasmiy tasdiqlandi!\n\n` +
-// 			  `👤 **Haydovchi ma'lumotlari:**\n` +
-// 			  `• Ism: ${order.driverId.fullName}\n` +
-// 			  `• Telefon: ${order.driverId.phone}\n` +
-// 			  `• Mashina: ${carModelName}\n` +
-// 			  `📞 Haydovchi bilan bog'laning va jo'nash vaqtini kelishing!`
-// 			: `✅ Заказ официально подтвержден!\n\n` +
-// 			  `👤 **Информация о водителе:**\n` +
-// 			  `• Имя: ${order.driverId.fullName}\n` +
-// 			  `• Телефон: ${order.driverId.phone}\n` +
-// 			  `• Машина: ${carModelName}\n` +
-// 			  `📞 Свяжитесь с водителем и договоритесь о времени отправления!`
-
-// 		await ctx.reply(driverInfoForPassenger, {
-// 			parse_mode: 'HTML',
-// 			disable_web_page_preview: true
-// 		})
-
-// 		// ============ HAYDOVCHIGA YO'LOVCHI MA'LUMOTLARI ============
-// 		if (order.driverId) {
-// 			const passenger = await User.findOne({ telegramId: order.userId })
-
-// 			const passengerName = passenger?.fullName || passenger?.firstName || 'Nomalum'
-// 			const passengerUsername = passenger?.username ? '@' + passenger.username : 'Yo`q'
-// 			const passengerPhone = passenger?.phone || 'Korsatilmagan'
-
-// 			const orderForDriverMessage = user.language === 'uz'
-//     ? `🚖 Sizga yangi buyurtma biriktirildi!\n\n` +
-//       `📋 **Buyurtma ma'lumotlari:**\n` +
-//       `📍 Yo'nalish: ${order.fromRegion} → ${order.toRegion}\n` +
-//       `👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
-//       `📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
-//       `📝 Tavsif: ${order.parcelDescription || "Yo'q"}\n\n` +
-//       `👤 **Yo'lovchi ma'lumotlari:**\n` +
-//       `• Ism: ${passengerName}\n` +
-//       `• Username: ${passengerUsername}\n` +
-//       `• Telefon: ${passengerPhone}\n\n` +
-//       `✅ Yo'lovchi buyurtmani tasdiqladi. Endi siz qabul qilishingiz mumkin.`
-//     : `🚖 Вам назначен новый заказ!\n\n` +
-//       `📋 **Информация о заказе:**\n` +
-//       `📍 Отправление: ${order.fromRegion}\n` +
-//       `📍 Прибытие: ${order.toRegion}\n` +
-//       `👥 Пассажиры: ${order.passengerCount} человек\n` +
-//       `📦 Посылка: ${order.hasParcel ? 'Да' : 'Нет'}\n` +
-//       `📝 Описание: ${order.parcelDescription || 'Нет'}\n\n` +
-//       `👤 **Информация о пассажире:**\n` +
-//       `• Имя: ${passengerName}\n` +
-//       `• Username: ${passengerUsername}\n` +
-//       `• Телефон: ${passengerPhone}\n\n` +
-//       `✅ Пассажир подтвердил заказ. Теперь вы можете принять его.`
-
-// await ctx.telegram.sendMessage(order.driverId.telegramId, orderForDriverMessage, {
-//     reply_markup: driverKeyboard,
-//     parse_mode: 'HTML',
-//     disable_web_page_preview: true
-// })
-
-// 			const driverKeyboard = {
-// 				inline_keyboard: [
-// 					[
-// 						{
-// 							text: user.language === 'uz' ? '✅ Qabul qilish' : '✅ Принять',
-// 							callback_data: `driver_accept_${order._id}`
-// 						}
-// 					],
-// 					[
-// 						{
-// 							text: user.language === 'uz' ? '❌ Rad etish' : '❌ Отклонить',
-// 							callback_data: `driver_reject_${order._id}`
-// 						}
-// 					]
-// 				]
-// 			}
 // 		}
 // 	} catch (error) {
 // 		console.error('Confirm order error:', error)
@@ -3968,15 +3129,24 @@ const confirmOrder = async (ctx, callbackData) => {
 	const user = ctx.user
 	const orderId = callbackData.split('_')[2]
 
+	console.log('✅ confirmOrder: orderId=', orderId)
+
 	try {
-		const order = await Order.findById(orderId).populate('driverId')
+		const order = await Order.findById(orderId).populate('driverId').exec()
 
 		if (!order) {
+			console.log('❌ Order topilmadi')
 			await ctx.reply(user.language === 'uz' ? '❌ Buyurtma topilmadi.' : '❌ Заказ не найден.')
 			return
 		}
 
-		if (order.userId !== user.telegramId) {
+		// Xatolikni aniqlash: order.userId ni tekshirish
+		console.log('🔍 Order userId:', order.userId)
+		console.log('🔍 User telegramId:', user.telegramId)
+
+		// User ID ni string ga o'girib tekshirish
+		if (order.userId.toString() !== user.telegramId.toString()) {
+			console.log('❌ User ID mos kelmadi')
 			await ctx.reply(
 				user.language === 'uz'
 					? '❌ Siz bu buyurtmani tasdiqlay olmaysiz.'
@@ -3988,22 +3158,34 @@ const confirmOrder = async (ctx, callbackData) => {
 		order.status = 'confirmed'
 		await order.save()
 
+		console.log('✅ Order confirmed, new status:', order.status)
+
 		await ctx.reply(
 			user.language === 'uz'
-				? "✅ Buyurtma rasmiy tasdiqlandi! Haydovchi bilan bog'laning."
-				: '✅ Заказ официально подтвержден! Свяжитесь с водителем.'
+				? '✅ Buyurtma rasmiy tasdiqlandi!'
+				: '✅ Заказ официально подтвержден!'
 		)
 
+		// Agar haydovchi bor bo'lsa, unga xabar yuborish
 		if (order.driverId) {
-			await ctx.telegram.sendMessage(
-				order.driverId.telegramId,
-				user.language === 'uz'
-					? "✅ Yo'lovchi buyurtmani tasdiqladi! Endi siz jo'nash vaqtini kelishingiz mumkin."
-					: '✅ Пассажир подтвердил заказ! Теперь вы можете договориться о времени отправления.'
-			)
+			console.log('📤 Driverga xabar yuborilmoqda:', order.driverId.telegramId)
+
+			try {
+				await ctx.telegram.sendMessage(
+					order.driverId.telegramId,
+					user.language === 'uz'
+						? "✅ Yo'lovchi buyurtmani tasdiqladi!"
+						: '✅ Пассажир подтвердил заказ!'
+				)
+				console.log('✅ Driverga xabar yuborildi')
+			} catch (telegramError) {
+				console.error('❌ Driverga xabar yuborishda xatolik:', telegramError)
+			}
 		}
 	} catch (error) {
-		console.error('Confirm order error:', error)
+		console.error('❌ Confirm order error:', error)
+		console.error('❌ Error stack:', error.stack)
+
 		await ctx.reply(
 			user.language === 'uz'
 				? '❌ Buyurtma tasdiqlashda xatolik yuz berdi.'
@@ -4409,89 +3591,6 @@ const driverRejectOrder = async (ctx, callbackData) => {
 	}
 }
 
-// const selectWorkHoursCallback = async (ctx, callbackData) => {
-// 	const user = ctx.user
-
-// 	console.log('🕒 selectWorkHoursCallback chaqirildi, callbackData:', callbackData)
-
-// 	// Avval callback queryga javob berish
-// 	try {
-// 		await ctx.answerCbQuery()
-// 	} catch (error) {
-// 		console.log('⚠️ answerCbQuery error:', error.message)
-// 	}
-
-// 	ctx.session = ctx.session || {}
-// 	ctx.session.driverData = ctx.session.driverData || {}
-
-// 	console.log('🔍 Session driverData:', JSON.stringify(ctx.session.driverData, null, 2))
-
-// 	if (callbackData === 'work_custom' || callbackData === 'work_custom_enter') {
-// 		// Qo'lda kiritish
-// 		user.state = states.DRIVER_REG_WORK_HOURS_CUSTOM
-// 		await user.save()
-
-// 		console.log('✅ User state yangilandi:', user.state)
-
-// 		if (callbackData === 'work_custom') {
-// 			const message =
-// 				user.language === 'uz'
-// 					? "⏰ Mashhur vaqtlardan tanlang yoki qo'lda kiriting:"
-// 					: '⏰ Выберите популярное время или введите вручную:'
-
-// 			try {
-// 				const keyboard = keyboards.customWorkHoursKeyboard(user.language)
-// 				await ctx.reply(message, keyboard)
-// 			} catch (error) {
-// 				console.error('❌ Keyboard yuborishda xatolik:', error)
-// 			}
-// 			return
-// 		} else {
-// 			const message =
-// 				user.language === 'uz'
-// 					? '✏️ Ish vaqtini quyidagi formatda kiriting:\nMisol: 08:00 - 20:00\nMisol: 22:00 - 06:00'
-// 					: '✏️ Введите время работы в формате:\nПример: 08:00 - 20:00\nПример: 22:00 - 06:00'
-
-// 			await ctx.reply(message)
-// 		}
-// 		return
-// 	}
-
-// 	// Callback datani parse qilish
-// 	let workHours = ''
-// 	if (callbackData === 'work_1000_1800') {
-// 		workHours = '10:00 - 18:00'
-// 	} else if (callbackData === 'work_1800_0200') {
-// 		workHours = '18:00 - 02:00'
-// 	} else if (callbackData === 'work_0200_1000') {
-// 		workHours = '02:00 - 10:00'
-// 	} else if (callbackData.startsWith('work_custom_')) {
-// 		const times = callbackData.replace('work_custom_', '').split('_')
-// 		if (times.length === 2) {
-// 			workHours = `${times[0]} - ${times[1]}`
-// 		}
-// 	}
-
-// 	console.log('📝 Parsed work hours:', workHours)
-
-// 	// Tanlanli vaqtni saqlash
-// 	if (workHours) {
-// 		ctx.session.driverData.workHours = workHours
-
-// 		console.log('✅ Ish vaqti sessionga saqlandi:', ctx.session.driverData.workHours)
-
-// 		// Keyingi qadamga o'tish (sana va vaqt tanlash)
-// 		await showDateTimeSelection(ctx)
-// 	} else {
-// 		console.error('❌ Work hours not parsed properly')
-// 		await ctx.reply(
-// 			user.language === 'uz'
-// 				? "❌ Xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
-// 				: '❌ Произошла ошибка. Пожалуйста, попробуйте еще раз.'
-// 		)
-// 	}
-// }
-
 const selectWorkHoursCallback = async (ctx, callbackData) => {
 	const user = ctx.user
 
@@ -4519,8 +3618,8 @@ const selectWorkHoursCallback = async (ctx, callbackData) => {
 		if (callbackData === 'work_custom') {
 			const message =
 				user.language === 'uz'
-					? "⏰ Mashhur vaqtlardan tanlang yoki qo'lda kiriting:"
-					: '⏰ Выберите популярное время или введите вручную:'
+					? "⏰ Mashhur vaqtlardan tanlang yoki qo'lda kiriting: 23:00 - 12:00"
+					: '⏰ Выберите популярное время или введите вручную: 23:00 - 12:00'
 
 			try {
 				const keyboard = keyboards.customWorkHoursKeyboard(user.language)
@@ -4685,176 +3784,6 @@ const showWorkHoursSelection = async (ctx) => {
     });
 };
 
-// ====================== PROFILNI TO'LIQ SAQLASH ======================
-// const completeDriverRegistration = async ctx => {
-// 	const user = ctx.user
-
-// 	console.log('🔵 ========== completeDriverRegistration START ==========')
-// 	console.log('👤 User ID:', user.telegramId)
-
-// 	if (!ctx.session || !ctx.session.driverData) {
-// 		console.log("❌ Session yoki driverData yo'q")
-// 		await ctx.reply(
-// 			user.language === 'uz'
-// 				? "❌ Ma'lumotlar topilmadi. Iltimos, qayta boshlang."
-// 				: '❌ Данные не найдены. Пожалуйста, начните заново.'
-// 		)
-// 		user.state = states.MAIN_MENU
-// 		await user.save()
-// 		return
-// 	}
-
-// 	const data = ctx.session.driverData
-
-// 	try {
-// 		// Avval mavjud haydovchini tekshirish
-// 		const existingDriver = await Driver.findOne({ telegramId: user.telegramId })
-
-// 		if (existingDriver) {
-// 			console.log('⚠️ Mavjud driver topildi:', existingDriver._id)
-// 			await ctx.reply(
-// 				user.language === 'uz'
-// 					? "❌ Siz allaqachon haydovchi sifatida ro'yxatdan o'tgansiz"
-// 					: '❌ Вы уже зарегистрированы как водитель'
-// 			)
-// 			user.state = states.MAIN_MENU
-// 			await user.save()
-// 			return
-// 		}
-
-// 		// Car model ni tekshirish
-// 		let carModelId = data.carId
-// 		if (!carModelId && data.carModel) {
-// 			console.log('🔍 Car model qidirilmoqda:', data.carModel)
-// 			const car = await Car.findOne({
-// 				$or: [{ name: data.carModel }, { nameRu: data.carModel }]
-// 			})
-
-// 			if (car) {
-// 				carModelId = car._id
-// 				console.log('✅ Car model topildi:', car.name)
-// 			} else {
-// 				// Yangi car model yaratish
-// 				console.log('➕ Yangi car model yaratilmoqda:', data.carModel)
-// 				const newCar = new Car({
-// 					name: data.carModel,
-// 					nameRu: data.carModel,
-// 					isActive: true
-// 				})
-// 				await newCar.save()
-// 				carModelId = newCar._id
-// 				console.log('✅ Yangi car model yaratildi:', data.carModel)
-// 			}
-// 		}
-
-// 		// Haydovchi ma'lumotlarini tayyorlash
-// 		const driverData = {
-// 			telegramId: user.telegramId,
-// 			fullName: data.fullName,
-// 			phone: data.phone,
-// 			fromRegion: data.fromRegion,
-// 			toRegion: data.toRegion,
-// 			carModel: carModelId,
-// 			carType: data.carType || null,
-// 			maxPassengers: data.maxPassengers,
-// 			serviceType: data.serviceType,
-// 			workHours: data.workHours,
-// 			departureTime: data.departureTime || "Yo'lovchi bilan kelishiladi",
-// 			status: 'inactive',
-// 			balance: 0,
-// 			totalOrders: 0,
-// 			registrationStep: 'completed',
-// 			createdAt: new Date(),
-// 			updatedAt: new Date()
-// 		}
-
-// 		console.log('📝 Driver yaratilmoqda:', driverData)
-
-// 		// Driver yaratish
-// 		const driver = new Driver(driverData)
-// 		await driver.save()
-
-// 		console.log('✅ Driver saqlandi. ID:', driver._id)
-
-// 		// User rolini yangilash
-// 		user.role = 'driver'
-// 		user.state = states.MAIN_MENU
-// 		await user.save()
-
-// 		console.log('✅ User roli yangilandi')
-
-// 		// Muvaffaqiyatli xabar
-// 		const serviceNames = {
-// 			road: user.language === 'uz' ? "Yo'l-yo'lakay" : 'Попутка',
-// 			route: user.language === 'uz' ? "Yo'nalish" : 'Направление',
-// 			parcel: user.language === 'uz' ? 'Pochta' : 'Посылка'
-// 		}
-
-// 		const services = data.serviceType.map(type => serviceNames[type] || type).join(', ')
-
-// 		const carModelName = data.carModel || "Noma'lum"
-
-// 		const successMessage =
-// 			user.language === 'uz'
-// 				? `✅ <b>Tabriklaymiz! Profilingiz muvaffaqiyatli yaratildi!</b>\n\n` +
-// 				  `<b>Profil ma'lumotlari:</b>\n` +
-// 				  `👤 <b>Ism:</b> ${data.fullName}\n` +
-// 				  `📍 <b>Yo'nalish:</b> ${data.fromRegion} → ${data.toRegion}\n` +
-// 				  `🚗 <b>Mashina:</b> ${carModelName}\n` +
-// 				  `👥 <b>Sig'im:</b> ${data.maxPassengers} kishi\n` +
-// 				  `🎯 <b>Xizmatlar:</b> ${services}\n` +
-// 				  `🏪 <b>Ish vaqti:</b> ${data.workHours}\n` +
-// 				  (data.departureTime ? `⏰ <b>Jo'nash vaqti:</b> ${data.departureTime}\n\n` : '\n') +
-// 				  `✅ Profilingiz yaratildi`
-// 				: `✅ <b>Поздравляем! Ваш профиль успешно создан!</b>\n\n` +
-// 				  `<b>Данные профиля:</b>\n` +
-// 				  `👤 <b>Имя:</b> ${data.fullName}\n` +
-// 				  `📍 <b>Направление:</b> ${data.fromRegion} → ${data.toRegion}\n` +
-// 				  `🚗 <b>Машина:</b> ${carModelName}\n` +
-// 				  `👥 <b>Вместимость:</b> ${data.maxPassengers} человек\n` +
-// 				  `🎯 <b>Услуги:</b> ${services}\n` +
-// 				  `🏪 <b>Время работы:</b> ${data.workHours}\n` +
-// 				  (data.departureTime ? `⏰ <b>Время отправления:</b> ${data.departureTime}\n\n` : '\n') +
-// 				  `✅ Ваш профиль создан, теперь вы можете активировать его, совершив оплату.`
-
-// 		await ctx.reply(successMessage, {
-// 			parse_mode: 'HTML',
-// 			reply_markup: { remove_keyboard: true }
-// 		})
-
-// 		// Sessionni tozalash
-// 		delete ctx.session.driverData
-// 		console.log('✅ Session tozalandi')
-
-// 		// To'lov menyusini ko'rsatish (2 soniyadan keyin)
-// 		// console.log("💰 To'lov sahifasi ko'rsatilmoqda...")
-// 		// setTimeout(async () => {
-// 		// 	await handleDriverPayment(ctx)
-// 		// }, 2000)
-
-// 	} catch (error) {
-// 		console.error('❌ Complete registration error:', error)
-// 		console.error('❌ Error stack:', error.stack)
-
-// 		// MongoDB xatoliklarini tekshirish
-// 		if (error.name === 'ValidationError') {
-// 			console.error('❌ Validation error details:', error.errors)
-// 		}
-
-// 		await ctx.reply(
-// 			user.language === 'uz'
-// 				? `❌ Profilni saqlashda xatolik yuz berdi.\n\n` +
-// 						`Xato: ${error.message}\n\n` +
-// 						`Iltimos, qayta urinib ko'ring.`
-// 				: `❌ Ошибка при сохранении профиля.\n\n` +
-// 						`Ошибка: ${error.message}\n\n` +
-// 						`Пожалуйста, попробуйте еще раз.`
-// 		)
-// 	}
-
-// 	console.log('🔵 ========== completeDriverRegistration END ==========')
-// }
-
 const completeDriverRegistration = async ctx => {
 	const user = ctx.user
 
@@ -4916,7 +3845,7 @@ const completeDriverRegistration = async ctx => {
 			}
 		}
 
-		// Haydovchi ma'lumotlarini tayyorlash (status: 'active' qilib o'zgartiring)
+		// Haydovchi ma'lumotlarini tayyorlash (carNumber qo'shing)
 		const driverData = {
 			telegramId: user.telegramId,
 			fullName: data.fullName,
@@ -4924,12 +3853,13 @@ const completeDriverRegistration = async ctx => {
 			fromRegion: data.fromRegion,
 			toRegion: data.toRegion,
 			carModel: carModelId,
+			carNumber: data.carNumber,
 			carType: data.carType || null,
 			maxPassengers: data.maxPassengers,
 			serviceType: data.serviceType,
 			workHours: data.workHours,
 			departureTime: data.departureTime || "Yo'lovchi bilan kelishiladi",
-			status: 'active', // BU YERNI 'active' QILING
+			status: 'active',
 			balance: 10000,
 			totalOrders: 0,
 			registrationStep: 'completed',
@@ -4963,6 +3893,7 @@ const completeDriverRegistration = async ctx => {
 
 		const carModelName = data.carModel || "Noma'lum"
 
+		// Mashina raqamini muvaffaqiyatli xabarda ko'rsatish
 		const successMessage =
 			user.language === 'uz'
 				? `✅ <b>Tabriklaymiz! Profilingiz muvaffaqiyatli yaratildi!</b>\n\n` +
@@ -4970,6 +3901,8 @@ const completeDriverRegistration = async ctx => {
 				  `👤 <b>Ism:</b> ${data.fullName}\n` +
 				  `📍 <b>Yo'nalish:</b> ${data.fromRegion} → ${data.toRegion}\n` +
 				  `🚗 <b>Mashina:</b> ${carModelName}\n` +
+				  (data.carNumber ? `🚘 <b>Mashina raqami:</b> ${data.carNumber}\n` : '') +
+				  (data.carTypeName ? `🏷️ <b>Mashina turi:</b> ${data.carTypeName}\n` : '') +
 				  `👥 <b>Sig'im:</b> ${data.maxPassengers} kishi\n` +
 				  `🎯 <b>Xizmatlar:</b> ${services}\n` +
 				  `🏪 <b>Ish vaqti:</b> ${data.workHours}\n` +
@@ -4980,6 +3913,8 @@ const completeDriverRegistration = async ctx => {
 				  `👤 <b>Имя:</b> ${data.fullName}\n` +
 				  `📍 <b>Направление:</b> ${data.fromRegion} → ${data.toRegion}\n` +
 				  `🚗 <b>Машина:</b> ${carModelName}\n` +
+				  (data.carNumber ? `🚘 <b>Номер машины:</b> ${data.carNumber}\n` : '') +
+				  (data.carTypeNameRu ? `🏷️ <b>Тип машины:</b> ${data.carTypeNameRu}\n` : '') +
 				  `👥 <b>Вместимость:</b> ${data.maxPassengers} человек\n` +
 				  `🎯 <b>Услуги:</b> ${services}\n` +
 				  `🏪 <b>Время работы:</b> ${data.workHours}\n` +
@@ -5016,47 +3951,842 @@ const completeDriverRegistration = async ctx => {
 
 	console.log('🔵 ========== completeDriverRegistration END ==========')
 }
+// Mashina raqamini so'rash funksiyasi
+const showCarNumberInput = async (ctx) => {
+    const user = ctx.user;
+    
+    console.log('🚘 ========== showCarNumberInput START ==========');
+    
+    // Sessionni tekshirish
+    if (!ctx.session || !ctx.session.driverData) {
+        console.log("❌ Session yoki driverData yo'q");
+        await ctx.reply(
+            user.language === 'uz'
+                ? "❌ Ma'lumotlar topilmadi. Iltimos, qayta boshlang."
+                : '❌ Данные не найдены. Пожалуйста, начните заново.'
+        );
+        return;
+    }
+    
+    const data = ctx.session.driverData;
+    
+    // Car model ma'lumotini olish
+    let carModelDisplay = '';
+    if (data.carModel) {
+        carModelDisplay = user.language === 'uz' 
+            ? data.carModel 
+            : data.carModelRu || data.carModel;
+    }
+    
+    // Car type ma'lumotini olish
+    let carTypeDisplay = '';
+    if (data.carTypeName) {
+        carTypeDisplay = user.language === 'uz'
+            ? data.carTypeName
+            : data.carTypeNameRu || data.carTypeName;
+    }
+    
+    // Mashina ma'lumotlari
+    let carInfo = '';
+    if (carModelDisplay) {
+        carInfo = `🚗 <b>Mashina:</b> ${carModelDisplay}`;
+        if (carTypeDisplay) {
+            carInfo += ` (${carTypeDisplay})`;
+        }
+        carInfo += '\n\n';
+    }
+    
+    const message = user.language === 'uz'
+        ? `${carInfo}` +
+          `🚘 <b>Mashina raqamingizni kiriting:</b>\n\n` +
+          `📝 <b>Format:</b> <code>01A123AB</code>, <code>01D777DB</code>\n` +
+          `⚠️ O'zbekiston davlat raqami formatida bo'lishi kerak\n\n` +
+          `<b>Masalan:</b>\n` +
+          `• <code>01A123AB</code>\n` +
+          `• <code>10B777DC</code>\n` +
+          `• <code>30D123CE</code>\n\n` +
+          `<b>Qoidalar:</b>\n` +
+          `1. 2 ta raqam (01-99 - viloyat kodi)\n` +
+          `2. 1 ta lotin harfi (A-Z)\n` +
+          `3. 3 ta raqam (001-999)\n` +
+          `4. 2 ta lotin harfi (A-Z)\n\n` +
+          `Iltimos, mashina raqamingizni yuqoridagi formatda kiriting:`
+        : `${carInfo}` +
+          `🚘 <b>Введите номер машины:</b>\n\n` +
+          `📝 <b>Формат:</b> <code>01A123AB</code>, <code>01D777DB</code>\n` +
+          `⚠️ Должен быть в формате узбекских госномеров\n\n` +
+          `<b>Например:</b>\n` +
+          `• <code>01A123AB</code>\n` +
+          `• <code>10B777DC</code>\n` +
+          `• <code>30D123CE</code>\n\n` +
+          `<b>Правила:</b>\n` +
+          `1. 2 цифры (01-99 - код региона)\n` +
+          `2. 1 латинская буква (A-Z)\n` +
+          `3. 3 цифры (001-999)\n` +
+          `4. 2 латинские буквы (A-Z)\n\n` +
+          `Пожалуйста, введите номер машины в указанном формате:`;
+    
+    // State ni o'zgartirish
+    user.state = states.DRIVER_REG_CAR_NUMBER;
+    await user.save();
+    
+    console.log('✅ User state yangilandi:', user.state);
+    
+    // Xabarni yuborish
+    await ctx.reply(message, {
+        parse_mode: 'HTML',
+        reply_markup: {
+            remove_keyboard: true
+        }
+    });
+    
+    console.log('🚘 ========== showCarNumberInput END ==========');
+};
+const saveCarNumber = async (ctx, text) => {
+	const user = ctx.user
 
-// ====================== MODULE EXPORTS ======================
+	console.log('🔵 ========== saveCarNumber START ==========')
+	console.log('📝 Received text:', text)
+
+	ctx.session = ctx.session || {}
+	ctx.session.driverData = ctx.session.driverData || {}
+
+	// Mashina raqamini tozalash
+	const cleanedText = text.trim().toUpperCase()
+	console.log('🧹 Cleaned text:', cleanedText)
+
+	// Format tekshiruvi - faqat 01A123AA formatini qabul qilamiz
+	const carNumberRegex = /^[0-9]{2}[A-Z]{1}[0-9]{3}[A-Z]{2}$/
+
+	if (!carNumberRegex.test(cleanedText)) {
+		console.log('❌ Invalid car number format:', cleanedText)
+		const message =
+			user.language === 'uz'
+				? "❌ Noto'g'ri mashina raqami formati!\n\n" +
+				  "✅ To'g'ri format: **01A123AA**\n" +
+				  '📝 Iltimos, 2 raqam + 1 harf + 3 raqam + 2 harf formatida kiriting.\n' +
+				  '✅ Masalan:\n' +
+				  '• 01A123AA\n' +
+				  '• 10B456CC\n' +
+				  '• 77C789DD\n\n' +
+				  '📋 Qayta kiriting:'
+				: '❌ Неправильный формат номера машины!\n\n' +
+				  '✅ Правильный формат: **01A123AA**\n' +
+				  '📝 Пожалуйста, введите в формате: 2 цифры + 1 буква + 3 цифры + 2 буквы.\n' +
+				  '✅ Например:\n' +
+				  '• 01A123AA\n' +
+				  '• 10B456CC\n' +
+				  '• 77C789DD\n\n' +
+				  '📋 Введите еще раз:'
+
+		await ctx.reply(message, { parse_mode: 'Markdown' })
+		return
+	}
+
+	// Mashina raqamini sessionga saqlash
+	ctx.session.driverData.carNumber = cleanedText
+	console.log('✅ Car number saved to session:', ctx.session.driverData.carNumber)
+
+	// Keyingi qadamga o'tish - yo'lovchilar soni
+	user.state = states.DRIVER_REG_MAX_PASSENGERS
+	await user.save()
+
+	console.log('✅ User state updated to:', user.state)
+
+	// Car model ma'lumotlari
+	const carModelDisplay =
+		user.language === 'uz'
+			? ctx.session.driverData.carModel
+			: ctx.session.driverData.carModelRu || ctx.session.driverData.carModel
+
+	const carTypeDisplay = ctx.session.driverData.carTypeName
+		? user.language === 'uz'
+			? ctx.session.driverData.carTypeName
+			: ctx.session.driverData.carTypeNameRu || ctx.session.driverData.carTypeName
+		: ''
+
+	const successMessage =
+		user.language === 'uz'
+			? `✅ Mashina ma'lumotlari saqlandi:\n\n` +
+			  `🚗 Model: ${carModelDisplay}\n` +
+			  (carTypeDisplay ? `🏷️ Turi: ${carTypeDisplay}\n` : '') +
+			  `🔢 Raqam: ${cleanedText}\n\n` +
+			  `👥 Necha kishigacha olib ketasiz?`
+			: `✅ Информация о машине сохранена:\n\n` +
+			  `🚗 Модель: ${carModelDisplay}\n` +
+			  (carTypeDisplay ? `🏷️ Тип: ${carTypeDisplay}\n` : '') +
+			  `🔢 Номер: ${cleanedText}\n\n` +
+			  `👥 Сколько человек вы можете взять?`
+
+	await ctx.reply(successMessage, keyboards.maxPassengersKeyboard(user.language))
+
+	console.log('🔵 ========== saveCarNumber END ==========')
+}
+const selectCarTypeCallback = async (ctx, callbackData) => {
+	const user = ctx.user
+
+	ctx.session = ctx.session || {}
+	ctx.session.driverData = ctx.session.driverData || {}
+
+	console.log('🏷️ Car type callback:', callbackData)
+
+	if (callbackData === 'car_type_skip') {
+		ctx.session.driverData.carType = null
+		ctx.session.driverData.carTypeName = null
+		ctx.session.driverData.carTypeNameRu = null
+		console.log('⏭️ Car type skipped')
+	} else {
+		const carTypeId = callbackData.replace('car_type_', '')
+		const carType = await CarType.findById(carTypeId)
+
+		if (!carType) {
+			await ctx.reply(
+				user.language === 'uz' ? '❌ Mashina turi topilmadi' : '❌ Тип машины не найден'
+			)
+			return
+		}
+
+		ctx.session.driverData.carType = carType._id
+		ctx.session.driverData.carTypeName = carType.name
+		ctx.session.driverData.carTypeNameRu = carType.nameRu
+		console.log('✅ Car type selected:', carType.name)
+	}
+
+	// Avval xabarni o'chirish
+	try {
+		await ctx.deleteMessage()
+	} catch (error) {
+		console.log('Delete message error:', error.message)
+	}
+
+	// Car model ma'lumotlarini olish
+	const carModelDisplay =
+		user.language === 'uz'
+			? ctx.session.driverData.carModel
+			: ctx.session.driverData.carModelRu || ctx.session.driverData.carModel
+
+	const successMessage =
+		user.language === 'uz'
+			? `✅ Mashina turi tanlandi: ${
+					ctx.session.driverData.carTypeName || 'Tanlanmadi'
+			  }\n\n🚗 Mashinangiz: ${carModelDisplay}\n\n🔢 Endi mashina raqamingizni kiriting:`
+			: `✅ Тип машины выбран: ${
+					ctx.session.driverData.carTypeNameRu || 'Не выбрано'
+			  }\n\n🚗 Ваша машина: ${carModelDisplay}\n\n🔢 Теперь введите номер машины:`
+
+	// MASHINA RAQAMINI SO'RASH - BU QATOR MUHIM!
+	console.log('📤 Calling askCarNumber...')
+	await askCarNumber(ctx)
+}
+const askCarNumber = async ctx => {
+	const user = ctx.user
+
+	console.log('🚗 ========== askCarNumber START ==========')
+	console.log('👤 User ID:', user.telegramId)
+	console.log('📊 Current state:', user.state)
+
+	// State ni o'zgartirish
+	user.state = states.DRIVER_REG_CAR_NUMBER
+	await user.save()
+
+	console.log('✅ User state updated to:', user.state)
+
+	// Car model ma'lumotlari
+	const carModelDisplay = ctx.session?.driverData?.carModel
+		? user.language === 'uz'
+			? ctx.session.driverData.carModel
+			: ctx.session.driverData.carModelRu || ctx.session.driverData.carModel
+		: ''
+
+	const carTypeDisplay = ctx.session?.driverData?.carTypeName
+		? user.language === 'uz'
+			? `🏷️ ${ctx.session.driverData.carTypeName}\n`
+			: `🏷️ ${ctx.session.driverData.carTypeNameRu || ctx.session.driverData.carTypeName}\n`
+		: ''
+
+	const message =
+		user.language === 'uz'
+			? `🚗 Mashina ma\'lumotlari:\n` +
+			  `Model: ${carModelDisplay}\n` +
+			  carTypeDisplay +
+			  `\n🔢 Mashina raqamingizni kiriting:\n\n` +
+			  '📝 Format: **01A123AA** yoki **10B456CC**\n' +
+			  '✅ Masalan: 01A123AA, 10B456CC, 77C789DD\n\n' +
+			  "ℹ️ Iltimos, to'g'ri formatda kiriting: 2 raqam + 1 harf + 3 raqam + 2 harf"
+			: `🚗 Информация о машине:\n` +
+			  `Модель: ${carModelDisplay}\n` +
+			  carTypeDisplay +
+			  `\n🔢 Введите номер машины:\n\n` +
+			  '📝 Формат: **01A123AA** или **10B456CC**\n' +
+			  '✅ Например: 01A123AA, 10B456CC, 77C789DD\n\n' +
+			  'ℹ️ Пожалуйста, введите в правильном формате: 2 цифры + 1 буква + 3 цифры + 2 буквы'
+
+	await ctx.reply(message, {
+		parse_mode: 'Markdown',
+		reply_markup: { remove_keyboard: true }
+	})
+
+	console.log('🚗 ========== askCarNumber END ==========')
+}
+// const selectCarCallback = async (ctx, callbackData) => {
+//     const user = ctx.user;
+
+//     ctx.session = ctx.session || {};
+//     ctx.session.driverData = ctx.session.driverData || {};
+
+//     const carId = callbackData.replace('car_select_', '');
+//     const car = await Car.findById(carId);
+
+//     if (!car) {
+//         await ctx.reply(
+//             user.language === 'uz' ? '❌ Mashina modeli topilmadi' : '❌ Модель машины не найдена'
+//         );
+//         await showCarSelection(ctx);
+//         return;
+//     }
+
+//     ctx.session.driverData.carId = car._id;
+//     ctx.session.driverData.carModel = car.name;
+//     ctx.session.driverData.carModelRu = car.nameRu;
+
+//     // Mashina turini so'rash
+//     user.state = states.DRIVER_REG_CAR_TYPE;
+//     await user.save();
+
+//     const successMessage =
+//         user.language === 'uz'
+//             ? `✅ Mashina modeli tanlandi: ${car.name}`
+//             : `✅ Модель машины выбрана: ${car.nameRu}`;
+
+//     await ctx.reply(successMessage);
+
+//     await selectCarType(ctx);
+// };
+
+// Car modelni qo'lda kiritganda
+// const saveCarModel = async (ctx, text) => {
+//     const user = ctx.user;
+
+//     ctx.session = ctx.session || {};
+//     ctx.session.driverData = ctx.session.driverData || {};
+
+//     if (text.length < 2) {
+//         const message =
+//             user.language === 'uz'
+//                 ? "❌ Mashina modeli kamida 2 ta belgidan iborat bo'lishi kerak."
+//                 : '❌ Модель машины должна содержать не менее 2 символов.';
+
+//         await ctx.reply(message);
+//         return;
+//     }
+
+//     ctx.session.driverData.carModel = text;
+
+//     // Mashina turini so'rash
+//     user.state = states.DRIVER_REG_CAR_TYPE;
+//     await user.save();
+
+//     await selectCarType(ctx);
+// };
+
+// const showDriverEditMenu = async ctx => {
+// 	const user = ctx.user
+
+// 	const driver = await Driver.findOne({ telegramId: user.telegramId })
+
+// 	if (!driver) {
+// 		await ctx.reply(user.language === 'uz' ? '❌ Profil topilmadi' : '❌ Профиль не найден')
+// 		return
+// 	}
+
+// 	const message =
+// 		user.language === 'uz'
+// 			? `✏️ <b>Profil tahrirlash</b>\n\n` + `Qaysi ma'lumotni tahrirlamoqchisiz?`
+// 			: `✏️ <b>Редактирование профиля</b>\n\n` + `Какую информацию вы хотите редактировать?`
+
+// 	const keyboard = {
+// 		inline_keyboard: [
+// 			[
+// 				{
+// 					text: user.language === 'uz' ? '👤 Ism-familiya' : '👤 Имя-фамилия',
+// 					callback_data: 'edit_fullname'
+// 				}
+// 			],
+// 			[
+// 				{
+// 					text: user.language === 'uz' ? '📞 Telefon raqam' : '📞 Номер телефона',
+// 					callback_data: 'edit_phone'
+// 				},
+// 				{
+// 					text: user.language === 'uz' ? '🚗 Mashina' : '🚗 Машина',
+// 					callback_data: 'edit_car'
+// 				}
+// 			],
+// 			[
+// 				{
+// 					text: user.language === 'uz' ? "👥 Yo'lovchilar soni" : '👥 Количество пассажиров',
+// 					callback_data: 'edit_passengers'
+// 				},
+// 				{
+// 					text: user.language === 'uz' ? "📍 Yo'nalish" : '📍 Направление',
+// 					callback_data: 'edit_route'
+// 				}
+// 			],
+// 			[
+// 				{
+// 					text: user.language === 'uz' ? '🎯 Xizmat turlari' : '🎯 Типы услуг',
+// 					callback_data: 'edit_services'
+// 				}
+// 			],
+// 			[
+// 				{
+// 					text: user.language === 'uz' ? "⏰ Jo'nash vaqti" : '⏰ Время отправления',
+// 					callback_data: 'edit_time'
+// 				}
+// 			],
+// 			[
+// 				{
+// 					text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
+// 					callback_data: 'main_menu'
+// 				},
+// 				{
+// 					text: user.language === 'uz' ? '❌ Bekor qilish' : '❌ Отмена',
+// 					callback_data: 'driver_info'
+// 				}
+// 			]
+// 		]
+// 	}
+
+// 	await ctx.reply(message, {
+// 		reply_markup: keyboard,
+// 		parse_mode: 'HTML'
+// 	})
+// }
+
+// ====================== MASHINA MODELINI TANLASH (PAGINATION bilan) ======================
+let currentCarPage = {} // {userId: pageNumber}
+
+const showCarSelection = async ctx => {
+    const user = ctx.user
+    
+    // Page ni 0 ga reset qilish
+    if (!currentCarPage[user.telegramId]) {
+        currentCarPage[user.telegramId] = 0
+    }
+    
+    const page = currentCarPage[user.telegramId] || 0
+    const limit = 5 // Har sahifada 5 ta mashina
+    
+    const cars = await Car.find({ isActive: true })
+        .sort({ name: 1 })
+        .skip(page * limit)
+        .limit(limit)
+    
+    const totalCars = await Car.countDocuments({ isActive: true })
+    const totalPages = Math.ceil(totalCars / limit)
+    
+    if (cars.length === 0) {
+        const message = user.language === 'uz' 
+            ? "🚗 Mashina modellari topilmadi. Mashina modelini qo'lda kiriting:"
+            : '🚗 Модели машин не найдены. Введите модель машины вручную:'
+        
+        user.state = states.DRIVER_REG_CAR_MODEL
+        await user.save()
+        
+        await ctx.reply(message, {
+            reply_markup: { remove_keyboard: true }
+        })
+        return
+    }
+    
+    const message = user.language === 'uz' 
+        ? `🚗 Mashina modelini tanlang (${page + 1}/${totalPages}):`
+        : `🚗 Выберите модель машины (${page + 1}/${totalPages}):`
+    
+    const keyboardButtons = []
+    
+    // Mashina tugmalari
+    cars.forEach(car => {
+        const displayName = user.language === 'uz' ? car.name : car.nameRu
+        keyboardButtons.push([Markup.button.callback(displayName, `car_select_${car._id}`)])
+    })
+    
+    // Pagination tugmalari
+    const paginationButtons = []
+    
+    // Faqat orqaga tugmasi (agar birinchi sahifa bo'lmasa)
+    if (page > 0) {
+        paginationButtons.push(Markup.button.callback('⬅️', `car_page_${page - 1}`))
+    }
+    
+    // Qo'lda kiritish tugmasi
+    paginationButtons.push(Markup.button.callback(
+        user.language === 'uz' ? '✏️ Qo\'lda kiritish' : '✏️ Ввести вручную', 
+        'car_manual_input'
+    ))
+    
+    // Faqat keyingi tugmasi (agar oxirgi sahifa bo'lmasa)
+    if (page < totalPages - 1) {
+        paginationButtons.push(Markup.button.callback('➡️', `car_page_${page + 1}`))
+    }
+    
+    if (paginationButtons.length > 0) {
+        keyboardButtons.push(paginationButtons)
+    }
+    
+    // Orqaga tugmasi (registratsiyani qayta boshlash)
+    keyboardButtons.push([
+        Markup.button.callback(
+            user.language === 'uz' ? '⬅️ Orqaga' : '⬅️ Назад', 
+            'back_to_registration'
+        )
+    ])
+    
+    const keyboard = Markup.inlineKeyboard(keyboardButtons)
+    
+    try {
+        // Avvalgi xabarni o'chirish
+        if (ctx.callbackQuery?.message?.message_id) {
+            await ctx.deleteMessage()
+        }
+    } catch (error) {
+        console.log('Delete message error:', error.message)
+    }
+    
+    await ctx.reply(message, keyboard)
+}
+
+// Pagination sahifasini o'zgartirish
+// const handleCarPageChange = async (ctx, callbackData) => {
+//     const user = ctx.user
+//     const page = parseInt(callbackData.replace('car_page_', ''))
+    
+//     currentCarPage[user.telegramId] = page
+//     await showCarSelection(ctx)
+// }
+
+// Mashinani tanlash callback
+const selectCarCallback = async (ctx, callbackData) => {
+    const user = ctx.user;
+    
+    ctx.session = ctx.session || {};
+    ctx.session.driverData = ctx.session.driverData || {};
+    
+    const carId = callbackData.replace('car_select_', '');
+    const car = await Car.findById(carId);
+    
+    if (!car) {
+        await ctx.reply(
+            user.language === 'uz' ? '❌ Mashina modeli topilmadi' : '❌ Модель машины не найдена'
+        );
+        await showCarSelection(ctx);
+        return;
+    }
+    
+    ctx.session.driverData.carId = car._id;
+    ctx.session.driverData.carModel = car.name;
+    ctx.session.driverData.carModelRu = car.nameRu;
+    
+    // Avval xabarni o'chirish
+    try {
+        await ctx.deleteMessage();
+    } catch (error) {
+        console.log('Delete message error:', error.message);
+    }
+    
+    // Sessionni tozalash
+    if (currentCarPage[user.telegramId]) {
+        delete currentCarPage[user.telegramId];
+    }
+    
+    const successMessage = user.language === 'uz'
+        ? `✅ Mashina modeli tanlandi: ${car.name}\n\n`
+        : `✅ Модель машины выбрана: ${car.nameRu}\n\n`;
+    
+    await ctx.reply(successMessage);
+    
+    // Mashina turini so'rash
+    user.state = states.DRIVER_REG_CAR_TYPE;
+    await user.save();
+    
+    await selectCarType(ctx);
+}
+
+// ====================== PAGINATION VA QO'LDA KIRITISH HANDLERLARI ======================
+
+// Mashina modelini qo'lda kiritish oynasini ko'rsatish
+const showManualCarInput = async ctx => {
+    const user = ctx.user
+    
+    console.log('✏️ Manual car input requested')
+    
+    // Avval xabarni o'chirish
+    try {
+        if (ctx.callbackQuery?.message?.message_id) {
+            await ctx.deleteMessage()
+        }
+    } catch (error) {
+        console.log('Delete message error:', error.message)
+    }
+    
+    const message = user.language === 'uz'
+        ? "✏️ Mashina modelini kiriting:\n\n" +
+          "Masalan:\n" +
+          "• Cobalt\n" +
+          "• Nexia 3\n" +
+          "• Gentra\n" +
+          "• Malibu\n" +
+          "• Lacetti"
+        : "✏️ Введите модель машины:\n\n" +
+          "Например:\n" +
+          "• Кобальт\n" +
+          "• Нексия 3\n" +
+          "• Гентра\n" +
+          "• Малибу\n" +
+          "• Лачетти"
+    
+    user.state = states.DRIVER_REG_CAR_MODEL
+    await user.save()
+    
+    await ctx.reply(message, {
+        reply_markup: { remove_keyboard: true }
+    })
+}
+
+// Mashina sahifasini o'zgartirish
+const handleCarPageChange = async (ctx, callbackData) => {
+    const user = ctx.user
+    const page = parseInt(callbackData.replace('car_page_', ''))
+    
+    console.log(`📄 Car page change to: ${page}`)
+    
+    currentCarPage[user.telegramId] = page
+    await showCarSelection(ctx)
+}
+
+// Orqaga qaytish - mashina tanlashga
+const handleBackToCarSelection = async ctx => {
+    const user = ctx.user
+    
+    console.log('⬅️ Back to car selection')
+    
+    user.state = states.DRIVER_REG_SELECT_CAR
+    await user.save()
+    
+    // Sessiondan mashina ma'lumotlarini tozalash
+    if (ctx.session?.driverData) {
+        delete ctx.session.driverData.carId
+        delete ctx.session.driverData.carModel
+        delete ctx.session.driverData.carModelRu
+    }
+    
+    // currentCarPage ni reset qilish
+    if (currentCarPage[user.telegramId]) {
+        currentCarPage[user.telegramId] = 0
+    }
+    
+    await showCarSelection(ctx)
+}
+
+// Orqaga qaytish - registratsiya boshiga
+const handleBackToRegistration = async ctx => {
+    const user = ctx.user
+    
+    console.log('⬅️ Back to registration start')
+    
+    // Registratsiyani qayta boshlash
+    user.state = states.DRIVER_REG_FROM_REGION
+    await user.save()
+    
+    // Sessionni tozalash
+    if (ctx.session?.driverData) {
+        ctx.session.driverData = {}
+    }
+    
+    if (currentCarPage[user.telegramId]) {
+        delete currentCarPage[user.telegramId]
+    }
+    
+    const message = user.language === 'uz'
+        ? "🚘 Haydovchi sifatida ro'yxatdan o'tish\n\n📍 Qaysi viloyatdan jo'namoqchisiz?"
+        : '🚘 Регистрация как водитель\n\n📍 Из какого региона выезжаете?'
+    
+    await ctx.reply(message, keyboards.driverFromRegionsKeyboard(user.language))
+}
+
+// Car modelni qo'lda kiritganda
+const saveCarModel = async (ctx, text) => {
+    const user = ctx.user;
+    
+    ctx.session = ctx.session || {};
+    ctx.session.driverData = ctx.session.driverData || {};
+    
+    if (text.length < 2) {
+        const message = user.language === 'uz'
+            ? "❌ Mashina modeli kamida 2 ta belgidan iborat bo'lishi kerak."
+            : '❌ Модель машины должна содержать не менее 2 символов.';
+        
+        await ctx.reply(message);
+        return;
+    }
+    
+    ctx.session.driverData.carModel = text;
+    ctx.session.driverData.carModelRu = text;
+    
+    const successMessage = user.language === 'uz'
+        ? `✅ Mashina modeli saqlandi: ${text}`
+        : `✅ Модель машины сохранена: ${text}`;
+    
+    await ctx.reply(successMessage);
+    
+    // Mashina turini so'rash
+    user.state = states.DRIVER_REG_CAR_TYPE;
+    await user.save();
+    
+    await selectCarType(ctx);
+}
+
+// Mashina turini so'rash (barcha mashina turlari uchun)
+// const selectCarType = async ctx => {
+//     const user = ctx.user
+    
+//     const carTypes = await CarType.find({ isActive: true }).sort({ name: 1 })
+    
+//     // Avval xabarni o'chirish
+//     try {
+//         await ctx.deleteMessage()
+//     } catch (error) {
+//         console.log('Delete message error:', error.message)
+//     }
+    
+//     if (carTypes.length === 0) {
+//         // Agar mashina turlari bo'lmasa, to'g'ridan-to'g'ri mashina raqamini so'rash
+//         console.log('⚠️ No car types found, asking for car number directly')
+//         await askCarNumber(ctx)
+//         return
+//     }
+    
+//     const carModelDisplay = user.language === 'uz'
+//         ? ctx.session.driverData.carModel
+//         : ctx.session.driverData.carModelRu || ctx.session.driverData.carModel
+    
+//     const message = user.language === 'uz'
+//         ? `🚗 Mashinangiz modeli: ${carModelDisplay}\n\nMashina turini tanlang:`
+//         : `🚗 Модель вашей машины: ${carModelDisplay}\n\nВыберите тип машины:`
+    
+//     const keyboardButtons = []
+    
+//     // Mashina turi tugmalari (3 ta qatorda)
+//     for (let i = 0; i < carTypes.length; i += 3) {
+//         const row = []
+        
+//         for (let j = 0; j < 3; j++) {
+//             if (carTypes[i + j]) {
+//                 const carType = carTypes[i + j]
+//                 const displayName = user.language === 'uz' ? carType.name : carType.nameRu
+//                 row.push(Markup.button.callback(displayName, `car_type_${carType._id}`))
+//             }
+//         }
+        
+//         if (row.length > 0) {
+//             keyboardButtons.push(row)
+//         }
+//     }
+    
+//     // O'tkazib yuborish va qo'lda kiritish tugmalari
+//     keyboardButtons.push([
+//         Markup.button.callback(
+//             user.language === 'uz' ? "⏭ O'tkazib yuborish" : '⏭ Пропустить', 
+//             'car_type_skip'
+//         )
+//     ])
+    
+//     // Orqaga tugmasi
+//     keyboardButtons.push([
+//         Markup.button.callback(
+//             user.language === 'uz' ? '⬅️ Orqaga' : '⬅️ Назад', 
+//             'back_to_car_selection'
+//         )
+//     ])
+    
+//     const keyboard = Markup.inlineKeyboard(keyboardButtons)
+    
+//     await ctx.reply(message, keyboard)
+// }
+
+// Orqaga qaytish handlerlari
+// const handleBackToCarSelection = async ctx => {
+//     const user = ctx.user
+    
+//     user.state = states.DRIVER_REG_SELECT_CAR
+//     await user.save()
+    
+//     // Sessiondan mashina ma'lumotlarini tozalash
+//     if (ctx.session?.driverData) {
+//         delete ctx.session.driverData.carId
+//         delete ctx.session.driverData.carModel
+//         delete ctx.session.driverData.carModelRu
+//     }
+    
+//     await showCarSelection(ctx)
+// }
+
+// const handleBackToRegistration = async ctx => {
+//     const user = ctx.user
+    
+//     // Registratsiyani qayta boshlash
+//     user.state = states.DRIVER_REG_FROM_REGION
+//     await user.save()
+    
+//     // Sessionni tozalash
+//     if (ctx.session?.driverData) {
+//         ctx.session.driverData = {}
+//     }
+    
+//     if (currentCarPage[user.telegramId]) {
+//         delete currentCarPage[user.telegramId]
+//     }
+    
+//     const message = user.language === 'uz'
+//         ? "🚘 Haydovchi sifatida ro'yxatdan o'tish\n\n📍 Qaysi viloyatdan jo'namoqchisiz?"
+//         : '🚘 Регистрация как водитель\n\n📍 Из какого региона выезжаете?'
+    
+//     await ctx.reply(message, keyboards.driverFromRegionsKeyboard(user.language))
+// }
+
+
 module.exports = {
-	// Asosiy funksiyalar
+    handleCarPageChange,
+    showManualCarInput,
+    saveCarModel,
+    selectCarType,
+    handleBackToCarSelection,
+    handleBackToRegistration,
 	startRegistration,
 	showDriverOrders,
 	selectFromRegion,
 	selectToRegion,
 	saveFullName,
 	savePhone,
-	saveCarModel,
 	handleConfirmCallback,
-	selectCarType,
 	selectCarTypeCallback,
 	selectMaxPassengers,
 	selectServiceType,
 	showCarSelection,
 	selectCarCallback,
-
-	// Vaqt va sana tanlash
 	selectDate,
 	showDateTimeSelection,
 	generateDateKeyboard,
 	generateTimeKeyboard,
-
-	// Tasdiqlash va profil saqlash
 	showConfirmation,
 	saveProfile: saveProfileWithPayment,
-
-	// Haydovchi menyusi
 	showDriverMenu,
 	showInactiveDriverMenu,
-
-	// To'lov funksiyalari
 	handleDriverPayment,
 	createSimplePaymentKeyboard,
 	getSimplePaymentMessage,
 	validateAndFormatAdminUsername,
 	createAdminChatLink,
-
-	// Profil tahrirlash funksiyalari
 	showDriverEditMenu,
 	editFullName,
 	editPhone,
@@ -5079,10 +4809,14 @@ module.exports = {
 	cancelOrder,
 	driverAcceptOrder,
 	driverRejectOrder,
-	// showWorkHoursSelection,
 	selectWorkHoursCallback,
 	saveCustomWorkHours,
 	showTimeInput,
 	saveTimeInput,
-	completeDriverRegistration
+	completeDriverRegistration,
+	showCarNumberInput,
+	saveCarNumber,
+	askCarNumber,
+editTimeSelectDate,
+saveManualDateInput 
 }

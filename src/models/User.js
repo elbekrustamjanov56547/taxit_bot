@@ -12,26 +12,30 @@ const userSchema = new mongoose.Schema({
 	},
 	firstName: {
 		type: String,
-		required: true
+		default: ''
 	},
 	lastName: {
 		type: String,
 		default: ''
 	},
+	fullName: {
+		// 👤 YANGI: To'liq ismi
+		type: String,
+		default: ''
+	},
+	phone: {
+		// 📞 YANGI: Telefon raqami
+		type: String,
+		default: ''
+	},
 	language: {
 		type: String,
-		enum: ['uz', 'ru', ''],
 		default: 'uz'
 	},
 	role: {
 		type: String,
 		enum: ['user', 'driver', 'none'],
-		default: 'none',
-		set: v => (v && v.length ? v : 'none')
-	},
-	phone: {
-		type: String,
-		default: ''
+		default: 'none'
 	},
 	state: {
 		type: String,

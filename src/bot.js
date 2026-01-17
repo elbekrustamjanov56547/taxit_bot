@@ -131,974 +131,6 @@ bot.start(async ctx => {
 	await startHandler.startHandler(ctx)
 })
 
-// Callback query handler
-// bot.on('callback_query', async ctx => {
-// 	try {
-// 		const callbackData = ctx.callbackQuery.data
-// 		const user = ctx.user
-
-// 		console.log('Callback received:', callbackData)
-
-// 		// Callback javobini darhol berish
-// 		await ctx.answerCbQuery()
-
-// 		// index.js faylida callback query handler qismini yangilang:
-
-// 		// ============ BUYURTMA CALLBACKS ============
-// 		// if (callbackData.startsWith('select_driver_')) {
-// 		// 	await orderHandler.handleDriverSelection(ctx, callbackData)
-// 		// } else if (callbackData.startsWith('confirm_order_')) {
-// 		// 	await orderHandler.confirmOrder(ctx, callbackData)
-// 		// } else if (callbackData.startsWith('cancel_order_')) {
-// 		// 	await orderHandler.cancelOrder(ctx, callbackData)
-// 		// } else if (callbackData.startsWith('driver_accept_')) {
-// 		// 	await orderHandler.driverAcceptOrder(ctx, callbackData)
-// 		// } else if (callbackData.startsWith('driver_reject_')) {
-// 		// 	await orderHandler.driverRejectOrder(ctx, callbackData)
-// 		// }
-
-// 		// index.js faylida callback query handler qismiga qo'shing:
-
-// 		// ============ HAYDOVCHI TANLASH CALLBACK ============
-// 		// index.js faylida BU QISMLARNI O'CHIRING YO'KI COMMENTGA OLING:
-
-// 		// ============ HAYDOVCHI TANLASH CALLBACK ============
-
-// 		// Index.js fayliga qo'shing:
-
-// 		// ============ ISH VAQTI CALLBACKS ============
-// 		// Index.js faylida callback query handler qismini tekshiramiz:
-// 		if (callbackData.startsWith('work_')) {
-// 			console.log('🕒 Work callback detected:', callbackData)
-
-// 			try {
-// 				await driverHandler.selectWorkHoursCallback(ctx, callbackData)
-// 			} catch (error) {
-// 				console.error('❌ Work hours callback error:', error)
-// 				console.error('❌ Error stack:', error.stack)
-// 			}
-// 			return
-// 		}
-
-// 		// ============ TEXT HANDLERDA ISH VAQTI ============
-// 		// Text message handler qismiga qo'shing:
-
-// 		if (callbackData.startsWith('select_driver_')) {
-// 			const parts = callbackData.split('_')
-// 			const driverId = parts[2]
-// 			const orderId = parts[3]
-
-// 			// Driver ma'lumotlarini olish
-// 			const driver = await Driver.findById(driverId).populate('carModel').populate('carType')
-
-// 			// Order ma'lumotlarini olish
-// 			const order = await Order.findById(orderId)
-
-// 			if (!driver || !order) {
-// 				await ctx.reply(
-// 					user.language === 'uz' ? "❌ Ma'lumotlar topilmadi" : '❌ Данные не найдены'
-// 				)
-// 				return
-// 			}
-
-// 			// Order statusini yangilash
-// 			order.driverId = driver._id
-// 			order.status = 'selected'
-// 			await order.save()
-
-// 			// ============ HAYDOVCHI MA'LUMOTLARI XABARI ============
-// 			const carModelName =
-// 				driver.carModel && typeof driver.carModel === 'object'
-// 					? user.language === 'uz'
-// 						? driver.carModel.name
-// 						: driver.carModel.nameRu
-// 					: driver.carModel
-
-// 			const carTypeName = driver.carType
-// 				? user.language === 'uz'
-// 					? driver.carType.name
-// 					: driver.carType.nameRu
-// 				: ''
-
-// 			const driverInfoMessage =
-// 				user.language === 'uz'
-// 					? `✅ Haydovchi tanlandi!\n\n` +
-// 					  `👤 Ism: ${driver.fullName}\n` +
-// 					  `🚗 Mashina: ${carModelName}${carTypeName ? ` (${carTypeName})` : ''}\n` +
-// 					  `👥 Sig'im: ${driver.maxPassengers} kishi\n` +
-// 					  `📞 Telefon: ${driver.phone}\n` +
-// 					  `📍 Yo'nalish: ${order.fromRegion} → ${order.toRegion}\n` +
-// 					  `👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
-// 					  `📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
-// 					  `${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n\n` : '\n'}` +
-// 					  `Haydovchi bilan bog'laning va jo'nash vaqtini kelishing.`
-// 					: `✅ Водитель выбран!\n\n` +
-// 					  `👤 Имя: ${driver.fullName}\n` +
-// 					  `🚗 Машина: ${carModelName}${carTypeName ? ` (${carTypeName})` : ''}\n` +
-// 					  `👥 Вместимость: ${driver.maxPassengers} человек\n` +
-// 					  `📞 Телефон: ${driver.phone}\n` +
-// 					  `📍 Направление: ${order.fromRegion} → ${order.toRegion}\n` +
-// 					  `👥 Пассажиры: ${order.passengerCount} человек\n` +
-// 					  `📦 Посылка: ${order.hasParcel ? 'Да' : 'Нет'}\n` +
-// 					  `${order.parcelDescription ? `📝 Описание: ${order.parcelDescription}\n\n` : '\n'}` +
-// 					  `Свяжитесь с водителем и договоритесь о времени отправления.`
-
-// 			// ============ BUYURTMA BERISH TUGMASI ============
-// 			const passengerKeyboard = {
-// 				inline_keyboard: [
-// 					[
-// 						{
-// 							text: user.language === 'uz' ? '✅ Buyurtma berish' : '✅ Подтвердить заказ',
-// 							callback_data: `confirm_order_${order._id}`
-// 						}
-// 					],
-// 					[
-// 						{
-// 							text: user.language === 'uz' ? '❌ Bekor qilish' : '❌ Отменить',
-// 							callback_data: `cancel_order_${order._id}`
-// 						}
-// 					]
-// 				]
-// 			}
-
-// 			await ctx.reply(driverInfoMessage, {
-// 				reply_markup: passengerKeyboard,
-// 				parse_mode: 'HTML'
-// 			})
-
-// 			// ============ HAYDOVCHIGA XABAR YUBORISH ============
-// 			// BU QISMNI O'CHIRISH KERAK! Haydovchiga xabar faqat confirm_order'da borishi kerak
-// 			/*
-//     const orderForDriverMessage =
-//         user.language === 'uz'
-//             ? `🚖 Sizga yangi buyurtma biriktirildi!\n\n` +
-//               `📍 Chiqish: ${order.fromRegion}\n` +
-//               `📍 Kirish: ${order.toRegion}\n` +
-//               `👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
-//               `📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
-//               `📝 Tavsif: ${order.parcelDescription || "Yo'q"}\n\n` +
-//               `👤 Yo'lovchi: @${order.username || "Noma'lum"}\n` +
-//               `📞 Telefon: Yo'lovchi bilan bog'laning\n\n` +
-//               `Buyurtmani qabul qilish uchun yo'lovchi bilan bog'laning.`
-//             : `🚖 Вам назначен новый заказ!\n\n` +
-//               `📍 Отправление: ${order.fromRegion}\n` +
-//               `📍 Прибытие: ${order.toRegion}\n` +
-//               `👥 Пассажиры: ${order.passengerCount} человек\n` +
-//               `📦 Посылка: ${order.hasParcel ? 'Да' : 'Нет'}\n` +
-//               `📝 Описание: ${order.parcelDescription || 'Нет'}\n\n` +
-//               `👤 Пассажир: @${order.username || 'Неизвестно'}\n` +
-//               `📞 Телефон: Свяжитесь с пассажиром\n\n` +
-//               `Свяжитесь с пассажиром для подтверждения заказа.`
-
-//     const driverKeyboard = {
-//         inline_keyboard: [
-//             [
-//                 {
-//                     text: user.language === 'uz' ? '✅ Qabul qilish' : '✅ Принять',
-//                     callback_data: `driver_accept_${order._id}`
-//                 }
-//             ],
-//             [
-//                 {
-//                     text: user.language === 'uz' ? '❌ Rad etish' : '❌ Отклонить',
-//                     callback_data: `driver_reject_${order._id}`
-//                 }
-//             ]
-//         ]
-//     }
-
-//     await ctx.telegram.sendMessage(driver.telegramId, orderForDriverMessage, {
-//         reply_markup: driverKeyboard,
-//         parse_mode: 'HTML'
-//     })
-//     */
-
-// 			return
-// 		}
-// 		// ============ LANGUAGE SELECTION ============
-// 		if (callbackData.startsWith('lang_')) {
-// 			await startHandler.handleLanguageSelection(ctx, callbackData)
-// 			return
-// 		}
-// 		// index.js faylida callback query handler qismiga qo'shing:
-
-// 		// ============ SAHIFA NAVIGATSIYASI CALLBACKS ============
-// 		if (callbackData.startsWith('driver_page_')) {
-// 			const orderHandler = require('./handlers/order')
-// 			await orderHandler.handleDriverPage(ctx, callbackData)
-// 			return
-// 		}
-
-// 		if (callbackData.startsWith('myorders_page_')) {
-// 			const orderHandler = require('./handlers/order')
-// 			await orderHandler.handleMyOrdersPage(ctx, callbackData)
-// 			return
-// 		}
-// 		// ============ BUYURTMA TASDIQLASH CALLBACK ============
-// 		// if (callbackData.startsWith('confirm_order_')) {
-// 		// 	const orderId = callbackData.split('_')[2]
-// 		// 	const order = await Order.findById(orderId).populate('driverId')
-
-// 		// 	if (!order) {
-// 		// 		await ctx.reply(user.language === 'uz' ? '❌ Buyurtma topilmadi' : '❌ Заказ не найден')
-// 		// 		return
-// 		// 	}
-
-// 		// 	// Faqat buyurtma egasi tasdiqlashi mumkin
-// 		// 	if (order.userId !== user.telegramId) {
-// 		// 		await ctx.reply(
-// 		// 			user.language === 'uz'
-// 		// 				? '❌ Siz bu buyurtmani tasdiqlay olmaysiz'
-// 		// 				: '❌ Вы не можете подтвердить этот заказ'
-// 		// 		)
-// 		// 		return
-// 		// 	}
-
-// 		// 	// Statusni yangilash
-// 		// 	order.status = 'confirmed'
-// 		// 	await order.save()
-
-// 		// 	// Yo'lovchiga xabar
-// 		// 	await ctx.reply(
-// 		// 		user.language === 'uz'
-// 		// 			? "✅ Buyurtma rasmiy tasdiqlandi! Haydovchi bilan bog'laning."
-// 		// 			: '✅ Заказ официально подтвержден! Свяжитесь с водителем.'
-// 		// 	)
-
-// 		// 	// Haydovchiga xabar
-// 		// 	if (order.driverId) {
-// 		// 		await ctx.telegram.sendMessage(
-// 		// 			order.driverId.telegramId,
-// 		// 			user.language === 'uz'
-// 		// 				? "✅ Yo'lovchi buyurtmani tasdiqladi! Endi siz jo'nash vaqtini kelishingiz mumkin."
-// 		// 				: '✅ Пассажир подтвердил заказ! Теперь вы можете договориться о времени отправления.'
-// 		// 		)
-// 		// 	}
-
-// 		// 	return
-// 		// }
-
-// 		// ============ BUYURTMA TASDIQLASH CALLBACK ============
-// 		if (callbackData.startsWith('confirm_order_')) {
-// 			const orderId = callbackData.split('_')[2]
-// 			const order = await Order.findById(orderId).populate('driverId')
-
-// 			if (!order) {
-// 				await ctx.reply(user.language === 'uz' ? '❌ Buyurtma topilmadi' : '❌ Заказ не найден')
-// 				return
-// 			}
-
-// 			// Faqat buyurtma egasi tasdiqlashi mumkin
-// 			if (order.userId !== user.telegramId) {
-// 				await ctx.reply(
-// 					user.language === 'uz'
-// 						? '❌ Siz bu buyurtmani tasdiqlay olmaysiz'
-// 						: '❌ Вы не можете подтвердить этот заказ'
-// 				)
-// 				return
-// 			}
-
-// 			// Statusni yangilash
-// 			order.status = 'confirmed'
-// 			await order.save()
-
-// 			// Yo'lovchiga xabar
-// 			await ctx.reply(
-// 				user.language === 'uz'
-// 					? "✅ Buyurtma rasmiy tasdiqlandi! Haydovchi bilan bog'laning."
-// 					: '✅ Заказ официально подтвержден! Свяжитесь с водителем.'
-// 			)
-
-// 			// ============ HAYDOVCHIGA XABAR YUBORISH (ENDI BU YERDA) ============
-// 			if (order.driverId) {
-// 				const orderForDriverMessage =
-// 					user.language === 'uz'
-// 						? `🚖 Sizga yangi buyurtma biriktirildi!\n\n` +
-// 						  `📍 Chiqish: ${order.fromRegion}\n` +
-// 						  `📍 Kirish: ${order.toRegion}\n` +
-// 						  `👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
-// 						  `📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
-// 						  `📝 Tavsif: ${order.parcelDescription || "Yo'q"}\n\n` +
-// 						  `👤 Yo'lovchi: @${order.username || "Noma'lum"}\n` +
-// 						  `📞 Telefon: Yo'lovchi bilan bog'laning\n\n` +
-// 						  `Buyurtmani qabul qilish uchun yo'lovchi bilan bog'laning.`
-// 						: `🚖 Вам назначен новый заказ!\n\n` +
-// 						  `📍 Отправление: ${order.fromRegion}\n` +
-// 						  `📍 Прибытие: ${order.toRegion}\n` +
-// 						  `👥 Пассажиры: ${order.passengerCount} человек\n` +
-// 						  `📦 Посылка: ${order.hasParcel ? 'Да' : 'Нет'}\n` +
-// 						  `📝 Описание: ${order.parcelDescription || 'Нет'}\n\n` +
-// 						  `👤 Пассажир: @${order.username || 'Неизвестно'}\n` +
-// 						  `📞 Телефон: Свяжитесь с пассажиром\n\n` +
-// 						  `Свяжитесь с пассажиром для подтверждения заказа.`
-
-// 				const driverKeyboard = {
-// 					inline_keyboard: [
-// 						[
-// 							{
-// 								text: user.language === 'uz' ? '✅ Qabul qilish' : '✅ Принять',
-// 								callback_data: `driver_accept_${order._id}`
-// 							}
-// 						],
-// 						[
-// 							{
-// 								text: user.language === 'uz' ? '❌ Rad etish' : '❌ Отклонить',
-// 								callback_data: `driver_reject_${order._id}`
-// 							}
-// 						]
-// 					]
-// 				}
-
-// 				await ctx.telegram.sendMessage(order.driverId.telegramId, orderForDriverMessage, {
-// 					reply_markup: driverKeyboard,
-// 					parse_mode: 'HTML'
-// 				})
-// 			}
-
-// 			return
-// 		}
-// 		// ============ HAYDOVCHI QABUL QILISH CALLBACK ============
-// 		if (callbackData.startsWith('driver_accept_')) {
-// 			const orderId = callbackData.split('_')[2]
-// 			const order = await Order.findById(orderId).populate('driverId')
-
-// 			if (!order) {
-// 				await ctx.reply(user.language === 'uz' ? '❌ Buyurtma topilmadi' : '❌ Заказ не найден')
-// 				return
-// 			}
-
-// 			// Faqat haydovchi qabul qilishi mumkin
-// 			if (!order.driverId || order.driverId.telegramId !== user.telegramId) {
-// 				await ctx.reply(
-// 					user.language === 'uz'
-// 						? '❌ Siz bu buyurtmani qabul qila olmaysiz'
-// 						: '❌ Вы не можете принять этот заказ'
-// 				)
-// 				return
-// 			}
-
-// 			// Statusni yangilash
-// 			order.status = 'accepted'
-// 			await order.save()
-
-// 			// Haydovchi statistikasini yangilash
-// 			order.driverId.totalOrders = (order.driverId.totalOrders || 0) + 1
-// 			await order.driverId.save()
-
-// 			// Haydovchiga xabar
-// 			// await ctx.reply(
-// 			// 	user.language === 'uz'
-// 			// 		? `✅ Buyurtmani qabul qildingiz! Yo'lovchi bilan bog'laning
-// 			// 		@${order.username || "noma'lum"}
-// 			// 		${order.firstName}
-// 			// 		`
-// 			// 		: `✅ Вы приняли заказ! Свяжитесь с пассажиром
-// 			// 			@${order.username || 'неизвестно'}
-// 			// 			${order.firstName}
-// 			// 		`
-// 			// )
-
-// 			await ctx.reply(
-// 				user.language === 'uz'
-// 					? `✅ Buyurtmani qabul qildingiz!\n\n` +
-// 							`👤 Yo'lovchi ma'lumotlari:\n` +
-// 							`• Username: @${order.username || "noma'lum"}\n` +
-// 							`• Yo'nalish: ${order.fromRegion} → ${order.toRegion}\n` +
-// 							`• Yo'lovchilar: ${order.passengerCount} kishi\n\n` +
-// 							`📞 Endi yo'lovchi bilan bog'lanishingiz mumkin!`
-// 					: `✅ Вы приняли заказ!\n\n` +
-// 							`👤 Информация о пассажире:\n` +
-// 							`• Username: @${order.username || 'неизвестно'}\n` +
-// 							`• Направление: ${order.fromRegion} → ${order.toRegion}\n` +
-// 							`• Пассажиры: ${order.passengerCount} человек\n\n` +
-// 							`📞 Теперь вы можете связаться с пассажиром!`,
-// 				{ parse_mode: 'HTML' }
-// 			)
-
-// 			// Yo'lovchiga xabar
-// 			await ctx.telegram.sendMessage(
-// 				order.userId,
-// 				user.language === 'uz'
-// 					? `✅ Haydovchi buyurtmangizni qabul qildi!\n\n` +
-// 							`👤 Haydovchi: ${order.driverId.fullName}\n` +
-// 							`📞 Telefon: ${order.driverId.phone}\n\n` +
-// 							`Tez orada siz bilan bog'lanadi`
-// 					: `✅ Водитель принял ваш заказ!\n\n` +
-// 							`👤 Водитель: ${order.driverId.fullName}\n` +
-// 							`📞 Телефон: ${order.driverId.phone}\n\n` +
-// 							`Скоро свяжется с вами`
-// 			)
-// 			return
-// 		}
-
-// 		// ============ ROLE SELECTION ============
-// 		if (callbackData.startsWith('role_')) {
-// 			await startHandler.handleRoleSelection(ctx, callbackData)
-// 			return
-// 		}
-
-// 		// ============ ADMIN CALLBACKS ============
-// 		if (callbackData.startsWith('admin_')) {
-// 			// ... admin callback'lar ...
-// 			return
-// 		}
-
-// 		// ============ PASSENGER FLOW CALLBACKS ============
-// 		if (callbackData.startsWith('passengers_')) {
-// 			await passengerHandler.selectPassengerCount(ctx, callbackData)
-// 			return
-// 		}
-
-// 		if (callbackData.startsWith('max_passengers_')) {
-// 			if (user.state === states.DRIVER_EDIT_PASSENGERS) {
-// 				await driverHandler.saveEditedPassengers(ctx, callbackData)
-// 			} else {
-// 				await driverHandler.selectMaxPassengers(ctx, callbackData)
-// 			}
-// 			return
-// 		}
-
-// 		// Mashina modelini tanlash
-// 		if (callbackData.startsWith('car_select_')) {
-// 			if (user.state === states.DRIVER_EDIT_CAR) {
-// 				await driverHandler.selectCarCallback(ctx, callbackData)
-// 				// Mashina tanlagandan keyin avtomatik sahifaga qaytish
-// 				const driver = await Driver.findOne({ telegramId: user.telegramId })
-// 				if (driver) {
-// 					user.state = states.MAIN_MENU
-// 					await user.save()
-// 					await driverHandler.showDriverMenu(ctx)
-// 				}
-// 			} else {
-// 				await driverHandler.selectCarCallback(ctx, callbackData)
-// 			}
-// 			return
-// 		}
-
-// 		// Chiqish viloyati
-// 		if (callbackData.startsWith('driver_from_')) {
-// 			if (user.state === states.DRIVER_EDIT_ROUTE_FROM) {
-// 				await driverHandler.saveEditedRouteFrom(ctx, callbackData)
-// 			} else {
-// 				await driverHandler.selectFromRegion(ctx, callbackData)
-// 			}
-// 			return
-// 		}
-
-// 		// Kirish viloyati
-// 		if (callbackData.startsWith('driver_to_')) {
-// 			if (user.state === states.DRIVER_EDIT_ROUTE_TO) {
-// 				await driverHandler.saveEditedRouteTo(ctx, callbackData)
-// 			} else {
-// 				await driverHandler.selectToRegion(ctx, callbackData)
-// 			}
-// 			return
-// 		}
-
-// 		// Xizmat turini tanlash
-// 		if (callbackData.startsWith('service_')) {
-// 			if (user.state === states.DRIVER_EDIT_SERVICES) {
-// 				await driverHandler.saveEditedServices(ctx, callbackData)
-// 			} else {
-// 				await driverHandler.selectServiceType(ctx, callbackData)
-// 			}
-// 			return
-// 		}
-
-// 		// ============ MAIN MENU ============
-// 		switch (callbackData) {
-// 			case states.DRIVER_REG_WORK_HOURS_CUSTOM:
-// 				await driverHandler.saveCustomWorkHours(ctx, text)
-// 				break
-// 			case 'driver_info':
-// 				// Ma'lumotlar
-// 				const driver = await Driver.findOne({ telegramId: user.telegramId })
-
-// 				if (driver) {
-// 					if (driver.status === 'active') {
-// 						await driverHandler.showDriverMenu(ctx)
-// 					} else {
-// 						await driverHandler.showInactiveDriverMenu(ctx, driver)
-// 					}
-// 				} else {
-// 					// Agar user roli driver bo'lsa, lekin driver profili yo'q
-// 					if (user.role === 'driver') {
-// 						await ctx.reply(
-// 							user.language === 'uz'
-// 								? '🚘 Siz haydovchi sifatida tanlangansiz, ammo haydovchi profilingiz hali yaratilmagan yoki topilmadi.\n\nIltimos, ro‘yxatdan o‘tish jarayonini qayta boshlang.'
-// 								: '🚘 Вы выбрали роль водителя, однако профиль водителя не был найден.\n\nПожалуйста, пройдите регистрацию заново.'
-// 						)
-// 					}
-
-// 					// Ro'yxatdan o'tishni boshlash
-// 					await driverHandler.startRegistration(ctx)
-// 				}
-// 				break
-
-// 			case 'driver_payment':
-// 				console.log('Driver payment callback triggered')
-// 				await driverHandler.handleDriverPayment(ctx)
-// 				break
-
-// 			case 'driver_edit':
-// 				await driverHandler.showDriverEditMenu(ctx)
-// 				break
-
-// 			case 'edit_fullname':
-// 				await driverHandler.editFullName(ctx)
-// 				break
-
-// 			case 'edit_phone':
-// 				await driverHandler.editPhone(ctx)
-// 				break
-
-// 			case 'edit_car':
-// 				await driverHandler.editCar(ctx)
-// 				break
-
-// 			case 'edit_passengers':
-// 				await driverHandler.editPassengers(ctx)
-// 				break
-
-// 			case 'edit_route':
-// 				await driverHandler.editRoute(ctx)
-// 				break
-
-// 			case 'edit_services':
-// 				await driverHandler.editServices(ctx)
-// 				break
-
-// 			case 'edit_time':
-// 				await driverHandler.editTime(ctx)
-// 				break
-
-// 			case 'main_menu':
-// 				// Asosiy menyuga qaytish
-// 				try {
-// 					await ctx.deleteMessage()
-// 				} catch (error) {
-// 					console.log('Delete message for main_menu error:', error.message)
-// 				}
-
-// 				await ctx.reply(
-// 					user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-// 					keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role)
-// 				)
-// 				user.state = states.MAIN_MENU
-// 				await user.save()
-// 				break
-
-// 			case 'close_menu':
-// 				// Menyuni yopish - faqat xabarni o'chirish
-// 				try {
-// 					await ctx.deleteMessage()
-// 				} catch (error) {
-// 					console.log('Delete message error:', error.message)
-// 				}
-// 				break
-
-// 			case 'need_taxi':
-// 				await passengerHandler.startOrder(ctx)
-// 				break
-
-// 			case 'taxi_service':
-// 				// Agar user roli driver bo'lsa, lekin driver profili yo'q
-// 				if (user.role === 'driver') {
-// 					const existingDriver = await Driver.findOne({ telegramId: user.telegramId })
-
-// 					if (existingDriver) {
-// 						if (existingDriver.status === 'active') {
-// 							await driverHandler.showDriverMenu(ctx)
-// 						} else {
-// 							await driverHandler.showInactiveDriverMenu(ctx, existingDriver)
-// 						}
-// 					} else {
-// 						await ctx.reply(
-// 							user.language === 'uz'
-// 								? '🚘 Haydovchi profilingiz topilmadi.\n\nKeling, ro‘yxatdan o‘tishni boshlaymiz.'
-// 								: '🚘 Профиль водителя не найден.\n\nДавайте начнём регистрацию.'
-// 						)
-
-// 						await driverHandler.startRegistration(ctx)
-// 					}
-// 				} else {
-// 					// Oddiy ro'yxatdan o'tish
-// 					await driverHandler.startRegistration(ctx)
-// 				}
-// 				break
-
-// 			case 'my_orders':
-// 				await passengerHandler.showMyOrders(ctx)
-// 				break
-
-// 			case 'confirm':
-// 				if (user.state === states.DRIVER_REG_CONFIRM) {
-// 					await driverHandler.saveProfile(ctx)
-// 				} else if (user.state === states.PASSENGER_CONFIRM) {
-// 					await passengerHandler.confirmOrder(ctx)
-// 				}
-// 				break
-
-// 			case 'cancel':
-// 				if (user.state === states.DRIVER_REG_CONFIRM) {
-// 					await ctx.reply('❌ Bekor qilindi')
-// 					user.state = states.MAIN_MENU
-// 					await user.save()
-// 					await ctx.reply(
-// 						'🏠 Asosiy menyu',
-// 						keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role)
-// 					)
-// 				} else if (user.state === states.PASSENGER_CONFIRM) {
-// 					await passengerHandler.cancelOrder(ctx)
-// 				}
-// 				break
-
-// 			default:
-// 				// ============ PASSENGER FLOW ============
-// 				if (callbackData.startsWith('from_') && !callbackData.startsWith('driver_')) {
-// 					await passengerHandler.selectFromRegion(ctx, callbackData)
-// 				} else if (callbackData.startsWith('to_') && !callbackData.startsWith('driver_')) {
-// 					await passengerHandler.selectToRegion(ctx, callbackData)
-// 				} else if (callbackData.startsWith('parcel_')) {
-// 					await passengerHandler.selectParcel(ctx, callbackData)
-// 				}
-// 				// ============ DRIVER FLOW ============
-// 				// Mashina turini tanlash
-// 				else if (callbackData.startsWith('car_type_')) {
-// 					await driverHandler.selectCarTypeCallback(ctx, callbackData)
-// 				}
-// 				// ============ DATE & TIME ============
-// 				else if (callbackData.startsWith('date_')) {
-// 					await driverHandler.selectDate(ctx, callbackData)
-// 				}
-// 				// Vaqt tanlash
-// 				else if (callbackData.startsWith('time_')) {
-// 					await driverHandler.selectTime(ctx, callbackData)
-// 				}
-// 				// ============ GENERAL ============
-// 				else if (callbackData === 'add_comment') {
-// 					await passengerHandler.addComment(ctx)
-// 				} else if (callbackData === 'skip_comment') {
-// 					await passengerHandler.skipComment(ctx)
-// 				}
-// 				break
-// 		}
-// 	} catch (error) {
-// 		console.error('Callback error:', error)
-// 		console.error('Error details:', error.stack)
-// 		try {
-// 			await ctx.answerCbQuery('❌ Xatolik yuz berdi')
-// 		} catch (e) {
-// 			console.error('Answer callback error:', e)
-// 		}
-// 	}
-// })
-
-// index.js faylida callback query handler qismini yangilang:
-
-// bot.on('callback_query', async ctx => {
-//     try {
-// 			const callbackData = ctx.callbackQuery.data
-// 			const user = ctx.user
-
-// 			console.log('📞 Callback received:', callbackData)
-
-// 			// index.js faylida callback query handler qismiga qo'shing:
-
-// 			// index.js yoki asosiy handler faylida:
-// 			if (user.state === states.DRIVER_REG_TIME_INPUT) {
-// 				console.log('⏰ DRIVER_REG_TIME_INPUT state detected')
-// 				await driverHandler.saveTimeInput(ctx, text)
-// 				return
-// 			}
-// 			if (user.state === states.DRIVER_REG_WORK_HOURS_CUSTOM) {
-// 				console.log('🕒 DRIVER_REG_WORK_HOURS_CUSTOM state detected')
-// 				await driverHandler.saveCustomWorkHours(ctx, text)
-// 				return
-// 			}
-// 			// ============ CONFIRM CALLBACK ============
-// 			if (callbackData === 'confirm') {
-// 				await ctx.answerCbQuery()
-
-// 				console.log('📞 Confirm callback detected, user state:', user.state)
-
-// 				if (user.state === states.DRIVER_REG_CONFIRM) {
-// 					try {
-// 						// Driver registration confirm
-// 						await driverHandler.saveProfile(ctx)
-// 					} catch (error) {
-// 						console.error('Driver confirm error:', error)
-// 						await ctx.reply(
-// 							user.language === 'uz'
-// 								? "❌ Xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
-// 								: '❌ Произошла ошибка. Пожалуйста, попробуйте еще раз.'
-// 						)
-// 					}
-// 				} else if (user.state === states.PASSENGER_CONFIRM) {
-// 					// Passenger confirm
-// 					await passengerHandler.confirmOrder(ctx)
-// 				} else {
-// 					console.log("❌ Noto'g'ri state uchun confirm:", user.state)
-// 					await ctx.reply(
-// 						user.language === 'uz' ? "❌ Noto'g'ri amal." : '❌ Неправильное действие.'
-// 					)
-// 				}
-// 				return
-// 			}
-
-// 			// ============ DRIVER REGISTRATION CONFIRM CALLBACK ============
-// 		if (callbackData === 'confirm_driver_registration') {
-// 			await ctx.answerCbQuery()
-// 			console.log('✅ Driver registration confirm callback')
-
-// 			// Driver handlerdan completeDriverRegistration funksiyasini chaqiramiz
-// 			try {
-// 				await driverHandler.completeDriverRegistration(ctx)
-// 			} catch (error) {
-// 				console.error('❌ Complete driver registration error:', error)
-// 				await ctx.reply(
-// 					user.language === 'uz'
-// 						? '❌ Profil saqlashda xatolik yuz berdi.'
-// 						: '❌ Ошибка при сохранении профиля.'
-// 				)
-// 			}
-// 			return
-// 		}
-// 			// ============ DRIVER REGISTRATION CANCEL CALLBACK ============
-// 			if (callbackData === 'cancel_driver_registration') {
-// 				await ctx.answerCbQuery()
-// 				console.log('❌ Driver registration cancel callback')
-
-// 				// Sessionni tozalash
-// 				if (ctx.session && ctx.session.driverData) {
-// 					delete ctx.session.driverData
-// 				}
-
-// 				await ctx.reply(
-// 					user.language === 'uz'
-// 						? '❌ Profil yaratish bekor qilindi. Qayta boshlash uchun /start ni bosing.'
-// 						: '❌ Создание профиля отменено. Нажмите /start чтобы начать заново.'
-// 				)
-
-// 				user.state = states.MAIN_MENU
-// 				await user.save()
-
-// 				// Asosiy menyuga qaytish
-// 				await ctx.reply(
-// 					user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-// 					keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role)
-// 				)
-// 				return
-// 			}
-
-
-// 			// ============ CANCEL CALLBACK ============
-// 			if (callbackData === 'cancel') {
-// 				await ctx.answerCbQuery()
-
-// 				if (user.state === states.DRIVER_REG_CONFIRM) {
-// 					await ctx.reply(user.language === 'uz' ? '❌ Bekor qilindi' : '❌ Отменено')
-// 					user.state = states.MAIN_MENU
-// 					await user.save()
-// 					await ctx.reply(
-// 						user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-// 						keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role)
-// 					)
-// 				} else if (user.state === states.PASSENGER_CONFIRM) {
-// 					await passengerHandler.cancelOrder(ctx)
-// 				}
-// 				return
-// 			}
-
-// 			// ============ ISH VAQTI CALLBACK'LARI ============
-// 			if (callbackData.startsWith('work_')) {
-// 				console.log('🕒 Work callback detected:', callbackData)
-// 				try {
-// 					await ctx.answerCbQuery() // Avval callback query javob berish
-// 					await driverHandler.selectWorkHoursCallback(ctx, callbackData)
-// 				} catch (error) {
-// 					console.error('❌ Work hours callback error:', error)
-// 					await ctx.answerCbQuery(
-// 						user.language === 'uz' ? '❌ Xatolik yuz berdi' : '❌ Произошла ошибка'
-// 					)
-// 				}
-// 				return
-// 			}
-
-// 			// ============ MASHINA CALLBACK'LARI ============
-// 			if (callbackData.startsWith('car_select_')) {
-// 				await ctx.answerCbQuery()
-// 				if (user.state === states.DRIVER_EDIT_CAR) {
-// 					await driverHandler.selectCarCallback(ctx, callbackData)
-// 					const driver = await Driver.findOne({ telegramId: user.telegramId })
-// 					if (driver) {
-// 						user.state = states.MAIN_MENU
-// 						await user.save()
-// 						await driverHandler.showDriverMenu(ctx)
-// 					}
-// 				} else {
-// 					await driverHandler.selectCarCallback(ctx, callbackData)
-// 				}
-// 				return
-// 			}
-
-// 			// ============ MASHINA TURI CALLBACK'LARI ============
-// 			if (callbackData.startsWith('car_type_')) {
-// 				await ctx.answerCbQuery()
-// 				await driverHandler.selectCarTypeCallback(ctx, callbackData)
-// 				return
-// 			}
-
-// 			// ============ MAX PASSENGERS CALLBACK'LARI ============
-// 			if (callbackData.startsWith('max_passengers_')) {
-// 				await ctx.answerCbQuery()
-// 				if (user.state === states.DRIVER_EDIT_PASSENGERS) {
-// 					await driverHandler.saveEditedPassengers(ctx, callbackData)
-// 				} else {
-// 					await driverHandler.selectMaxPassengers(ctx, callbackData)
-// 				}
-// 				return
-// 			}
-
-// 			// ============ SERVICE TYPE CALLBACK'LARI ============
-// 			if (callbackData.startsWith('service_')) {
-// 				await ctx.answerCbQuery()
-// 				if (user.state === states.DRIVER_EDIT_SERVICES) {
-// 					await driverHandler.saveEditedServices(ctx, callbackData)
-// 				} else {
-// 					await driverHandler.selectServiceType(ctx, callbackData)
-// 				}
-// 				return
-// 			}
-
-// 			// index.js faylida date callback handler:
-// 			if (callbackData.startsWith('date_')) {
-// 				console.log('📅 Date callback detected:', callbackData)
-// 				await ctx.answerCbQuery()
-// 				try {
-// 					await driverHandler.selectDate(ctx, callbackData)
-// 				} catch (error) {
-// 					console.error('❌ Date callback error:', error)
-// 					await ctx.reply('❌ Xatolik yuz berdi')
-// 				}
-// 				return
-// 			}
-
-// 			if (callbackData.startsWith('time_')) {
-// 				await ctx.answerCbQuery()
-// 				await driverHandler.selectTime(ctx, callbackData)
-// 				return
-// 			}
-
-// 			// ============ VILOYAT CALLBACK'LARI ============
-// 			if (callbackData.startsWith('driver_from_')) {
-// 				await ctx.answerCbQuery()
-// 				if (user.state === states.DRIVER_EDIT_ROUTE_FROM) {
-// 					await driverHandler.saveEditedRouteFrom(ctx, callbackData)
-// 				} else {
-// 					await driverHandler.selectFromRegion(ctx, callbackData)
-// 				}
-// 				return
-// 			}
-
-// 			if (callbackData.startsWith('driver_to_')) {
-// 				await ctx.answerCbQuery()
-// 				if (user.state === states.DRIVER_EDIT_ROUTE_TO) {
-// 					await driverHandler.saveEditedRouteTo(ctx, callbackData)
-// 				} else {
-// 					await driverHandler.selectToRegion(ctx, callbackData)
-// 				}
-// 				return
-// 			}
-
-// 			// ============ ASOSIY MENYU CALLBACK'LARI ============
-// 			switch (callbackData) {
-// 				case 'driver_info':
-// 					await ctx.answerCbQuery()
-// 					const driver = await Driver.findOne({ telegramId: user.telegramId })
-// 					if (driver) {
-// 						if (driver.status === 'active') {
-// 							await driverHandler.showDriverMenu(ctx)
-// 						} else {
-// 							await driverHandler.showInactiveDriverMenu(ctx, driver)
-// 						}
-// 					} else {
-// 						await driverHandler.startRegistration(ctx)
-// 					}
-// 					break
-
-// 				case 'driver_payment':
-// 					await ctx.answerCbQuery()
-// 					console.log('Driver payment callback triggered')
-// 					await driverHandler.handleDriverPayment(ctx)
-// 					break
-
-// 				case 'driver_edit':
-// 					await ctx.answerCbQuery()
-// 					await driverHandler.showDriverEditMenu(ctx)
-// 					break
-
-// 				case 'edit_fullname':
-// 					await ctx.answerCbQuery()
-// 					await driverHandler.editFullName(ctx)
-// 					break
-
-// 				case 'edit_phone':
-// 					await ctx.answerCbQuery()
-// 					await driverHandler.editPhone(ctx)
-// 					break
-
-// 				case 'edit_car':
-// 					await ctx.answerCbQuery()
-// 					await driverHandler.editCar(ctx)
-// 					break
-
-// 				case 'edit_passengers':
-// 					await ctx.answerCbQuery()
-// 					await driverHandler.editPassengers(ctx)
-// 					break
-
-// 				case 'edit_route':
-// 					await ctx.answerCbQuery()
-// 					await driverHandler.editRoute(ctx)
-// 					break
-
-// 				case 'edit_services':
-// 					await ctx.answerCbQuery()
-// 					await driverHandler.editServices(ctx)
-// 					break
-
-// 				case 'edit_time':
-// 					await ctx.answerCbQuery()
-// 					await driverHandler.editTime(ctx)
-// 					break
-
-// 				case 'main_menu':
-// 					await ctx.answerCbQuery()
-// 					await ctx.reply(
-// 						user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-// 						keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role)
-// 					)
-// 					user.state = states.MAIN_MENU
-// 					await user.save()
-// 					break
-
-// 				default:
-// 					// Agar callback topilmasa, default handler
-// 					await ctx.answerCbQuery()
-// 					console.log('❌ Unknown callback:', callbackData)
-// 					break
-// 			}
-// 		} catch (error) {
-//         console.error('❌ Callback error:', error)
-//         try {
-//             await ctx.answerCbQuery('❌ Xatolik yuz berdi')
-//         } catch (e) {
-//             console.error('Answer callback error:', e)
-//         }
-//     }
-// })
-
 
 // Callback query handler - birlashtirilgan versiya
 bot.on('callback_query', async ctx => {
@@ -1111,9 +143,56 @@ bot.on('callback_query', async ctx => {
 			// Avval callback query ga javob berish
 			await ctx.answerCbQuery().catch(() => {})
 
+			 if (callbackData === 'switch_to_user' || callbackData === 'switch_to_driver') {
+					console.log("🔄 Xizmatni o'zgartirish:", callbackData)
+
+					// Global switchServiceRole funksiyasini chaqirish
+					await switchServiceRole(ctx)
+					return
+				}
+
+			if (callbackData.startsWith('car_page_')) {
+            await driverHandler.handleCarPageChange(ctx, callbackData)
+        }
+        // Mashina modelini qo'lda kiritish
+        else if (callbackData === 'car_manual_input') {
+            await driverHandler.showManualCarInput(ctx)
+        }
+        // Mashina tanlashga qaytish
+        else if (callbackData === 'back_to_car_selection') {
+            await driverHandler.handleBackToCarSelection(ctx)
+        }
+        // Registratsiya boshiga qaytish
+        else if (callbackData === 'back_to_registration') {
+            await driverHandler.handleBackToRegistration(ctx)
+        }
+        // Mashina tanlash
+        else if (callbackData.startsWith('car_select_')) {
+            await driverHandler.selectCarCallback(ctx, callbackData)
+        }
+        // Mashina turini tanlash
+        else if (callbackData.startsWith('car_type_')) {
+            await driverHandler.selectCarTypeCallback(ctx, callbackData)
+        }
+
 			// ============ LANGUAGE SELECTION ============
 			if (callbackData.startsWith('lang_')) {
 				await startHandler.handleLanguageSelection(ctx, callbackData)
+				return
+			}
+			 if (callbackData.startsWith('car_type_')) {
+					console.log('🏷️ Car type callback detected, calling handler...')
+					const driverHandler = require('./handlers/driver')
+					await driverHandler.selectCarTypeCallback(ctx, callbackData)
+					return
+				}
+
+			if (callbackData === 'switch_to_user' || callbackData === 'switch_to_driver') {
+				console.log("🔄 Xizmatni o'zgartirish:", callbackData)
+
+				// driverHandler dan switchServiceRole funksiyasini chaqirish
+				const driverHandler = require('./handlers/driver')
+				await driverHandler.switchServiceRole(ctx)
 				return
 			}
 
@@ -1145,6 +224,28 @@ bot.on('callback_query', async ctx => {
 						await orderHandler.confirmOrder(ctx, callbackData)
 						return
 					}
+				if (
+					callbackData.startsWith('car_page_') ||
+					callbackData === 'car_custom_input' ||
+					callbackData === 'car_search_input' ||
+					callbackData.startsWith('car_select_')
+				) {
+					const driverHandler = require('./handlers/driver')
+
+					if (callbackData.startsWith('car_page_')) {
+						const page = parseInt(callbackData.replace('car_page_', ''))
+						await driverHandler.showCarSelection(ctx, page)
+					} else if (callbackData === 'car_custom_input') {
+						await driverHandler.showCustomCarInput(ctx)
+					} else if (callbackData === 'car_search_input') {
+						await driverHandler.showCarSearchInput(ctx)
+					} else if (callbackData.startsWith('car_select_')) {
+						await driverHandler.selectCarCallback(ctx, callbackData)
+					}
+
+					await ctx.answerCbQuery()
+					return
+				}
         
 if (callbackData.startsWith('cancel_order_')) {
 	console.log('❌ Cancel order callback:', callbackData)
@@ -1573,7 +674,6 @@ bot.action(/^driver_reject_(.+)$/, async ctx => {
     }
 })
 
-// To'lov callbacklari
 bot.action('driver_payment_enhanced', async ctx => {
     await driverHandler.handleEnhancedDriverPayment(ctx)
     await ctx.answerCbQuery()
@@ -1589,220 +689,166 @@ bot.action('driver_payment', async ctx => {
     await ctx.answerCbQuery()
 })
 
-// Text message handler
-// bot.on('text', async ctx => {
-// 	try {
-// 		const user = ctx.user
-// 		const text = ctx.message.text
-
-// 		// ============ ADMIN PAYMENT ADD ============
-// 		if (ctx.session?.adminAction === 'add_payment' && ctx.session?.adminDriverId) {
-// 			const amount = parseInt(text)
-// 			if (isNaN(amount) || amount <= 0) {
-// 				await ctx.reply("❌ Noto'g'ri miqdor. Iltimos, raqam kiriting:")
-// 				return
-// 			}
-
-// 			const driver = await Driver.findOne({ telegramId: ctx.session.adminDriverId })
-// 			if (driver) {
-// 				driver.balance += amount
-// 				await driver.save()
-
-// 				const message =
-// 					user.language === 'uz'
-// 						? `✅ Haydovchi balansi yangilandi!\n\n${
-// 								driver.fullName
-// 						  }\n💰 Qo'shilgan summa: ${amount.toLocaleString()} so'm\n💳 Yangi balans: ${driver.balance.toLocaleString()} so'm`
-// 						: `✅ Баланс водителя обновлен!\n\n${
-// 								driver.fullName
-// 						  }\n💰 Добавленная сумма: ${amount.toLocaleString()} сум\n💳 Новый баланс: ${driver.balance.toLocaleString()} сум`
-
-// 				await ctx.reply(message)
-
-// 				// Haydovchiga xabar
-// 				try {
-// 					await ctx.telegram.sendMessage(
-// 						driver.telegramId,
-// 						user.language === 'uz'
-// 							? `💰 Sizning balansingizga ${amount.toLocaleString()} so'm qo'shildi.\n\n💳 Joriy balans: ${driver.balance.toLocaleString()} so'm\n🎉 Rahmat!`
-// 							: `💰 На ваш баланс добавлено ${amount.toLocaleString()} сум.\n\n💳 Текущий баланс: ${driver.balance.toLocaleString()} сум\n🎉 Спасибо!`
-// 					)
-// 				} catch (error) {
-// 					console.error('Driver notification error:', error)
-// 				}
-// 			}
-
-// 			// Sessionni tozalash
-// 			delete ctx.session.adminAction
-// 			delete ctx.session.adminDriverId
-
-// 			// Admin menyusiga qaytish
-// 			await adminHandler.showAdminMenu(ctx)
-// 			return
-// 		}
-
-// 		// ============ STATE BASED ACTIONS ============
-// 		switch (user.state) {
-// 			case states.DRIVER_EDIT_FULLNAME:
-// 				await driverHandler.saveEditedFullName(ctx, text)
-// 				break
-
-// 			case states.DRIVER_EDIT_PHONE:
-// 				await driverHandler.saveEditedPhone(ctx, text)
-// 				break
-
-// 			case states.DRIVER_EDIT_CAR:
-// 				await driverHandler.saveCarModel(ctx, text)
-// 				break
-
-// 			case states.PASSENGER_PARCEL_DESC:
-// 				await passengerHandler.saveParcelDescription(ctx, text)
-// 				break
-
-// 			case states.PASSENGER_COMMENT:
-// 				await passengerHandler.saveComment(ctx, text)
-// 				break
-
-// 			case states.DRIVER_REG_FULLNAME:
-// 				await driverHandler.saveFullName(ctx, text)
-// 				break
-
-// 			case states.DRIVER_REG_PHONE:
-// 				await driverHandler.savePhone(ctx, text)
-// 				break
-
-// 			case states.DRIVER_REG_SELECT_CAR:
-// 				await driverHandler.saveCarModel(ctx, text)
-// 				break
-
-// 			case states.DRIVER_REG_CAR_MODEL:
-// 				await driverHandler.saveCarModel(ctx, text)
-// 				break
-
-// 			default:
-// 				if (text.startsWith('/')) {
-// 					await ctx.reply(
-// 						user.language === 'uz' ? 'Iltimos, menudan foydalaning' : 'Пожалуйста, используйте меню'
-// 					)
-// 				}
-// 				break
-// 		}
-// 	} catch (error) {
-// 		console.error('Text handler error:', error)
-// 	}
-// })
-
-// index.js faylida text handler qismini quyidagicha yangilang:
-
 bot.on('text', async ctx => {
-    try {
-        const user = ctx.user
-        const text = ctx.message.text
+	try {
+		const user = ctx.user
+		const text = ctx.message.text
 
-        console.log('📝 ========== TEXT HANDLER START ==========')
-        console.log('👤 User ID:', user.telegramId)
-        console.log('📊 User state:', user.state)
-        console.log('📄 Text content:', text)
-        console.log('📋 Message type:', ctx.message?.content_type || 'text')
-        
-        // User states ni konsolga chiqaramiz
-        console.log('🔍 All states check:')
-        console.log('DRIVER_REG_TIME_INPUT:', states.DRIVER_REG_TIME_INPUT)
-        console.log('DRIVER_REG_WORK_HOURS_CUSTOM:', states.DRIVER_REG_WORK_HOURS_CUSTOM)
-        console.log('Is user.state === states.DRIVER_REG_TIME_INPUT?', user.state === states.DRIVER_REG_TIME_INPUT)
+		console.log('📝 ========== TEXT HANDLER START ==========')
+		console.log('👤 User ID:', user.telegramId)
+		console.log('📊 User state:', user.state)
+		console.log('📄 Text content:', text)
 
-        // ============ Vaqt kiritish handleri ============
-        if (user.state === states.DRIVER_REG_TIME_INPUT) {
-            console.log('✅ DRIVER_REG_TIME_INPUT state detected - vaqt kiritish uchun')
-            console.log('📤 Calling saveTimeInput...')
-            
-            // Avval oldingi xabarni o'chirish
-            try {
-                if (ctx.message?.message_id) {
-                    await ctx.deleteMessage(ctx.message.message_id)
-                }
-            } catch (deleteError) {
-                console.log('Delete message error:', deleteError.message)
-            }
-            
-            await driverHandler.saveTimeInput(ctx, text)
-            console.log('✅ saveTimeInput called successfully')
-            return
-        }
+		// Barcha kerakli handlerlarni avval import qilib olamiz
+		const driverHandler = require('./handlers/driver')
+		const passengerHandler = require('./handlers/passenger')
 
-        // ============ ISH VAQTI MAXSUS KIRITISH ============
-        if (user.state === states.DRIVER_REG_WORK_HOURS_CUSTOM) {
-            console.log('✅ DRIVER_REG_WORK_HOURS_CUSTOM state detected')
-            await driverHandler.saveCustomWorkHours(ctx, text)
-            return
-        }
+		// ============ MASHINA RAQAMINI QABUL QILISH ============
+		if (user.state === states.DRIVER_REG_CAR_NUMBER) {
+			console.log('✅ DRIVER_REG_CAR_NUMBER state detected!')
+			await driverHandler.saveCarNumber(ctx, text)
+			return
+		}
+	if (user.state === states.DRIVER_REG_DATE_MANUAL) {
+		console.log('📅 DRIVER_REG_DATE_MANUAL state detected - manual date input')
 
-        console.log('ℹ️ Text handled by default handler')
-        
-        // ============ QOLGAN TEXT HANDLERLAR ============
-        switch (user.state) {
-            case states.DRIVER_EDIT_FULLNAME:
-                await driverHandler.saveEditedFullName(ctx, text)
-                break
-                
-            case states.DRIVER_EDIT_PHONE:
-                await driverHandler.saveEditedPhone(ctx, text)
-                break
-                
-            case states.DRIVER_EDIT_CAR:
-                await driverHandler.saveCarModel(ctx, text)
-                break
-                
-            case states.PASSENGER_PARCEL_DESC:
-                await passengerHandler.saveParcelDescription(ctx, text)
-                break
-                
-            case states.PASSENGER_COMMENT:
-                await passengerHandler.saveComment(ctx, text)
-                break
-                
-            case states.DRIVER_REG_FULLNAME:
-                await driverHandler.saveFullName(ctx, text)
-                break
-                
-            case states.DRIVER_REG_PHONE:
-                await driverHandler.savePhone(ctx, text)
-                break
-                
-            case states.DRIVER_REG_SELECT_CAR:
-                await driverHandler.saveCarModel(ctx, text)
-                break
-                
-            case states.DRIVER_REG_CAR_MODEL:
-                await driverHandler.saveCarModel(ctx, text)
-                break
-                
-            default:
-                console.log('⚠️ No matching state found for text handler')
-                if (text.startsWith('/')) {
-                    await ctx.reply(
-                        user.language === 'uz' 
-                            ? 'Iltimos, menudan foydalaning' 
-                            : 'Пожалуйста, используйте меню'
-                    )
-                }
-                break
-        }
-        
-        console.log('📝 ========== TEXT HANDLER END ==========')
+		try {
+			await ctx.deleteMessage()
+		} catch (error) {
+			console.log('Delete message error:', error.message)
+		}
 
-    } catch (error) {
-        console.error('❌ Text handler error:', error)
-        console.error('❌ Error stack:', error.stack)
-        
-        try {
-            await ctx.reply(
-                '❌ Xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.'
-            )
-        } catch (replyError) {
-            console.error('Reply error:', replyError)
-        }
-    }
+		const driverHandler = require('./handlers/driver')
+		await driverHandler.saveManualDateInput(ctx, text)
+		return
+	}
+    
+		if (user.state === 'DRIVER_REG_DATE_CUSTOM') {
+			console.log('📅 DRIVER_REG_DATE_CUSTOM state detected - custom date input')
+			
+			// Avval xabarni o'chirish
+			try {
+				await ctx.deleteMessage()
+			} catch (error) {
+				console.log('Delete message error:', error.message)
+			}
+			
+			const driverHandler = require('./handlers/driver')
+			await driverHandler.saveCustomDate(ctx, text)
+			return
+		}
+		if (user.state === 'DRIVER_REG_CAR_SEARCH') {
+			console.log('🔍 Car search state detected')
+			await searchCars(ctx, text)
+			return
+		}
+
+
+		// ============ VAQT KIRITISH ============
+		if (user.state === states.DRIVER_REG_TIME_INPUT) {
+			console.log('✅ DRIVER_REG_TIME_INPUT state detected - time input')
+
+			try {
+				await ctx.deleteMessage()
+			} catch (error) {
+				console.log('Delete message error:', error.message)
+			}
+
+			await driverHandler.saveTimeInput(ctx, text)
+			return
+		}
+		
+		if (user.state === states.DRIVER_REG_DATE_MANUAL) {
+			console.log('📅 DRIVER_REG_DATE_MANUAL state detected - manual date input')
+
+			try {
+				await ctx.deleteMessage()
+			} catch (error) {
+				console.log('Delete message error:', error.message)
+			}
+
+			await driverHandler.saveManualDateInput(ctx, text)
+			return
+		}
+if (user.state === states.DRIVER_REG_WORK_HOURS_CUSTOM) {
+	console.log('✅ DRIVER_REG_WORK_HOURS_CUSTOM state detected - custom work hours')
+	await driverHandler.saveCustomWorkHours(ctx, text)
+	return
+}
+
+		console.log('ℹ️ Text handled by default handler')
+
+		// ============ QOLGAN TEXT HANDLERLAR ============
+		switch (user.state) {
+			case 'DRIVER_EDIT_FULLNAME':
+				await driverHandler.saveEditedFullName(ctx, text)
+				break
+
+			case 'DRIVER_EDIT_PHONE':
+				await driverHandler.saveEditedPhone(ctx, text)
+				break
+
+			case 'DRIVER_EDIT_CAR':
+				await driverHandler.saveCarModel(ctx, text)
+				break
+
+			case 'DRIVER_REG_FULLNAME':
+				await driverHandler.saveFullName(ctx, text)
+				break
+
+			case 'DRIVER_REG_PHONE':
+				await driverHandler.savePhone(ctx, text)
+				break
+
+			case 'DRIVER_REG_SELECT_CAR':
+			case 'DRIVER_REG_CAR_MODEL':
+				await driverHandler.saveCarModel(ctx, text)
+				break
+
+			case 'PASSENGER_PARCEL_DESC':
+				await passengerHandler.saveParcelDescription(ctx, text)
+				break
+
+			case 'PASSENGER_COMMENT':
+				await passengerHandler.saveComment(ctx, text)
+				break
+
+			case 'PASSENGER_INFO_NAME':
+				await passengerHandler.savePassengerName(ctx, text)
+				break
+
+			case 'PASSENGER_INFO_PHONE':
+				await passengerHandler.savePassengerPhone(ctx, text)
+				break
+
+			default:
+				console.log('⚠️ No matching state found for text handler')
+				console.log('Current state:', user.state)
+				if (text.startsWith('/')) {
+					await ctx.reply(
+						user.language === 'uz' ? 'Iltimos, menudan foydalaning' : 'Пожалуйста, используйте меню'
+					)
+				} else {
+					await ctx.reply(
+						user.language === 'uz'
+							? 'ℹ️ Menyudan foydalanishingiz mumkin. /start ni bosing.'
+							: 'ℹ️ Вы можете использовать меню. Нажмите /start.'
+					)
+				}
+				break
+		}
+
+		console.log('📝 ========== TEXT HANDLER END ==========')
+	} catch (error) {
+		console.error('❌ Text handler error:', error)
+		console.error('❌ Error stack:', error.stack)
+
+		try {
+			await ctx.reply("❌ Xatolik yuz berdi. Iltimos, qayta urinib ko'ring.")
+		} catch (replyError) {
+			console.error('Reply error:', replyError)
+		}
+	}
 })
 
 // Contact handler
@@ -1863,10 +909,28 @@ bot.action('show_driver_profile', async ctx => {
 })
 
 bot.action('close_menu', async ctx => {
-	await ctx.deleteMessage()
-	await ctx.answerCbQuery()
-})
+	const user = ctx.user
 
+	try {
+		// Avvalgi xabarni o'chirish
+		await ctx.deleteMessage().catch(() => {
+			console.log('Delete message failed, continuing...')
+		})
+	} catch (error) {
+		console.log('Delete message error:', error.message)
+	}
+
+	// Asosiy menyuni ko'rsatish
+	const { message, keyboard } = keyboards.showMainMenu(ctx, user.language)
+
+	await ctx.reply(message, {
+		reply_markup: keyboard,
+		parse_mode: 'HTML'
+	})
+
+	user.state = states.MAIN_MENU
+	await user.save()
+})
 // ============ ESKI TO'LOV HANDLERINI YANGILASH ============
 bot.action('driver_payment', async ctx => {
 	await driverHandler.handleEnhancedDriverPayment(ctx)
@@ -1965,6 +1029,107 @@ bot.action(/^driver_accept_(.+)$/, async ctx => {
 		console.error('Driver accept callback error:', error)
 	}
 })
+bot.action('main_menu', async ctx => {
+	const user = ctx.user
+
+	console.log('🏠 Main menu callback, user role:', user.role)
+
+	try {
+		// Avvalgi xabarni o'chirish
+		await ctx.deleteMessage().catch(() => {
+			console.log('Delete message failed, continuing...')
+		})
+	} catch (error) {
+		console.log('Delete message error:', error.message)
+	}
+
+	// RO'LGA QARAB ASOSIY MENYU KO'RSATISH
+	if (user.role === 'driver') {
+		// DRIVER rolida
+		const message =
+			user.language === 'uz'
+				? `🏠 Asosiy menyu\n\n` 
+				: `🏠 Главное меню\n\n`
+
+		const keyboard = {
+			inline_keyboard: [
+				[
+					{
+						text: user.language === 'uz' ? '🚘 Haydovchi menyusi' : '🚘 Меню водителя',
+						callback_data: 'driver_info'
+					}
+				],
+				[
+					{
+						text: user.language === 'uz' ? "🔄 Xizmatni o'zgartirish" : '🔄 Изменить услугу',
+						callback_data: 'switch_to_user'
+					}
+				]
+			]
+		}
+
+		await ctx.reply(message, { reply_markup: keyboard })
+	} else if (user.role === 'user') {
+		// USER rolida
+		const message =
+			user.language === 'uz'
+				? `🏠 Asosiy menyu\n\n` +
+				  `Siz yo'lovchi sifatida ro'yxatdan o'tgansiz. Quyidagilardan birini tanlang:`
+				: `🏠 Главное меню\n\n` + `Вы зарегистрированы как пассажир. Выберите одно из следующих:`
+
+		const keyboard = {
+			inline_keyboard: [
+				[
+					{
+						text: user.language === 'uz' ? '🚖 Taksiga buyurtma berish' : '🚖 Заказать такси',
+						callback_data: 'need_taxi'
+					}
+				],
+				[
+					{
+						text: user.language === 'uz' ? '📋 Mening buyurtmalarim' : '📋 Мои заказы',
+						callback_data: 'my_orders'
+					}
+				],
+				[
+					{
+						text: user.language === 'uz' ? "🔄 Xizmatni o'zgartirish" : '🔄 Изменить услугу',
+						callback_data: 'switch_to_driver'
+					}
+				]
+			]
+		}
+
+		await ctx.reply(message, { reply_markup: keyboard })
+	} else {
+		// ROL TANLAMAGANLAR UCHUN
+		const message =
+			user.language === 'uz'
+				? `🏠 Asosiy menyu\n\n` + `Quyidagilardan birini tanlang:`
+				: `🏠 Главное меню\n\n` + `Выберите одно из следующих:`
+
+		const keyboard = {
+			inline_keyboard: [
+				[
+					{
+						text: user.language === 'uz' ? '🚖 Taksi kerak' : '🚖 Нужно такси',
+						callback_data: 'need_taxi'
+					},
+					{
+						text: user.language === 'uz' ? '🚘 Taksi xizmati' : '🚘 Такси сервис',
+						callback_data: 'taxi_service'
+					}
+				]
+			]
+		}
+
+		await ctx.reply(message, { reply_markup: keyboard })
+	}
+
+	user.state = states.MAIN_MENU
+	await user.save()
+})
+
 
 bot.action(/^driver_reject_(.+)$/, async ctx => {
 	const user = ctx.user
@@ -1979,6 +1144,192 @@ bot.action(/^driver_reject_(.+)$/, async ctx => {
 		console.error('Driver reject callback error:', error)
 	}
 })
+
+const switchServiceRole = async (ctx) => {
+    const user = ctx.user;
+    
+    console.log('🔀 ========== switchServiceRole START ==========');
+    console.log('👤 Current role:', user.role);
+    console.log('👤 Telegram ID:', user.telegramId);
+    
+    try {
+        // Avval oldingi xabarni o'chirish
+        try {
+            await ctx.deleteMessage();
+        } catch (error) {
+            console.log('Delete message error:', error.message);
+        }
+
+        // O'ZGARTIRISH NIYATI
+        const currentRole = user.role;
+        let newRole;
+        
+        if (currentRole === 'user') {
+            newRole = 'driver';
+        } else if (currentRole === 'driver') {
+            newRole = 'user';
+        } else {
+            // Agar role 'none' bo'lsa
+            newRole = 'user';
+        }
+        
+        console.log(`🔄 Switching from ${currentRole} to ${newRole}`);
+        
+        // User ro'li yangilash
+        user.role = newRole;
+        await user.save();
+        
+        const driverHandler = require('./handlers/driver');
+        
+        if (newRole === 'driver') {
+            // YANGI DRIVER SIFATIDA
+            console.log("🚗 Checking driver profile for new driver role...");
+            const driver = await Driver.findOne({ telegramId: user.telegramId });
+            
+            if (driver) {
+                // Driver profili mavjud
+                console.log("✅ Existing driver profile found");
+                
+                if (driver.status === 'active') {
+                    // Faol driver - driver menyusi
+                    await driverHandler.showDriverMenu(ctx);
+                } else {
+                    // Nofaol driver - nofaol menyusi
+                    await driverHandler.showInactiveDriverMenu(ctx, driver);
+                }
+            } else {
+                // Driver profili yo'q - ro'yxatdan o'tish
+                console.log("❌ Driver profile not found, starting registration");
+                await driverHandler.startRegistration(ctx);
+            }
+            
+        } else if (newRole === 'user') {
+            // YANGI USER SIFATIDA
+            console.log("🚖 Showing passenger menu for new user role");
+            
+            const { message, keyboard } = keyboards.showMainMenu(ctx, user.language);
+            await ctx.reply(message, {
+                reply_markup: keyboard,
+                parse_mode: 'HTML'
+            });
+            user.state = states.MAIN_MENU;
+            await user.save();
+        }
+        
+        const successMessage = user.language === 'uz'
+            ? `✅ <b>Xizmat muvaffaqiyatli o'zgartirildi!</b>\n\n` +
+              `Siz endi <b>${newRole === 'driver' ? 'haydovchi' : 'yo\'lovchi'}</b> sifatida ishlaysiz.`
+            : `✅ <b>Услуга успешно изменена!</b>\n\n` +
+              `Теперь вы работаете как <b>${newRole === 'driver' ? 'водитель' : 'пассажир'}</b>.`;
+        
+const keyboard = {
+			inline_keyboard: [
+				[
+					{
+						text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
+						callback_data: 'main_menu'
+					}
+				]
+			]
+		}
+
+							await ctx.telegram.sendMessage(user.telegramId, successMessage, {
+            parse_mode: 'HTML'
+        });
+        
+    } catch (error) {
+        console.error('❌ Switch service role error:', error);
+        console.error('❌ Error stack:', error.stack);
+        
+        await ctx.reply(
+            user.language === 'uz'
+                ? "❌ Xizmatni o'zgartirishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
+                : '❌ Ошибка при изменении услуги. Пожалуйста, попробуйте еще раз.'
+        );
+    }
+    
+    console.log('🔀 ========== switchServiceRole END ==========');
+}
+
+bot.action('switch_to_user', async ctx => {
+	console.log('🔄 switch_to_user callback')
+	await switchServiceRole(ctx)
+})
+
+bot.action('switch_to_driver', async ctx => {
+	console.log('🔄 switch_to_driver callback')
+	await switchServiceRole(ctx)
+})
+// Main menu callback handlerga qo'shing
+bot.action('main_menu', async ctx => {
+	const user = ctx.user
+
+	console.log('🏠 Main menu callback called')
+
+	try {
+		// Avvalgi xabarni o'chirish
+		try {
+			await ctx.deleteMessage()
+		} catch (error) {
+			console.log('Delete message error:', error.message)
+		}
+	} catch (error) {
+		console.log('Delete message error:', error.message)
+	}
+
+	// Asosiy menyuni ko'rsatish
+	const { message, keyboard } = keyboards.showMainMenu(ctx, user.language)
+
+	await ctx.reply(message, {
+		reply_markup: keyboard,
+		parse_mode: 'HTML'
+	})
+
+	user.state = states.MAIN_MENU
+	await user.save()
+})
+
+// index.js faylida callback handler'lar qatoriga qo'shing:
+bot.action('main_menu', async ctx => {
+	const user = ctx.user
+
+	try {
+		// Avvalgi xabarni o'chirish
+		await ctx.deleteMessage().catch(() => {
+			console.log('Delete message failed, continuing...')
+		})
+	} catch (error) {
+		console.log('Delete message error:', error.message)
+	}
+
+	// Asosiy menyuni ko'rsatish
+	const { message, keyboard } = keyboards.showMainMenu(ctx, user.language)
+
+	await ctx.reply(message, {
+		reply_markup: keyboard,
+		parse_mode: 'HTML'
+	})
+
+	user.state = states.MAIN_MENU
+	await user.save()
+})
+bot.action('driver_info', async (ctx) => {
+    await ctx.answerCbQuery();
+    const driver = await Driver.findOne({ telegramId: ctx.user.telegramId });
+    if (driver) {
+        if (driver.status === 'active') {
+            await driverHandler.showDriverMenu(ctx);
+        } else {
+            await driverHandler.showInactiveDriverMenu(ctx, driver);
+        }
+    } else {
+        await ctx.reply(
+            ctx.user.language === 'uz'
+                ? "❌ Haydovchi profilingiz topilmadi."
+                : "❌ Ваш профиль водителя не найден."
+        );
+    }
+});
 
 // Serverni ishga tushirish funksiyasini yangilaymiz
 const startServer = async () => {

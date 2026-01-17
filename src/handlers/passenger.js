@@ -1121,4 +1121,105 @@ const createPassengerOrder = async ctx => {
 
 	// Sessionni tozalash
 	delete ctx.session.orderData
+
+}
+
+// ====================== YO'LOVCHI MA'LUMOTLARINI TEKSHIRISH ======================
+const checkPassengerInfo = async (ctx) => {
+    const user = ctx.user
+    
+    // Yo'lovchi ma'lumotlari to'liq emasligini tekshirish
+    if (!user.fullName || !user.phone) {
+        // Ma'lumotlarni so'rash
+        user.state = states.PASSENGER_INFO_NAME
+        await user.save()
+        
+        const message = user.language === 'uz'
+            ? "👤 Sizning ma'lumotlaringiz to'liq emas.\n\n" +
+              "Iltimos, ism-familyangizni kiriting:"
+            : "👤 Ваши данные неполные.\n\n" +
+              "Пожалуйста, введите ваше имя и фамилию:"
+        
+        await ctx.reply(message)
+        return false
+    }
+    
+    return true
+}
+
+// ====================== YO'LOVCHI ISMINI SAQLASH ======================
+const savePassengerName = async (ctx, text) => {
+    const user = ctx.user
+    
+    if (text.length < 3) {
+        await ctx.reply(
+            user.language === 'uz'
+                ? "❌ Ism-familya kamida 3 ta belgidan iborat bo'lishi kerak."
+                : '❌ Имя и фамилия должны содержать не менее 3 символов.'
+        )
+        return
+    }
+    
+    user.fullName = text
+    user.state = states.PASSENGER_INFO_PHONE
+    await user.save()
+    
+    const message = user.language === 'uz'
+        ? `✅ Ism-familya saqlandi: ${text}\n\n📞 Telefon raqamingizni yuboring (yoki +998XXXXXXXXX formatida yozing):`
+        : `✅ Имя и фамилия сохранены: ${text}\n\n📞 Отправьте номер телефона (или напишите в формате +998XXXXXXXXX):`
+    
+    await ctx.reply(message, {
+        reply_markup: {
+            keyboard: [
+                [
+                    {
+                        text: user.language === 'uz'
+                            ? '📞 Telefon raqamini yuborish'
+                            : '📞 Отправить номер телефона',
+                        request_contact: true
+                    }
+                ]
+            ],
+            resize_keyboard: true,
+            one_time_keyboard: true
+        }
+    })
+}
+
+// ====================== YO'LOVCHI TELEFON RAQAMINI SAQLASH ======================
+const savePassengerPhone = async (ctx, phone) => {
+    const user = ctx.user
+    
+    let formattedPhone = phone.replace(/\s+/g, '')
+    
+    if (!formattedPhone.startsWith('+')) {
+        if (formattedPhone.startsWith('998')) {
+            formattedPhone = '+' + formattedPhone
+        } else if (formattedPhone.startsWith('0')) {
+            formattedPhone = '+998' + formattedPhone.substring(1)
+        } else {
+            formattedPhone = '+998' + formattedPhone
+        }
+    }
+    
+    const phoneRegex = /^\+998[0-9]{9}$/
+    if (!phoneRegex.test(formattedPhone)) {
+        await ctx.reply(
+            user.language === 'uz'
+                ? "❌ Telefon raqami noto'g'ri formatda. +998XXXXXXXXX formatida kiriting."
+                : '❌ Неверный формат номера телефона. Введите в формате +998XXXXXXXXX.'
+        )
+        return
+    }
+    
+    user.phone = formattedPhone
+    user.state = states.MAIN_MENU
+    await user.save()
+    
+    await ctx.reply(
+        user.language === 'uz'
+            ? `✅ Telefon raqami saqlandi: ${formattedPhone}\n\n🎉 Ma'lumotlaringiz to'liq! Endi buyurtma berishingiz mumkin.`
+            : `✅ Номер телефона сохранен: ${formattedPhone}\n\n🎉 Ваши данные полны! Теперь вы можете сделать заказ.`,
+        keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role)
+    )
 }

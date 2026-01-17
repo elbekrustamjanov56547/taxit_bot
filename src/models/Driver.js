@@ -23,15 +23,16 @@ const driverSchema = new mongoose.Schema({
 		required: true
 	},
 	carModel: {
-		type: mongoose.Schema.Types.ObjectId, // Agar bu ObjectId bo'lsa
+		type: mongoose.Schema.Types.ObjectId,
 		ref: 'Car',
 		required: true
 	},
-	// YOKI carModel string bo'lishi kerak:
-	// carModel: {
-	//   type: String,
-	//   required: true
-	// },
+	carNumber: {
+		type: String,
+		required: false,
+		trim: true,
+		uppercase: true
+	},
 	carType: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'CarType'
