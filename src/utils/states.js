@@ -54,5 +54,20 @@ module.exports = {
 
 	// ADMIN STATES
 	ADMIN_MENU: 'ADMIN_MENU',
-	ADMIN_ADD_PAYMENT: 'ADMIN_ADD_PAYMENT'
+	ADMIN_ADD_PAYMENT: 'ADMIN_ADD_PAYMENT',
+	PASSENGER_PHONE: 'passenger_phone',
+	PASSENGER_CONFIRM: 'passenger_confirm',
+	PASSENGER_EDIT_FROM_REGION: 'passenger_edit_from_region',
+	PASSENGER_EDIT_TO_REGION: 'passenger_edit_to_region',
+	PASSENGER_EDIT_PASSENGER_COUNT: 'passenger_edit_passenger_count',
+	PASSENGER_EDIT_PHONE: 'passenger_edit_phone',
+	PASSENGER_EDIT_PARCEL: 'passenger_edit_parcel',
+	PASSENGER_EDIT_PARCEL_DESC: 'passenger_edit_parcel_desc',
+	// Driver trip states
+	DRIVER_START_TRIP: 'driver_start_trip',
+	DRIVER_ON_TRIP: 'driver_on_trip',
+	DRIVER_END_TRIP: 'driver_end_trip',
+	DRIVER_TRIP_CHANGE_DESTINATION: 'driver_trip_change_destination',
+	DRIVER_SELECT_TO_REGION: 'driver_select_to_region',
+	DRIVER_EDIT_CAR_NUMBER: 'driver_edit_car_number'
 }

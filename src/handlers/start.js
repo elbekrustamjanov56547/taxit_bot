@@ -11,14 +11,22 @@ module.exports = {
 			console.log('🚀 /start command, user role:', user.role)
 			console.log('📊 User state:', user.state)
 
-			// Agar language bo'sh bo'lsa yoki undefined bo'lsa
-			if (!user.language || user.language.trim() === '') {
-				// Yangi foydalanuvchi - til tanlash
-				const message =
-					'👋 Assalomu alaykum! Добро пожаловать!\n\n' +
-					'Iltimos, tilni tanlang: Пожалуйста, выберите язык:'
+			const firstName = (
+				ctx.from?.first_name || 'Hurmatli foydalanuvchi'
+			).slice(0, 20)
 
-				await ctx.reply(message, keyboards.languageKeyboard())
+			if (!user.language || user.language.trim() === '') {
+				const message =
+					`👋 Assalomu alaykum, <b>${firstName}</b>!\n\n` +
+					`Botimizga xush kelibsiz. Davom etish uchun iltimos, tilni tanlang.\n\n` +
+					`👋 Здравствуйте, <b>${firstName}</b>!\n\n` +
+					`Добро пожаловать в нашего бота. Пожалуйста, выберите язык для продолжения.`
+
+				await ctx.reply(message, {
+					parse_mode: 'HTML',
+					...keyboards.languageKeyboard(),
+				})
+
 				user.state = states.START
 				await user.save()
 				return
@@ -33,23 +41,32 @@ module.exports = {
 					// DRIVER rolida - asosiy menyu (driver versiyasi)
 					console.log('🚗 Showing main menu for DRIVER role')
 
-					const message = user.language === 'uz' ? `🏠 Asosiy menyu\n\n` : `🏠 Главное меню\n\n`
+					const message =
+						user.language === 'uz'
+							? `🏠 Asosiy menyu\n\n` + `Quyidagilardan birini tanlang:`
+							: `🏠 Главное меню\n\n` + `Выберите одно из следующих:`
 
 					const keyboard = {
 						inline_keyboard: [
 							[
 								{
-									text: user.language === 'uz' ? '🚘 Haydovchi menyusi' : '🚘 Меню водителя',
-									callback_data: 'driver_info'
-								}
+									text:
+										user.language === 'uz'
+											? '🚘 Haydovchi menyusi'
+											: '🚘 Меню водителя',
+									callback_data: 'driver_info',
+								},
 							],
 							[
 								{
-									text: user.language === 'uz' ? "🔄 Xizmatni o'zgartirish" : '🔄 Изменить услугу',
-									callback_data: 'switch_to_user'
-								}
-							]
-						]
+									text:
+										user.language === 'uz'
+											? "🔄 Xizmatni o'zgartirish"
+											: '🔄 Изменить услугу',
+									callback_data: 'switch_to_user',
+								},
+							],
+						],
 					}
 
 					await ctx.reply(message, { reply_markup: keyboard })
@@ -61,35 +78,36 @@ module.exports = {
 
 					const message =
 						user.language === 'uz'
-							? `🏠 Asosiy menyu\n\n` +
-							  `Siz yo'lovchi sifatida ro'yxatdan o'tgansiz. Quyidagilardan birini tanlang:`
-							: `🏠 Главное меню\n\n` +
-							  `Вы зарегистрированы как пассажир. Выберите одно из следующих:`
+							? '🏠 <b>Asosiy menyu</b>\n\nKerakli bo‘limni tanlang:'
+							: '🏠 <b>Главное меню</b>\n\nВыберите нужный раздел:'
 
 					const keyboard = {
 						inline_keyboard: [
 							[
 								{
-									text: user.language === 'uz' ? '🚖 Taksiga buyurtma berish' : '🚖 Заказать такси',
-									callback_data: 'need_taxi'
-								}
+									text:
+										user.language === 'uz'
+											? '🚖 Taksiga buyurtma berish'
+											: '🚖 Заказать такси',
+									callback_data: 'need_taxi',
+								},
 							],
 							[
 								{
-									text: user.language === 'uz' ? '📋 Mening buyurtmalarim' : '📋 Мои заказы',
-									callback_data: 'my_orders'
-								}
+									text:
+										user.language === 'uz'
+											? "🔄 Xizmatni o'zgartirish"
+											: '🔄 Изменить услугу',
+									callback_data: 'switch_to_driver',
+								},
 							],
-							[
-								{
-									text: user.language === 'uz' ? "🔄 Xizmatni o'zgartirish" : '🔄 Изменить услугу',
-									callback_data: 'switch_to_driver'
-								}
-							]
-						]
+						],
 					}
+					await ctx.reply(message, {
+						parse_mode: 'HTML',
+						reply_markup: keyboard,
+					})
 
-					await ctx.reply(message, { reply_markup: keyboard })
 					user.state = states.MAIN_MENU
 					await user.save()
 				}
@@ -146,32 +164,30 @@ module.exports = {
 				// Agar yo'lovchi rolini tanlasa, asosiy menyuni ko'rsatamiz
 				const message =
 					user.language === 'uz'
-						? `🏠 Asosiy menyu\n\n` +
-						  `Siz yo'lovchi sifatida ro'yxatdan o'tgansiz. Quyidagilardan birini tanlang:`
-						: `🏠 Главное меню\n\n` +
-						  `Вы зарегистрированы как пассажир. Выберите одно из следующих:`
-
+						? `🏠 Asosiy menyu\n\n` + `Quyidagilardan birini tanlang:`
+						: `🏠 Главное меню\n\n` + `Выберите одно из следующих:`
 				const keyboard = {
 					inline_keyboard: [
 						[
 							{
-								text: user.language === 'uz' ? '🚖 Taksiga buyurtma berish' : '🚖 Заказать такси',
-								callback_data: 'need_taxi'
-							}
+								text:
+									user.language === 'uz'
+										? '🚖 Taksiga buyurtma berish'
+										: '🚖 Заказать такси',
+								callback_data: 'need_taxi',
+							},
 						],
+						
 						[
 							{
-								text: user.language === 'uz' ? '📋 Mening buyurtmalarim' : '📋 Мои заказы',
-								callback_data: 'my_orders'
-							}
+								text:
+									user.language === 'uz'
+										? "🔄 Xizmatni o'zgartirish"
+										: '🔄 Изменить услугу',
+								callback_data: 'switch_to_driver',
+							},
 						],
-						[
-							{
-								text: user.language === 'uz' ? "🔄 Xizmatni o'zgartirish" : '🔄 Изменить услугу',
-								callback_data: 'switch_to_driver'
-							}
-						]
-					]
+					],
 				}
 
 				await ctx.reply(message, { reply_markup: keyboard })
@@ -181,7 +197,7 @@ module.exports = {
 		} catch (error) {
 			console.error('Role selection error:', error)
 		}
-	}
+	},
 }
 
 // Rol tanlashni ko'rsatish (faqat bir marta)
@@ -190,31 +206,32 @@ async function showRoleSelection(ctx) {
 
 	const message =
 		user.language === 'uz'
-			? '🎯 Iltimos, rol tanlang:\n\n' +
-			  "🚖 **Taksi kerak** - agar siz yo'lovchi bo'lsangiz\n" +
-			  "🚘 **Taksi xizmati** - agar siz haydovchi bo'lsangiz\n\n" +
-			  "*Eslatma:* Faqat bitta rol tanlashingiz mumkin. Keyinchalik o'zgartirib bo'lmaydi."
-			: '🎯 Пожалуйста, выберите роль:\n\n' +
-			  '🚖 **Нужно такси** - если вы пассажир\n' +
-			  '🚘 **Такси сервис** - если вы водитель\n\n' +
-			  '*Примечание:* Можно выбрать только одну роль. Позже изменить нельзя.'
+			? '🎯 Iltimos, xizmat turini tanlang:\n\n' +
+				'🚖 <b>Taksi kerak</b> — agar siz yo‘lovchi bo‘lsangiz\n' +
+				'🚘 <b>Taksi xizmati</b> — agar siz haydovchi bo‘lsangiz\n\n\n\n\n'
+			: '🎯 Пожалуйста, выберите вашу роль:\n\n' +
+				'🚖 <b>Нужно такси</b> — если вы пассажир\n' +
+				'🚘 <b>Такси сервис</b> — если вы водитель\n\n'
 
 	const keyboard = {
 		inline_keyboard: [
 			[
 				{
 					text: user.language === 'uz' ? '🚖 Taksi kerak' : '🚖 Нужно такси',
-					callback_data: 'role_user'
-				}
+					callback_data: 'role_user',
+				},
 			],
 			[
 				{
 					text: user.language === 'uz' ? '🚘 Taksi xizmati' : '🚘 Такси сервис',
-					callback_data: 'role_driver'
-				}
-			]
-		]
+					callback_data: 'role_driver',
+				},
+			],
+		],
 	}
 
-	await ctx.reply(message, { reply_markup: keyboard })
+	await ctx.reply(message, {
+		parse_mode: 'HTML',
+		reply_markup: keyboard,
+	})
 }

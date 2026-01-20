@@ -68,6 +68,22 @@ const driverSchema = new mongoose.Schema({
 	createdAt: {
 		type: Date,
 		default: Date.now
+	},
+	onTrip: {
+		type: Boolean,
+		default: false
+	},
+	currentTripId: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Trip'
+	},
+	totalTrips: {
+		type: Number,
+		default: 0
+	},
+	totalTripHours: {
+		type: Number,
+		default: 0
 	}
 })
 

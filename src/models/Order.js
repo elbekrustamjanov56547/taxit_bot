@@ -12,6 +12,8 @@ const orderSchema = new mongoose.Schema({
 		// 👤 YANGI: Yo'lovchining to'liq ismi
 		type: String
 	},
+	autoExpireAt: Date,
+	autoClosed: { type: Boolean, default: false },
 	phone: {
 		// 📞 YANGI: Yo'lovchining telefon raqami
 		type: String
@@ -56,7 +58,6 @@ const orderSchema = new mongoose.Schema({
 		type: String
 	},
 	carNumber: {
-		// 🚗 YANGI: Mashina raqami
 		type: String
 	},
 	status: {
@@ -69,7 +70,8 @@ const orderSchema = new mongoose.Schema({
 			'accepted',
 			'rejected',
 			'cancelled',
-			'completed'
+			'completed',
+			'expired'
 		],
 		default: 'pending'
 	},
@@ -83,7 +85,6 @@ const orderSchema = new mongoose.Schema({
 	}
 })
 
-// Yangilangan vaqtni avtomatik saqlash
 orderSchema.pre('save', function (next) {
 	this.updatedAt = new Date()
 	next()

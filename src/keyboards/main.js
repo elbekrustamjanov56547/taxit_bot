@@ -7,7 +7,10 @@ const passengerCountKeyboard = (lang = 'uz') => {
 	// 1-5 gacha sonlar
 	for (let i = 1; i <= 5; i++) {
 		buttons.push([
-			Markup.button.callback(`${i} ${lang === 'uz' ? 'kishi' : 'человек'}`, `passengers_${i}`)
+			Markup.button.callback(
+				`${i} ${lang === 'uz' ? 'kishi' : 'человек'}`,
+				`passengers_${i}`,
+			),
 		])
 	}
 
@@ -20,7 +23,10 @@ const maxPassengersKeyboard = (lang = 'uz') => {
 	// 1-5 gacha sonlar
 	for (let i = 1; i <= 5; i++) {
 		buttons.push([
-			Markup.button.callback(`${i} ${lang === 'uz' ? 'kishi' : 'человек'}`, `max_passengers_${i}`)
+			Markup.button.callback(
+				`${i} ${lang === 'uz' ? 'kishi' : 'человек'}`,
+				`max_passengers_${i}`,
+			),
 		])
 	}
 
@@ -30,45 +36,28 @@ const maxPassengersKeyboard = (lang = 'uz') => {
 const mainMenuKeyboard = (language = 'uz', isAdmin = false, role = 'user') => {
 	const buttons = []
 
-	// Barcha foydalanuvchilar uchun umumiy tugmalar
 	if (role === 'user') {
 		buttons.push([
 			Markup.button.callback(
 				language === 'uz' ? '🚖 Taksiga buyurtma berish' : '🚖 Заказать такси',
-				'need_taxi'
+				'need_taxi',
 			),
-			Markup.button.callback(
-				language === 'uz' ? '🚘 Taksi xizmati ko‘rsatish' : '🚘 Предоставлять такси',
-				'switch_to_driver'
-			)
-		])
-		buttons.push([
-			Markup.button.callback(
-				language === 'uz' ? '📋 Mening buyurtmalarim' : '📋 Мои заказы',
-				'my_orders'
-			)
 		])
 	} else if (role === 'driver') {
-		buttons.push([
-		
-		])
+		buttons.push([])
 		buttons.push([
 			Markup.button.callback(
 				language === 'uz' ? "🔄 Xizmatni o'zgartirish" : '🔄 Изменить услугу',
-				'switch_to_user'
-			)
+				'switch_to_user',
+			),
 		])
 	} else {
 		// Hali rol tanlamaganlar uchun
 		buttons.push([
 			Markup.button.callback(
 				language === 'uz' ? '🚖 Taksiga buyurtma berish' : '🚖 Нужно такси',
-				'need_taxi'
+				'need_taxi',
 			),
-			Markup.button.callback(
-				language === 'uz' ? '🚘 Taksi xizmati ko‘rsatish' : '🚘 Предоставлять такси',
-				'taxi_service'
-			)
 		])
 	}
 	return Markup.inlineKeyboard(buttons)
@@ -84,31 +73,29 @@ const showMainMenu = (ctx, language) => {
 
 	const message =
 		language === 'uz'
-			? `🏠 Asosiy menyu\n\n` +
-			  `Siz yo'lovchi sifatida ro'yxatdan o'tgansiz. Quyidagilardan birini tanlang:`
-			: `🏠 Главное меню\n\n` + `Вы зарегистрированы как пассажир. Выберите одно из следующих:`
+			? `🏠 Asosiy menyu\n\n` + `Quyidagilardan birini tanlang:`
+			: `🏠 Главное меню\n\n` + `Выберите одно из следующих:`
 
 	const keyboard = {
 		inline_keyboard: [
 			[
 				{
-					text: language === 'uz' ? '🚖 Taksiga buyurtma berish' : '🚖 Заказать такси',
-					callback_data: 'need_taxi'
-				}
+					text:
+						language === 'uz'
+							? '🚖 Taksiga buyurtma berish'
+							: '🚖 Заказать такси',
+					callback_data: 'need_taxi',
+				},
 			],
+
 			[
 				{
-					text: language === 'uz' ? '📋 Mening buyurtmalarim' : '📋 Мои заказы',
-					callback_data: 'my_orders'
-				}
+					text:
+						language === 'uz' ? "Xizmatni O`zgartirish" : 'Изменить услугу',
+					callback_data: 'switch_to_driver',
+				},
 			],
-			[
-				{
-					text: language === 'uz' ? "🚘 Haydovchi bo'lish" : '🚘 Стать водителем',
-					callback_data: 'switch_to_driver'
-				}
-			]
-		]
+		],
 	}
 
 	return { message, keyboard }
@@ -128,7 +115,7 @@ const fromRegionsKeyboard = (lang = 'uz') => {
 			['Surxondaryo', 'Surxondaryo'],
 			['Jizzax', 'Jizzax'],
 			['Sirdaryo', 'Sirdaryo'],
-			['Qoraqalpogʻiston', 'Qoraqalpoq']
+			['Qoraqalpogʻiston', 'Qoraqalpoq'],
 		],
 		ru: [
 			['Ташкент', 'Toshkent'],
@@ -143,12 +130,12 @@ const fromRegionsKeyboard = (lang = 'uz') => {
 			['Сурхандарья', 'Surxondaryo'],
 			['Джизак', 'Jizzax'],
 			['Сырдарья', 'Sirdaryo'],
-			['Каракалпакстан', 'Qoraqalpoq']
-		]
+			['Каракалпакстан', 'Qoraqalpoq'],
+		],
 	}
 
 	const buttons = regions[lang].map(region => [
-		Markup.button.callback(region[0], `from_${region[1]}`)
+		Markup.button.callback(region[0], `from_${region[1]}`),
 	])
 
 	return Markup.inlineKeyboard(buttons)
@@ -169,7 +156,7 @@ const toRegionsKeyboard = (lang = 'uz') => {
 			['Surxondaryo', 'Surxondaryo'],
 			['Jizzax', 'Jizzax'],
 			['Sirdaryo', 'Sirdaryo'],
-			['Qoraqalpogʻiston', 'Qoraqalpoq']
+			['Qoraqalpogʻiston', 'Qoraqalpoq'],
 		],
 		ru: [
 			['Ташкент', 'Toshkent'],
@@ -184,12 +171,12 @@ const toRegionsKeyboard = (lang = 'uz') => {
 			['Сурхандарья', 'Surxondaryo'],
 			['Джизак', 'Jizzax'],
 			['Сырдарья', 'Sirdaryo'],
-			['Каракалпакстан', 'Qoraqalpoq']
-		]
+			['Каракалпакстан', 'Qoraqalpoq'],
+		],
 	}
 
 	const buttons = regions[lang].map(region => [
-		Markup.button.callback(region[0], `to_${region[1]}`)
+		Markup.button.callback(region[0], `to_${region[1]}`),
 	])
 
 	return Markup.inlineKeyboard(buttons)
@@ -210,7 +197,7 @@ const driverFromRegionsKeyboard = (lang = 'uz') => {
 			['Surxondaryo', 'Surxondaryo'],
 			['Jizzax', 'Jizzax'],
 			['Sirdaryo', 'Sirdaryo'],
-			['Qoraqalpogʻiston', 'Qoraqalpoq']
+			['Qoraqalpogʻiston', 'Qoraqalpoq'],
 		],
 		ru: [
 			['Ташкент', 'Toshkent'],
@@ -225,12 +212,12 @@ const driverFromRegionsKeyboard = (lang = 'uz') => {
 			['Сурхандарья', 'Surxondaryo'],
 			['Джизак', 'Jizzax'],
 			['Сырдарья', 'Sirdaryo'],
-			['Каракалпакстан', 'Qoraqalpoq']
-		]
+			['Каракалпакстан', 'Qoraqalpoq'],
+		],
 	}
 
 	const buttons = regions[lang].map(region => [
-		Markup.button.callback(region[0], `driver_from_${region[1]}`)
+		Markup.button.callback(region[0], `driver_from_${region[1]}`),
 	])
 
 	return Markup.inlineKeyboard(buttons)
@@ -251,7 +238,7 @@ const driverToRegionsKeyboard = (lang = 'uz') => {
 			['Surxondaryo', 'Surxondaryo'],
 			['Jizzax', 'Jizzax'],
 			['Sirdaryo', 'Sirdaryo'],
-			['Qoraqalpogʻiston', 'Qoraqalpoq']
+			['Qoraqalpogʻiston', 'Qoraqalpoq'],
 		],
 		ru: [
 			['Ташкент', 'Toshkent'],
@@ -266,12 +253,12 @@ const driverToRegionsKeyboard = (lang = 'uz') => {
 			['Сурхандарья', 'Surxondaryo'],
 			['Джизак', 'Jizzax'],
 			['Сырдарья', 'Sirdaryo'],
-			['Каракалпакстан', 'Qoraqalpoq']
-		]
+			['Каракалпакстан', 'Qoraqalpoq'],
+		],
 	}
 
 	const buttons = regions[lang].map(region => [
-		Markup.button.callback(region[0], `driver_to_${region[1]}`)
+		Markup.button.callback(region[0], `driver_to_${region[1]}`),
 	])
 
 	return Markup.inlineKeyboard(buttons)
@@ -281,19 +268,19 @@ const parcelKeyboard = (lang = 'uz') => {
 	const texts = {
 		uz: {
 			yes: '📦 Ha',
-			no: "❌ Yo'q"
+			no: "❌ Yo'q",
 		},
 		ru: {
 			yes: '📦 Да',
-			no: '❌ Нет'
-		}
+			no: '❌ Нет',
+		},
 	}
 
 	const t = texts[lang]
 
 	return Markup.inlineKeyboard([
 		[Markup.button.callback(t.yes, 'parcel_yes')],
-		[Markup.button.callback(t.no, 'parcel_no')]
+		[Markup.button.callback(t.no, 'parcel_no')],
 	])
 }
 
@@ -303,14 +290,14 @@ const serviceTypeKeyboard = (lang = 'uz', selectedServices = []) => {
 			road: "🚕 Yo'l-yo'lakay",
 			route: "🛣 Yo'nalish",
 			parcel: '📦 Pochta',
-			done: '✅ Tayyor'
+			done: '✅ Tayyor',
 		},
 		ru: {
 			road: '🚕 Попутка',
 			route: '🛣 Направление',
 			parcel: '📦 Посылка',
-			done: '✅ Готово'
-		}
+			done: '✅ Готово',
+		},
 	}
 
 	const t = texts[lang]
@@ -319,22 +306,22 @@ const serviceTypeKeyboard = (lang = 'uz', selectedServices = []) => {
 		[
 			Markup.button.callback(
 				selectedServices.includes('road') ? `✅ ${t.road}` : t.road,
-				'service_road'
-			)
+				'service_road',
+			),
 		],
 		[
 			Markup.button.callback(
 				selectedServices.includes('route') ? `✅ ${t.route}` : t.route,
-				'service_route'
-			)
+				'service_route',
+			),
 		],
 		[
 			Markup.button.callback(
 				selectedServices.includes('parcel') ? `✅ ${t.parcel}` : t.parcel,
-				'service_parcel'
-			)
+				'service_parcel',
+			),
 		],
-		[Markup.button.callback(t.done, 'service_done')]
+		[Markup.button.callback(t.done, 'service_done')],
 	]
 
 	return Markup.inlineKeyboard(buttons)
@@ -344,18 +331,21 @@ const confirmKeyboard = (lang = 'uz') => {
 	const texts = {
 		uz: {
 			confirm: '✅ Tasdiqlash',
-			cancel: '❌ Bekor qilish'
+			cancel: '❌ Bekor qilish',
 		},
 		ru: {
 			confirm: '✅ Подтвердить',
-			cancel: '❌ Отмена'
-		}
+			cancel: '❌ Отмена',
+		},
 	}
 
 	const t = texts[lang]
 
 	return Markup.inlineKeyboard([
-		[Markup.button.callback(t.confirm, 'confirm'), Markup.button.callback(t.cancel, 'cancel')]
+		[
+			Markup.button.callback(t.confirm, 'confirm'),
+			Markup.button.callback(t.cancel, 'cancel'),
+		],
 	])
 }
 
@@ -363,19 +353,19 @@ const commentKeyboard = (lang = 'uz') => {
 	const texts = {
 		uz: {
 			add: '✍️ Izoh qoldirish',
-			skip: "⏭ O'tkazib yuborish"
+			skip: "⏭ O'tkazib yuborish",
 		},
 		ru: {
 			add: '✍️ Оставить комментарий',
-			skip: '⏭ Пропустить'
-		}
+			skip: '⏭ Пропустить',
+		},
 	}
 
 	const t = texts[lang]
 
 	return Markup.inlineKeyboard([
 		[Markup.button.callback(t.add, 'add_comment')],
-		[Markup.button.callback(t.skip, 'skip_comment')]
+		[Markup.button.callback(t.skip, 'skip_comment')],
 	])
 }
 
@@ -383,28 +373,34 @@ const workHoursKeyboard = (lang = 'uz') => {
 	return Markup.inlineKeyboard([
 		[
 			Markup.button.callback(
-				lang === 'uz' ? '🌅 10:00 - 18:00 (Kunduzi)' : '🌅 10:00 - 18:00 (Дневное)',
-				'work_1000_1800'
-			)
+				lang === 'uz'
+					? '🌅 10:00 - 18:00 (Kunduzi)'
+					: '🌅 10:00 - 18:00 (Дневное)',
+				'work_1000_1800',
+			),
 		],
 		[
 			Markup.button.callback(
-				lang === 'uz' ? '🌆 18:00 - 02:00 (Kechqurun)' : '🌆 18:00 - 02:00 (Вечернее)',
-				'work_1800_0200'
-			)
+				lang === 'uz'
+					? '🌆 18:00 - 02:00 (Kechqurun)'
+					: '🌆 18:00 - 02:00 (Вечернее)',
+				'work_1800_0200',
+			),
 		],
 		[
 			Markup.button.callback(
-				lang === 'uz' ? '🌃 02:00 - 10:00 (Tungi)' : '🌃 02:00 - 10:00 (Ночное)',
-				'work_0200_1000'
-			)
+				lang === 'uz'
+					? '🌃 02:00 - 10:00 (Tungi)'
+					: '🌃 02:00 - 10:00 (Ночное)',
+				'work_0200_1000',
+			),
 		],
 		[
 			Markup.button.callback(
 				lang === 'uz' ? "✏️ Qo'lda kiritish" : '✏️ Ввести вручную',
-				'work_custom'
-			)
-		]
+				'work_custom',
+			),
+		],
 	])
 }
 
@@ -414,30 +410,30 @@ const customWorkHoursKeyboard = (lang = 'uz') => {
 			[
 				{
 					text: lang === 'uz' ? '08:00 - 20:00' : '08:00 - 20:00',
-					callback_data: 'work_custom_08:00_20:00'
+					callback_data: 'work_custom_08:00_20:00',
 				},
 				{
 					text: lang === 'uz' ? '22:00 - 06:00' : '22:00 - 06:00',
-					callback_data: 'work_custom_22:00_06:00'
-				}
+					callback_data: 'work_custom_22:00_06:00',
+				},
 			],
 			[
 				{
 					text: lang === 'uz' ? '09:00 - 17:00' : '09:00 - 17:00',
-					callback_data: 'work_custom_09:00_17:00'
+					callback_data: 'work_custom_09:00_17:00',
 				},
 				{
 					text: lang === 'uz' ? '07:00 - 19:00' : '07:00 - 19:00',
-					callback_data: 'work_custom_07:00_19:00'
-				}
+					callback_data: 'work_custom_07:00_19:00',
+				},
 			],
 			[
 				{
 					text: lang === 'uz' ? '✏️ Boshqa vaqt kiritish' : '✏️ Другое время',
-					callback_data: 'work_custom_enter'
-				}
-			]
-		]
+					callback_data: 'work_custom_enter',
+				},
+			],
+		],
 	}
 }
 
@@ -445,19 +441,19 @@ const confirmKeyboard2 = (lang = 'uz') => {
 	const texts = {
 		uz: {
 			confirm: "✅ Ha, to'g'ri",
-			cancel: "❌ Yo'q, o'zgartirish"
+			cancel: "❌ Yo'q, o'zgartirish",
 		},
 		ru: {
 			confirm: '✅ Да, верно',
-			cancel: '❌ Нет, изменить'
-		}
+			cancel: '❌ Нет, изменить',
+		},
 	}
 
 	const t = texts[lang]
 
 	return Markup.inlineKeyboard([
 		[Markup.button.callback(t.confirm, 'confirm')],
-		[Markup.button.callback(t.cancel, 'cancel')]
+		[Markup.button.callback(t.cancel, 'cancel')],
 	])
 }
 
@@ -465,56 +461,61 @@ const carNumberKeyboard = (lang = 'uz') => {
 	const message =
 		lang === 'uz'
 			? '🚘 Mashina raqamingizni kiriting:\n\n' +
-			  '📝 **Format:** 01A123AB, 10B777DC, 30D123CE\n\n' +
-			  "⚠️ **Eslatma:** O'zbekiston davlat raqami formatida bo'lishi kerak:\n" +
-			  '• 2 ta raqam (01-99 - viloyat kodi)\n' +
-			  '• 1 ta lotin harfi (A-Z)\n' +
-			  '• 3 ta raqam (001-999)\n' +
-			  '• 2 ta lotin harfi (A-Z)\n\n' +
-			  '**Masalan:**\n' +
-			  '✅ 01A123AB\n' +
-			  '✅ 10B777DC\n' +
-			  '✅ 30D123CE\n\n' +
-			  'Iltimos, mashina raqamingizni yuqoridagi formatda kiriting:'
+				'📝 **Format:** 01A123AB, 10B777DC, 30D123CE\n\n' +
+				"⚠️ **Eslatma:** O'zbekiston davlat raqami formatida bo'lishi kerak:\n" +
+				'• 2 ta raqam (01-99 - viloyat kodi)\n' +
+				'• 1 ta lotin harfi (A-Z)\n' +
+				'• 3 ta raqam (001-999)\n' +
+				'• 2 ta lotin harfi (A-Z)\n\n' +
+				'**Masalan:**\n' +
+				'✅ 01A123AB\n' +
+				'✅ 10B777DC\n' +
+				'✅ 30D123CE\n\n' +
+				'Iltimos, mashina raqamingizni yuqoridagi formatda kiriting:'
 			: '🚘 Введите номер машины:\n\n' +
-			  '📝 **Формат:** 01A123AB, 10B777DC, 30D123CE\n\n' +
-			  '⚠️ **Примечание:** Должен быть в формате узбекских госномеров:\n' +
-			  '• 2 цифры (01-99 - код региона)\n' +
-			  '• 1 латинская буква (A-Z)\n' +
-			  '• 3 цифры (001-999)\n' +
-			  '• 2 латинские буквы (A-Z)\n\n' +
-			  '**Например:**\n' +
-			  '✅ 01A123AB\n' +
-			  '✅ 10B777DC\n' +
-			  '✅ 30D123CE\n\n' +
-			  'Пожалуйста, введите номер машины в указанном формате:'
+				'📝 **Формат:** 01A123AB, 10B777DC, 30D123CE\n\n' +
+				'⚠️ **Примечание:** Должен быть в формате узбекских госномеров:\n' +
+				'• 2 цифры (01-99 - код региона)\n' +
+				'• 1 латинская буква (A-Z)\n' +
+				'• 3 цифры (001-999)\n' +
+				'• 2 латинские буквы (A-Z)\n\n' +
+				'**Например:**\n' +
+				'✅ 01A123AB\n' +
+				'✅ 10B777DC\n' +
+				'✅ 30D123CE\n\n' +
+				'Пожалуйста, введите номер машины в указанном формате:'
 
 	return Markup.inlineKeyboard([
-		[Markup.button.callback(lang === 'uz' ? '❌ Bekor qilish' : '❌ Отмена', 'cancel_car_number')]
+		[
+			Markup.button.callback(
+				lang === 'uz' ? '❌ Bekor qilish' : '❌ Отмена',
+				'cancel_car_number',
+			),
+		],
 	])
 }
 const languageKeyboard = () => {
 	return Markup.inlineKeyboard([
 		[Markup.button.callback('🇺🇿 O‘zbek tili', 'lang_uz')],
-		[Markup.button.callback('🇷🇺 Русский язык', 'lang_ru')]
+		[Markup.button.callback('🇷🇺 Русский язык', 'lang_ru')],
 	])
 }
-	(module.exports = {
-		showMainMenu,
-		mainMenuKeyboard,
-		fromRegionsKeyboard,
-		toRegionsKeyboard,
-		driverFromRegionsKeyboard,
-		driverToRegionsKeyboard,
-		parcelKeyboard,
-		serviceTypeKeyboard,
-		confirmKeyboard,
-		commentKeyboard,
-		workHoursKeyboard,
-		customWorkHoursKeyboard,
-		confirmKeyboard2,
-		passengerCountKeyboard,
-		maxPassengersKeyboard,
-		carNumberKeyboard,
-		languageKeyboard
-	})
+module.exports = {
+	showMainMenu,
+	mainMenuKeyboard,
+	fromRegionsKeyboard,
+	toRegionsKeyboard,
+	driverFromRegionsKeyboard,
+	driverToRegionsKeyboard,
+	parcelKeyboard,
+	serviceTypeKeyboard,
+	confirmKeyboard,
+	commentKeyboard,
+	workHoursKeyboard,
+	customWorkHoursKeyboard,
+	confirmKeyboard2,
+	passengerCountKeyboard,
+	maxPassengersKeyboard,
+	carNumberKeyboard,
+	languageKeyboard,
+}
