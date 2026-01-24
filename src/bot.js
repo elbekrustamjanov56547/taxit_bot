@@ -8,7 +8,7 @@ const driverHandler = require('./handlers/driver')
 const adminHandler = require('./handlers/admin')
 const express = require('express')
 const OrderExpirationService = require('./services/orderExpirationService')
-
+const {getTimeAgo} = require('./utils/helpers')
 // Import models
 const User = require('./models/User')
 const Driver = require('./models/Driver')
@@ -185,10 +185,7 @@ bot.start(async ctx => {
 bot.on('callback_query', async ctx => {
 	try {
 		console.log('📞 ========== CALLBACK HANDLER START ==========')
-		console.log(
-			'🔍 Full callback query:',
-			JSON.stringify(ctx.callbackQuery, null, 2),
-		)
+		console.log('🔍 Full callback query:', JSON.stringify(ctx.callbackQuery, null, 2))
 		console.log('🔍 Callback data:', ctx.callbackQuery.data)
 		console.log('🔍 Message ID:', ctx.callbackQuery.message?.message_id)
 
@@ -209,7 +206,88 @@ bot.on('callback_query', async ctx => {
 		console.log('📞 Callback received:', callbackData)
 		console.log('👤 User:', user.telegramId, 'State:', user.state)
 
-		// Avval callback query ga javob berish
+		if (callbackData === 'show_unmatched_routes') {
+			console.log('🔍 Show unmatched routes callback')
+			const orderHandler = require('./handlers/order')
+			await orderHandler.showUnmatchedRoutes(ctx)
+			return
+		}
+		// bot.js faylida callback handler'ni quyidagicha o'zgartiring:
+
+		// bot.js faylida callback handler qismiga qo'shing:
+		if (callbackData.startsWith('unmatched_page_')) {
+			console.log('📄 Unmatched page callback:', callbackData)
+
+			try {
+				const page = parseInt(callbackData.replace('unmatched_page_', ''))
+
+				if (isNaN(page)) {
+					console.error('❌ Invalid page number:', callbackData)
+					await ctx.answerCbQuery('❌ Invalid page')
+					return
+				}
+
+				console.log('📄 Page number extracted:', page)
+
+				const orderHandler = require('./handlers/order')
+				await orderHandler.showUnmatchedRoutes(ctx, page)
+
+				await ctx.answerCbQuery()
+			} catch (error) {
+				console.error('❌ unmatched_page_ callback error:', error)
+				await ctx.answerCbQuery('❌ Error')
+			}
+			return
+		}
+
+		if (callbackData === 'refresh_unmatched') {
+			console.log('🔄 Refresh unmatched routes callback')
+			const orderHandler = require('./handlers/order')
+			await orderHandler.refreshUnmatchedRoutes(ctx)
+			return
+		}
+
+		if (callbackData.startsWith('view_unmatched_')) {
+			console.log('👁️ View unmatched order callback')
+			const orderHandler = require('./handlers/order')
+			await orderHandler.viewUnmatchedOrder(ctx, callbackData)
+			return
+		}
+
+		if (callbackData.startsWith('contact_passenger_')) {
+			console.log('📞 Contact passenger callback')
+			const orderHandler = require('./handlers/order')
+			await orderHandler.contactPassenger(ctx, callbackData)
+			return
+		}
+
+		if (callbackData === 'back_to_unmatched') {
+			console.log('⬅️ Back to unmatched callback')
+			const orderHandler = require('./handlers/order')
+			await orderHandler.backToUnmatched(ctx)
+			return
+		}
+		if (callbackData.startsWith('filter_region_')) {
+			console.log('📍 Region filter callback:', callbackData)
+			const parts = callbackData.split('_')
+			const region = parts[2]
+			const page = parseInt(parts[3]) || 1
+			await showUnmatchedRoutesByRegion(ctx, region, page)
+			return
+		}
+		if (callbackData.startsWith('unmatched_page_')) {
+			console.log('📄 Unmatched page callback:', callbackData)
+			const orderHandler = require('./handlers/order')
+
+			// Agar faqat raqam bo'lsa (umumiy sahifa)
+			if (callbackData === 'unmatched_page_1' || callbackData === 'unmatched_page_2') {
+				await orderHandler.showUnmatchedRoutes(ctx)
+			} else {
+				// Agar viloyat bilan bo'lsa
+				await orderHandler.showUnmatchedRoutesByRegion(ctx, callbackData)
+			}
+			return
+		}
 		try {
 			await ctx.answerCbQuery()
 		} catch (cbError) {
@@ -223,14 +301,17 @@ bot.on('callback_query', async ctx => {
 			await driverHandler.showManualCarInput(ctx)
 			return
 		}
+		if (callbackData === 'back_to_unmatched_list') {
+			console.log('⬅️ Back to unmatched list')
+			const orderHandler = require('./handlers/order')
+			await orderHandler.showUnmatchedRoutes(ctx)
+			return
+		}
 		if (callbackData === 'parcel_yes' || callbackData === 'parcel_no') {
 			console.log('📦 Parcel callback:', callbackData)
 			const passengerHandler = require('./handlers/passenger')
 
-			if (
-				user.state === states.PASSENGER_PARCEL ||
-				user.state === states.PASSENGER_EDIT_PARCEL
-			) {
+			if (user.state === states.PASSENGER_PARCEL || user.state === states.PASSENGER_EDIT_PARCEL) {
 				if (user.state === states.PASSENGER_EDIT_PARCEL) {
 					// Tahrirlash uchun
 					await passengerHandler.saveEditedParcel(ctx, callbackData)
@@ -252,7 +333,15 @@ bot.on('callback_query', async ctx => {
 		if (callbackData.startsWith('car_select_')) {
 			console.log('🚗 Car select callback:', callbackData)
 			const driverHandler = require('./handlers/driver')
-			await driverHandler.selectCarCallback(ctx, callbackData)
+
+			// Agar DRIVER_EDIT_CAR holatida bo'lsa, maxsus edit funksiyasini chaqiramiz
+			if (user.state === states.DRIVER_EDIT_CAR) {
+				console.log('✅ Car select in EDIT mode')
+				await driverHandler.selectCarCallback(ctx, callbackData)
+			} else {
+				// Boshqa holatlar uchun oddiy funksiya
+				await driverHandler.selectCarCallback(ctx, callbackData)
+			}
 			return
 		}
 
@@ -281,7 +370,7 @@ bot.on('callback_query', async ctx => {
 					await ctx.reply(
 						user.language === 'uz'
 							? '🕒 Ish vaqtini kiriting (masalan: 09:00 - 18:00):'
-							: '🕒 Введите рабочее время (например: 09:00 - 18:00):',
+							: '🕒 Введите рабочее время (например: 09:00 - 18:00):'
 					)
 				}
 			} else {
@@ -336,7 +425,7 @@ bot.on('callback_query', async ctx => {
 			console.log('🚖 Taxi service callback')
 			const driverHandler = require('./handlers/driver')
 			const existingDriver = await Driver.findOne({
-				telegramId: user.telegramId,
+				telegramId: user.telegramId
 			})
 
 			if (existingDriver) {
@@ -349,7 +438,7 @@ bot.on('callback_query', async ctx => {
 				await ctx.reply(
 					user.language === 'uz'
 						? "🚘 Haydovchi profilingiz topilmadi.\n\nKeling, ro'yxatdan o'tishni boshlaymiz."
-						: '🚘 Профиль водителя не найден.\n\nДавайте начнём регистрацию.',
+						: '🚘 Профиль водителя не найден.\n\nДавайте начнём регистрацию.'
 				)
 				await driverHandler.startRegistration(ctx)
 			}
@@ -375,7 +464,7 @@ bot.on('callback_query', async ctx => {
 			await ctx.reply(
 				user.language === 'uz'
 					? '❌ Profil yaratish bekor qilindi. Qayta boshlash uchun /start ni bosing.'
-					: '❌ Создание профиля отменено. Нажмите /start чтобы начать заново.',
+					: '❌ Создание профиля отменено. Нажмите /start чтобы начать заново.'
 			)
 
 			user.state = states.MAIN_MENU
@@ -383,7 +472,7 @@ bot.on('callback_query', async ctx => {
 
 			await ctx.reply(
 				user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-				keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role),
+				keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role)
 			)
 			return
 		}
@@ -398,17 +487,18 @@ bot.on('callback_query', async ctx => {
 
 		if (callbackData === 'edit_car_number') {
 			console.log('🚗 Edit car number callback')
-			user.state = states.DRIVER_EDIT_CAR_NUMBER
-			await user.save()
+			const driverHandler = require('./handlers/driver')
 
-			await ctx.reply(
-				user.language === 'uz'
-					? '🚗 Yangi mashina raqamini kiriting: 01AA000BB'
-					: '🚗 Введите новый номер машины: 01AA000BB',
-					user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-				keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role),
-			)
+			try {
+				if (ctx.callbackQuery?.message?.message_id) {
+					await ctx.deleteMessage()
+				}
+			} catch (error) {
+				console.log('Delete message error:', error.message)
+			}
 
+			// editCarNumber funksiyasini to'g'ridan-to'g'ri chaqiramiz
+			await driverHandler.editCarNumber(ctx)
 			return
 		}
 
@@ -483,7 +573,7 @@ bot.on('callback_query', async ctx => {
 					await ctx.reply(
 						ctx.user?.language === 'uz'
 							? "❌ Taksi buyurtma qilishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
-							: '❌ Ошибка при заказе такси. Пожалуйста, попробуйте еще раз.',
+							: '❌ Ошибка при заказе такси. Пожалуйста, попробуйте еще раз.'
 					)
 				} catch (replyError) {
 					console.error('Reply error:', replyError)
@@ -564,10 +654,7 @@ bot.on('callback_query', async ctx => {
 		}
 
 		// ============ SERVICE SWITCH CALLBACKLARI ============
-		if (
-			callbackData === 'switch_to_user' ||
-			callbackData === 'switch_to_driver'
-		) {
+		if (callbackData === 'switch_to_user' || callbackData === 'switch_to_driver') {
 			console.log('🔄 Service switch:', callbackData)
 			await switchServiceRole(ctx)
 			return
@@ -577,9 +664,10 @@ bot.on('callback_query', async ctx => {
 		if (callbackData === 'main_menu') {
 			console.log('🏠 Main menu callback')
 			await ctx.reply(
-				user.language === 'uz' ? `🏠 Asosiy menyu\n\n` + `Quyidagilardan birini tanlang:`
-				: `🏠 Главное меню\n\n` + `Выберите одно из следующих:`,
-				keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role),
+				user.language === 'uz'
+					? `🏠 Asosiy menyu\n\n` + `Quyidagilardan birini tanlang:`
+					: `🏠 Главное меню\n\n` + `Выберите одно из следующих:`,
+				keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role)
 			)
 			user.state = states.MAIN_MENU
 			await user.save()
@@ -647,9 +735,7 @@ bot.on('callback_query', async ctx => {
 
 			// Driver callback emasligini tekshirish
 			if (callbackData.startsWith('driver_from_')) {
-				console.log(
-					'🚗 This is driver_from callback, skipping passenger handler',
-				)
+				console.log('🚗 This is driver_from callback, skipping passenger handler')
 			} else if (
 				user.state === states.PASSENGER_FROM_REGION ||
 				user.state === states.PASSENGER_EDIT_FROM_REGION
@@ -746,7 +832,7 @@ bot.on('callback_query', async ctx => {
 					user.language === 'uz'
 						? '❌ Haydovchi profilingiz topilmadi.'
 						: '❌ Ваш профиль водителя не найден.',
-					await driverHandler.startRegistration(ctx),
+					await driverHandler.startRegistration(ctx)
 				)
 			}
 			return
@@ -819,10 +905,7 @@ bot.on('callback_query', async ctx => {
 			return
 		}
 
-		if (
-			callbackData === 'accept_parcel' ||
-			callbackData === 'accept_parcel_trip'
-		) {
+		if (callbackData === 'accept_parcel' || callbackData === 'accept_parcel_trip') {
 			console.log('📦 Accept parcel callback')
 			const driverHandler = require('./handlers/driver')
 			await driverHandler.acceptParcel(ctx)
@@ -906,7 +989,7 @@ bot.on('callback_query', async ctx => {
 		await ctx.reply(
 			user.language === 'uz'
 				? '❌ Buyurtma bekor qilindi.\n\nDavom etish uchun /start bosing yoki asosiy menyudan foydalaning.'
-				: '❌ Команда не распознана.\n\nПожалуйста, воспользуйтесь главным меню.',
+				: '❌ Команда не распознана.\n\nПожалуйста, воспользуйтесь главным меню.'
 		)
 
 		console.log('📞 ========== CALLBACK HANDLER END ==========')
@@ -1460,14 +1543,74 @@ bot.on('contact', async ctx => {
 bot.command('admin', async ctx => {
 	await adminHandler.showAdminMenu(ctx)
 })
+// bot.js faylida cron jobni yangilang
+cron.schedule('0 3 * * *', async () => {
+    try {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-// Cron job - oylik obuna tekshiruvi
+        // 7 kundan oldingi pending statusdagi va haydovchi topilmagan buyurtmalarni "expired" qilamiz
+        const result = await Order.updateMany(
+            {
+                status: 'pending',
+                driverFound: false,
+                createdAt: { $lt: sevenDaysAgo },
+                autoClosed: false
+            },
+            {
+                $set: {
+                    autoClosed: true,
+                    status: 'expired'
+                }
+            }
+        );
+
+        console.log(`🗑️ Avtomatik tozalandi: ${result.modifiedCount} ta eski buyurtma`);
+
+        // Yo'lovchilarga xabar yuborish
+        if (result.modifiedCount > 0) {
+            const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+
+            const expiredOrders = await Order.find({
+                status: 'expired',
+                autoClosed: true,
+                updatedAt: { $gte: oneHourAgo }
+            });
+
+            for (const order of expiredOrders) {
+                try {
+                    const user = await User.findOne({ telegramId: order.userId });
+                    const language = user?.language || 'uz';
+
+                    await bot.telegram.sendMessage(
+                        order.userId,
+                        language === 'uz'
+                            ? `❌ Sizning buyurtmangiz 7 kun davomida haydovchi topilmagani uchun avtomatik bekor qilindi.\n\n` +
+                              `📍 Yo'nalish: ${order.fromRegion} → ${order.toRegion}\n` +
+                              `👥 Yo'lovchilar: ${order.passengerCount} kishi\n\n` +
+                              `🔄 Yangi buyurtma berish uchun /start buyrug'idan foydalaning.`
+                            : `❌ Ваш заказ автоматически отменен, так как в течение 7 дней не был найден водитель.\n\n` +
+                              `📍 Направление: ${order.fromRegion} → ${order.toRegion}\n` +
+                              `👥 Пассажиры: ${order.passengerCount} человек\n\n` +
+                              `🔄 Используйте команду /start для создания нового заказа.`
+                    );
+                } catch (error) {
+                    console.error(`Yo'lovchiga xabar yuborishda xatolik: ${order.userId}`, error.message);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('❌ Avtomatik tozalash xatosi:', error);
+    }
+});
+
+// Cron job - har kuni 00:00 da paidUntil tugagan active driverlarni inactive qilish
 cron.schedule('0 0 * * *', async () => {
 	try {
 		const expiredDrivers = await Driver.find({
 			paidUntil: { $lt: new Date() },
-			status: 'active',
+			status: 'active'
 		})
+
 		for (const driver of expiredDrivers) {
 			driver.status = 'inactive'
 			await driver.save()
@@ -1475,10 +1618,39 @@ cron.schedule('0 0 * * *', async () => {
 			try {
 				await bot.telegram.sendMessage(
 					driver.telegramId,
-					"⚠️ Sizning obunangiz tugadi. Faollashtirish uchun to'lov qiling.",
+					"⚠️ Sizning obunangiz tugadi. Faollashtirish uchun to'lov qiling."
 				)
 			} catch (error) {
-				console.error('Driver notification failed:', error.message)
+				console.error('Driver notification failed:', driver.telegramId, error.message)
+			}
+		}
+
+		console.log(`Expired drivers checked: ${expiredDrivers.length}`)
+	} catch (error) {
+		console.error('Cron job error:', error)
+	}
+})
+
+
+// ✅ 2) Har kuni 00:00 — paidUntil tugagan active driverlarni inactive qilish + xabar yuborish
+cron.schedule('0 0 * * *', async () => {
+	try {
+		const expiredDrivers = await Driver.find({
+			paidUntil: { $lt: new Date() },
+			status: 'active'
+		})
+
+		for (const driver of expiredDrivers) {
+			driver.status = 'inactive'
+			await driver.save()
+
+			try {
+				await bot.telegram.sendMessage(
+					driver.telegramId,
+					"⚠️ Sizning obunangiz tugadi. Faollashtirish uchun to'lov qiling."
+				)
+			} catch (error) {
+				console.error('Driver notification failed:', driver.telegramId, error.message)
 			}
 		}
 
@@ -1497,6 +1669,23 @@ bot.action('driver_payment_enhanced', async ctx => {
 bot.action('show_driver_profile', async ctx => {
 	await driverHandler.handleShowProfileCallback(ctx)
 	await ctx.answerCbQuery()
+})
+
+bot.action(/unmatched_page_(\d+)/, async ctx => {
+	try {
+		const page = Number(ctx.match[1]) || 1
+		console.log('📄 Unmatched page callback:', ctx.callbackQuery.data, '=> page:', page)
+
+		await ctx.answerCbQuery()
+
+		// Chatni spam qilmaslik uchun edit qilamiz
+		await module.exports.showUnmatchedRoutes(ctx, page, true)
+	} catch (e) {
+		console.error('unmatched_page handler error:', e)
+		try {
+			await ctx.answerCbQuery('❌ Xatolik')
+		} catch {}
+	}
 })
 
 bot.action('close_menu', async ctx => {
@@ -1663,6 +1852,10 @@ bot.action('main_menu', async ctx => {
 								: '🔄 Изменить услугу',
 						callback_data: 'switch_to_user',
 					},
+					{
+				 text: language === 'uz' ? "🔍 Boshqa yo'nalishlar" : '🔍 Другие направления',
+					callback_data:'show_unmatched_routes'
+					}
 				],
 			],
 		}
@@ -1678,24 +1871,22 @@ bot.action('main_menu', async ctx => {
 			inline_keyboard: [
 				[
 					{
-						text:
-							user.language === 'uz'
-								? '🚖 Taksiga buyurtma berish'
-								: '🚖 Заказать такси',
-						callback_data: 'need_taxi',
-					},
+						text: user.language === 'uz' ? '🚖 Taksiga buyurtma berish' : '🚖 Заказать такси',
+						callback_data: 'need_taxi'
+					}
 				],
 
 				[
 					{
-						text:
-							user.language === 'uz'
-								? "🔄 Xizmatni o'zgartirish"
-								: '🔄 Изменить услугу',
-						callback_data: 'switch_to_driver',
+						text: user.language === 'uz' ? "🔄 Xizmatni o'zgartirish" : '🔄 Изменить услугу',
+						callback_data: 'switch_to_driver'
 					},
-				],
-			],
+					{
+						text: language === 'uz' ? "🔍 Boshqa yo'nalishlar" : '🔍 Другие направления',
+						callback_data: 'show_unmatched_routes'
+					}
+				]
+			]
 		}
 
 		await ctx.reply(message, { reply_markup: keyboard })
@@ -1861,26 +2052,97 @@ bot.action('switch_to_driver', async ctx => {
 bot.action('main_menu', async ctx => {
 	const user = ctx.user
 
-	console.log('🏠 Main menu callback called')
+	console.log('🏠 Main menu callback, user role:', user.role)
 
 	try {
 		// Avvalgi xabarni o'chirish
-		try {
-			await ctx.deleteMessage()
-		} catch (error) {
-			console.log('Delete message error:', error.message)
-		}
+		await ctx.deleteMessage().catch(() => {
+			console.log('Delete message failed, continuing...')
+		})
 	} catch (error) {
 		console.log('Delete message error:', error.message)
 	}
 
-	// Asosiy menyuni ko'rsatish
-	const { message, keyboard } = keyboards.showMainMenu(ctx, user.language)
+	// RO'LGA QARAB ASOSIY MENYU KO'RSATISH
+	if (user.role === 'driver') {
+		// DRIVER rolida
+		const message =
+			user.language === 'uz'
+				? `🏠 Asosiy menyu\n\n` + `Quyidagilardan birini tanlang:`
+				: `🏠 Главное меню\n\n` + `Выберите одно из следующих:`
 
-	await ctx.reply(message, {
-		reply_markup: keyboard,
-		parse_mode: 'HTML',
-	})
+		const keyboard = {
+			inline_keyboard: [
+				[
+					{
+						text: user.language === 'uz' ? '🚘 Haydovchi menyusi' : '🚘 Меню водителя',
+						callback_data: 'driver_info'
+					}
+				],
+				[
+					{
+						text: user.language === 'uz' ? "🔄 Xizmatni o'zgartirish" : '🔄 Изменить услугу',
+						callback_data: 'switch_to_user'
+					},
+					{
+						text: user.language === 'uz' ? "🔍 Boshqa yo'nalishlar" : '🔍 Другие направления',
+						callback_data: 'show_unmatched_routes'
+					}
+				]
+			]
+		}
+
+		await ctx.reply(message, { reply_markup: keyboard })
+	} else if (user.role === 'user') {
+		// USER rolida
+		const message =
+			user.language === 'uz'
+				? `🏠 Asosiy menyu\n\n` + `Quyidagilardan birini tanlang:`
+				: `🏠 Главное меню\n\n` + `Выберите одно из следующих:`
+
+		const keyboard = {
+			inline_keyboard: [
+				[
+					{
+						text: user.language === 'uz' ? '🚖 Taksiga buyurtma berish' : '🚖 Заказать такси',
+						callback_data: 'need_taxi'
+					}
+				],
+				[
+					{
+						text: user.language === 'uz' ? "🔄 Xizmatni o'zgartirish" : '🔄 Изменить услугу',
+						callback_data: 'switch_to_driver'
+					}
+					// USER uchun "Boshqa yo'nalishlar" tugmasi OLIB TASHLANDI
+				]
+			]
+		}
+
+		await ctx.reply(message, { reply_markup: keyboard })
+	} else {
+		// ROL TANLAMAGANLAR UCHUN
+		const message =
+			user.language === 'uz'
+				? `🏠 Asosiy menyu\n\n` + `Quyidagilardan birini tanlang:`
+				: `🏠 Главное меню\n\n` + `Выберите одно из следующих:`
+
+		const keyboard = {
+			inline_keyboard: [
+				[
+					{
+						text: user.language === 'uz' ? '🚖 Taksi kerak' : '🚖 Нужно такси',
+						callback_data: 'need_taxi'
+					},
+					{
+						text: user.language === 'uz' ? '🚘 Taksi xizmati' : '🚘 Такси сервис',
+						callback_data: 'taxi_service'
+					}
+				]
+			]
+		}
+
+		await ctx.reply(message, { reply_markup: keyboard })
+	}
 
 	user.state = states.MAIN_MENU
 	await user.save()
@@ -1997,6 +2259,225 @@ const startServer = async () => {
 		console.error('Server start error:', error)
 	}
 }
+const showUnmatchedRoutesByRegion = async (ctx, region = null, page = 1) => {
+	const user = ctx.user
+
+	try {
+		console.log('🔍 ========== showUnmatchedRoutesByRegion START ==========')
+
+		// 1. Faqat haydovchilar uchun
+		if (user.role !== 'driver') {
+			await ctx.reply(
+				user.language === 'uz'
+					? '❌ Bu funksiya faqat haydovchilar uchun mavjud.'
+					: '❌ Эта функция доступна только для водителей.'
+			)
+			return
+		}
+
+		// 2. Haydovchining profili
+		const driver = await Driver.findOne({ telegramId: user.telegramId })
+
+		if (!driver) {
+			await ctx.reply(
+				user.language === 'uz'
+					? '❌ Haydovchi profilingiz topilmadi.'
+					: '❌ Ваш профиль водителя не найден.'
+			)
+			return
+		}
+
+		// 3. Pagination settings
+		const limit = 5 // har sahifada 5 ta buyurtma
+		const skip = (page - 1) * limit
+
+		// 4. Filtrlar
+		const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+		let filter = {
+			$and: [
+				{
+					$or: [{ fromRegion: { $ne: driver.fromRegion } }, { toRegion: { $ne: driver.toRegion } }]
+				},
+				{
+					status: 'pending',
+					driverFound: false,
+					autoClosed: false,
+					createdAt: { $gte: sevenDaysAgo }
+				}
+			]
+		}
+
+		// 5. Agar region tanlangan bo'lsa, filterni qisqartirish
+		if (region && region !== 'all') {
+			filter = {
+				$and: [
+					{ fromRegion: region },
+					{
+						status: 'pending',
+						driverFound: false,
+						autoClosed: false,
+						createdAt: { $gte: sevenDaysAgo }
+					}
+				]
+			}
+		}
+
+		// 6. Buyurtmalarni olish
+		const unmatchedOrders = await Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit)
+
+		const totalOrders = await Order.countDocuments(filter)
+		const totalPages = Math.ceil(totalOrders / limit)
+
+		console.log(
+			`📊 Topilmagan yo'nalishlar: ${unmatchedOrders.length} ta, Sahifa: ${page}/${totalPages}`
+		)
+
+		if (unmatchedOrders.length === 0) {
+			const message =
+				user.language === 'uz'
+					? `📭 Hozircha topilmagan yo'nalishlar mavjud emas.\n\n` +
+					  (region && region !== 'all'
+							? `📍 Filtr: ${region}\n`
+							: `📍 Sizning yo'nalishingiz: ${driver.fromRegion} → ${driver.toRegion}\n`) +
+					  `⏰ So'nggi 7 kun ichida buyurtma berilmagan.`
+					: `📭 Нет неподходящих направлений в данный момент.\n\n` +
+					  (region && region !== 'all'
+							? `📍 Фильтр: ${region}\n`
+							: `📍 Ваше направление: ${driver.fromRegion} → ${driver.toRegion}\n`) +
+					  `⏰ За последние 7 дней не было заказов.`
+
+			await ctx.reply(message)
+			return
+		}
+
+		// 7. Xabar tayyorlash
+		let message =
+			user.language === 'uz'
+				? `🔍 Topilmagan yo'nalishlar (sahifa ${page}/${totalPages})\n\n` +
+				  (region && region !== 'all'
+						? `📍 Filtr: ${region}\n`
+						: `📍 Sizning yo'nalishingiz: ${driver.fromRegion} → ${driver.toRegion}\n`) +
+				  `📊 Jami: ${totalOrders} ta buyurtma\n\n`
+				: `🔍 Неподходящие направления (страница ${page}/${totalPages})\n\n` +
+				  (region && region !== 'all'
+						? `📍 Фильтр: ${region}\n`
+						: `📍 Ваше направление: ${driver.fromRegion} → ${driver.toRegion}\n`) +
+				  `📊 Всего: ${totalOrders} заказов\n\n`
+
+		// 8. Buyurtmalarni ko'rsatish
+		const inlineKeyboard = []
+		const orderIndex = skip + 1
+
+		unmatchedOrders.forEach((order, index) => {
+			const passengerCountText =
+				user.language === 'uz' ? `${order.passengerCount} kishi` : `${order.passengerCount} человек`
+
+			const parcelText = order.hasParcel
+				? user.language === 'uz'
+					? '📦 Ha'
+					: '📦 Да'
+				: user.language === 'uz'
+				? "📦 Yo'q"
+				: '📦 Нет'
+
+			const timeAgo = getTimeAgo(order.createdAt, user.language)
+
+			// Buyurtma qatorini qo'shish
+			message += `${orderIndex + index}. ${order.fromRegion} → ${order.toRegion}\n`
+			message += `   👥 ${passengerCountText} | ${parcelText}\n`
+			message += `   ⏰ ${timeAgo}\n\n`
+
+			// Tugma yaratish
+			inlineKeyboard.push([
+				{
+					text:
+						user.language === 'uz'
+							? `👁️ ${order.fromRegion} → ${order.toRegion}`
+							: `👁️ ${order.fromRegion} → ${order.toRegion}`,
+					callback_data: `view_unmatched_${order._id}`
+				}
+			])
+		})
+
+		// 9. Region filtrlari tugmalari
+		const regions = ['Toshkent', 'Samarqand', 'Buxoro', 'Andijon', 'Fargʻona', 'Namangan'] // Barcha viloyatlarni qo'shing
+
+		const regionButtons = []
+		regions.forEach(regionName => {
+			regionButtons.push({
+				text: regionName,
+				callback_data: `filter_region_${regionName.toLowerCase()}_1`
+			})
+		})
+
+		// 2 qatorga joylashtirish
+		for (let i = 0; i < regionButtons.length; i += 2) {
+			inlineKeyboard.push(regionButtons.slice(i, i + 2))
+		}
+
+		// 10. Pagination tugmalari
+		const paginationButtons = []
+
+		if (page > 1) {
+			paginationButtons.push({
+				text: user.language === 'uz' ? '⬅️ Oldingi' : '⬅️ Назад',
+				callback_data:
+					region && region !== 'all'
+						? `unmatched_page_${region}_${page - 1}`
+						: `unmatched_page_all_${page - 1}`
+			})
+		}
+
+		paginationButtons.push({
+			text: user.language === 'uz' ? `📄 ${page}/${totalPages}` : `📄 ${page}/${totalPages}`,
+			callback_data: 'current_page'
+		})
+
+		if (page < totalPages) {
+			paginationButtons.push({
+				text: user.language === 'uz' ? 'Keyingi ➡️' : 'Далее ➡️',
+				callback_data:
+					region && region !== 'all'
+						? `unmatched_page_${region}_${page + 1}`
+						: `unmatched_page_all_${page + 1}`
+			})
+		}
+
+		if (paginationButtons.length > 0) {
+			inlineKeyboard.push(paginationButtons)
+		}
+
+		// 11. Boshqa tugmalar
+		inlineKeyboard.push([
+			{
+				text: user.language === 'uz' ? '🔄 Yangilash' : '🔄 Обновить',
+				callback_data: 'refresh_unmatched'
+			},
+			{
+				text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
+				callback_data: 'main_menu'
+			}
+		])
+
+		// 12. Xabarni yuborish
+		await ctx.reply(message, {
+			reply_markup: {
+				inline_keyboard: inlineKeyboard
+			},
+			parse_mode: 'HTML'
+		})
+
+		console.log('✅ showUnmatchedRoutesByRegion END ==========')
+	} catch (error) {
+		console.error('❌ showUnmatchedRoutesByRegion error:', error)
+		await ctx.reply(
+			user.language === 'uz'
+				? "❌ Topilmagan yo'nalishlarni ko'rsatishda xatolik yuz berdi."
+				: '❌ Ошибка при отображении неподходящих направлений.'
+		)
+	}
+}
+
 
 // .env faylni yuklash va server ishga tushirish
 startServer()

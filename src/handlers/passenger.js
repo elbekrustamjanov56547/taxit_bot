@@ -23,7 +23,7 @@ module.exports = {
 			await ctx.reply(
 				user.language === 'uz'
 					? '❌ Siz haydovchisiz. Siz taxi buyurtma qila olmaysiz.'
-					: '❌ Вы водитель. Вы не можете заказать такси.',
+					: '❌ Вы водитель. Вы не можете заказать такси.'
 			)
 			return
 		}
@@ -65,13 +65,10 @@ module.exports = {
 
 			// Xabarni yuborish (to'g'ri formatda)
 			const sentMessage = await ctx.reply(message, {
-				reply_markup: keyboard,
+				reply_markup: keyboard
 			})
 
-			console.log(
-				'✅ Message sent with keyboard, message ID:',
-				sentMessage.message_id,
-			)
+			console.log('✅ Message sent with keyboard, message ID:', sentMessage.message_id)
 		} catch (error) {
 			console.error('❌ Error in startOrder:', error)
 			console.error('❌ Error stack:', error.stack)
@@ -80,7 +77,7 @@ module.exports = {
 			await ctx.reply(
 				user.language === 'uz'
 					? "❌ Viloyat tanlashda xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
-					: '❌ Ошибка при выборе региона. Пожалуйста, попробуйте еще раз.',
+					: '❌ Ошибка при выборе региона. Пожалуйста, попробуйте еще раз.'
 			)
 
 			// Asosiy menyuga qaytish
@@ -91,7 +88,7 @@ module.exports = {
 			const keyboards = require('../keyboards/main')
 			await ctx.reply(
 				user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-				keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role),
+				keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role)
 			)
 		}
 
@@ -148,7 +145,7 @@ module.exports = {
 			// Xabarni yuborish
 			console.log('📤 Sending message...')
 			await ctx.reply(message, {
-				reply_markup: keyboard,
+				reply_markup: keyboard
 			})
 
 			console.log('✅ Message sent successfully')
@@ -160,7 +157,7 @@ module.exports = {
 			await ctx.reply(
 				user.language === 'uz'
 					? "❌ Viloyat tanlashda xatolik yuz berdi. Iltimos, qayta urinib ko'ring."
-					: '❌ Ошибка при выборе региона. Пожалуйста, попробуйте еще раз.',
+					: '❌ Ошибка при выборе региона. Пожалуйста, попробуйте еще раз.'
 			)
 		}
 
@@ -265,29 +262,25 @@ module.exports = {
 		const message =
 			user.language === 'uz'
 				? `📋 Buyurtma ma'lumotlari:\n\n` +
-					`📍 Chiqish: ${orderData.fromRegion}\n` +
-					`📍 Kirish: ${orderData.toRegion}\n` +
-					`👥 Yo'lovchilar: ${orderData.passengerCount} kishi\n` +
-					`📦 Pochta: ${orderData.hasParcel ? 'Ha' : "Yo'q"}\n` +
-					`${
-						orderData.parcelDescription
-							? `📝 Tavsif: ${orderData.parcelDescription}\n`
-							: ''
-					}\n\n` +
-					`📞 <b>Telefon raqamingizni yuboring:</b>\n` +
-					`(yoki +998XXXXXXXXX formatida yozing)`
+				  `📍 Chiqish: ${orderData.fromRegion}\n` +
+				  `📍 Kirish: ${orderData.toRegion}\n` +
+				  `👥 Yo'lovchilar: ${orderData.passengerCount} kishi\n` +
+				  `📦 Pochta: ${orderData.hasParcel ? 'Ha' : "Yo'q"}\n` +
+				  `${
+						orderData.parcelDescription ? `📝 Tavsif: ${orderData.parcelDescription}\n` : ''
+				  }\n\n` +
+				  `📞 <b>Telefon raqamingizni yuboring:</b>\n` +
+				  `(yoki +998XXXXXXXXX formatida yozing)`
 				: `📋 Данные заказа:\n\n` +
-					`📍 Отправление: ${orderData.fromRegion}\n` +
-					`📍 Прибытие: ${orderData.toRegion}\n` +
-					`👥 Пассажиры: ${orderData.passengerCount} человек\n` +
-					`📦 Посылка: ${orderData.hasParcel ? 'Да' : 'Нет'}\n` +
-					`${
-						orderData.parcelDescription
-							? `📝 Описание: ${orderData.parcelDescription}\n`
-							: ''
-					}\n\n` +
-					`📞 <b>Отправьте номер телефона:</b>\n` +
-					`(или напишите в формате +998XXXXXXXXX)`
+				  `📍 Отправление: ${orderData.fromRegion}\n` +
+				  `📍 Прибытие: ${orderData.toRegion}\n` +
+				  `👥 Пассажиры: ${orderData.passengerCount} человек\n` +
+				  `📦 Посылка: ${orderData.hasParcel ? 'Да' : 'Нет'}\n` +
+				  `${
+						orderData.parcelDescription ? `📝 Описание: ${orderData.parcelDescription}\n` : ''
+				  }\n\n` +
+				  `📞 <b>Отправьте номер телефона:</b>\n` +
+				  `(или напишите в формате +998XXXXXXXXX)`
 
 		const keyboard = {
 			reply_markup: {
@@ -298,24 +291,24 @@ module.exports = {
 								user.language === 'uz'
 									? '📞 Telefon raqamini yuborish'
 									: '📞 Отправить номер телефона',
-							request_contact: true,
-						},
+							request_contact: true
+						}
 					],
 					[
 						{
 							text: user.language === 'uz' ? '⬅️ Orqaga' : '⬅️ Назад',
-							callback_data: 'back_to_order',
-						},
-					],
+							callback_data: 'back_to_order'
+						}
+					]
 				],
 				resize_keyboard: true,
-				one_time_keyboard: true,
-			},
+				one_time_keyboard: true
+			}
 		}
 
 		await ctx.reply(message, {
 			...keyboard,
-			parse_mode: 'HTML',
+			parse_mode: 'HTML'
 		})
 	},
 
@@ -342,13 +335,13 @@ module.exports = {
 			const message =
 				user.language === 'uz'
 					? "❌ Telefon raqami noto'g'ri formatda.\n\n" +
-						"✅ To'g'ri format: +998XXXXXXXXX\n" +
-						'📝 Masalan: +998901234567\n\n' +
-						'Iltimos, qaytadan kiriting:'
+					  "✅ To'g'ri format: +998XXXXXXXXX\n" +
+					  '📝 Masalan: +998901234567\n\n' +
+					  'Iltimos, qaytadan kiriting:'
 					: '❌ Неверный формат номера телефона.\n\n' +
-						'✅ Правильный формат: +998XXXXXXXXX\n' +
-						'📝 Например: +998901234567\n\n' +
-						'Пожалуйста, введите еще раз:'
+					  '✅ Правильный формат: +998XXXXXXXXX\n' +
+					  '📝 Например: +998901234567\n\n' +
+					  'Пожалуйста, введите еще раз:'
 
 			await ctx.reply(message)
 			return false
@@ -401,43 +394,41 @@ module.exports = {
 		const message =
 			user.language === 'uz'
 				? `✅ <b>Buyurtma ma'lumotlari:</b>\n\n` +
-					`📍 <b>Chiqish:</b> ${orderData.fromRegion}\n` +
-					`📍 <b>Kirish:</b> ${orderData.toRegion}\n` +
-					`👥 <b>Yo'lovchilar:</b> ${orderData.passengerCount} kishi\n` +
-					`📞 <b>Telefon:</b> ${orderData.phone}\n` +
-					`📦 <b>Pochta:</b> ${orderData.hasParcel ? 'Ha' : "Yo'q"}\n` +
-					`${
-						orderData.parcelDescription
-							? `📝 <b>Tavsif:</b> ${orderData.parcelDescription}\n`
-							: ''
-					}\n\n` +
-					`🔄 Barcha ma'lumotlar to'g'rimi?`
+				  `📍 <b>Chiqish:</b> ${orderData.fromRegion}\n` +
+				  `📍 <b>Kirish:</b> ${orderData.toRegion}\n` +
+				  `👥 <b>Yo'lovchilar:</b> ${orderData.passengerCount} kishi\n` +
+				  `📞 <b>Telefon:</b> ${orderData.phone}\n` +
+				  `📦 <b>Pochta:</b> ${orderData.hasParcel ? 'Ha' : "Yo'q"}\n` +
+				  `${
+						orderData.parcelDescription ? `📝 <b>Tavsif:</b> ${orderData.parcelDescription}\n` : ''
+				  }\n\n` +
+				  `🔄 Barcha ma'lumotlar to'g'rimi?`
 				: `✅ <b>Данные заказа:</b>\n\n` +
-					`📍 <b>Отправление:</b> ${orderData.fromRegion}\n` +
-					`📍 <b>Прибытие:</b> ${orderData.toRegion}\n` +
-					`👥 <b>Пассажиры:</b> ${orderData.passengerCount} человек\n` +
-					`📞 <b>Телефон:</b> ${orderData.phone}\n` +
-					`📦 <b>Посылка:</b> ${orderData.hasParcel ? 'Да' : 'Нет'}\n` +
-					`${
+				  `📍 <b>Отправление:</b> ${orderData.fromRegion}\n` +
+				  `📍 <b>Прибытие:</b> ${orderData.toRegion}\n` +
+				  `👥 <b>Пассажиры:</b> ${orderData.passengerCount} человек\n` +
+				  `📞 <b>Телефон:</b> ${orderData.phone}\n` +
+				  `📦 <b>Посылка:</b> ${orderData.hasParcel ? 'Да' : 'Нет'}\n` +
+				  `${
 						orderData.parcelDescription
 							? `📝 <b>Описание:</b> ${orderData.parcelDescription}\n`
 							: ''
-					}\n\n` +
-					`🔄 Все данные верны?`
+				  }\n\n` +
+				  `🔄 Все данные верны?`
 
 		const keyboard = {
 			inline_keyboard: [
 				[
 					{
 						text: user.language === 'uz' ? '✅ Tasdiqlash' : '✅ Подтвердить',
-						callback_data: 'confirm_final_order',
+						callback_data: 'confirm_final_order'
 					},
 					{
 						text: user.language === 'uz' ? '❌ Bekor qilish' : '❌ Отменить',
-						callback_data: 'cancel_order',
-					},
-				],
-			],
+						callback_data: 'cancel_order'
+					}
+				]
+			]
 		}
 
 		user.state = states.PASSENGER_CONFIRM
@@ -445,7 +436,7 @@ module.exports = {
 
 		await ctx.reply(message, {
 			reply_markup: keyboard,
-			parse_mode: 'HTML',
+			parse_mode: 'HTML'
 		})
 	},
 
@@ -462,53 +453,49 @@ module.exports = {
 		// Tahrirlash menyusini ko'rsatish
 		const editMessage =
 			user.language === 'uz'
-				? `✏️ <b>Buyurtmani tahrirlash</b>\n\n` +
-					`Qaysi ma'lumotni o'zgartirmoqchisiz?`
-				: `✏️ <b>Редактировать заказ</b>\n\n` +
-					`Какую информацию вы хотите изменить?`
+				? `✏️ <b>Buyurtmani tahrirlash</b>\n\n` + `Qaysi ma'lumotni o'zgartirmoqchisiz?`
+				: `✏️ <b>Редактировать заказ</b>\n\n` + `Какую информацию вы хотите изменить?`
 
 		const editKeyboard = {
 			inline_keyboard: [
 				[
 					{
-						text:
-							user.language === 'uz' ? '📍 Chiqish viloyati' : '📍 Отправление',
-						callback_data: 'edit_from_region',
+						text: user.language === 'uz' ? '📍 Chiqish viloyati' : '📍 Отправление',
+						callback_data: 'edit_from_region'
 					},
 					{
 						text: user.language === 'uz' ? '📍 Kirish viloyati' : '📍 Прибытие',
-						callback_data: 'edit_to_region',
-					},
+						callback_data: 'edit_to_region'
+					}
 				],
 				[
 					{
-						text:
-							user.language === 'uz' ? "👥 Yo'lovchilar soni" : '👥 Пассажиры',
-						callback_data: 'edit_passenger_count',
+						text: user.language === 'uz' ? "👥 Yo'lovchilar soni" : '👥 Пассажиры',
+						callback_data: 'edit_passenger_count'
 					},
 					{
 						text: user.language === 'uz' ? '📞 Telefon raqam' : '📞 Телефон',
-						callback_data: 'edit_phone',
-					},
+						callback_data: 'edit_phone'
+					}
 				],
 				[
 					{
 						text: user.language === 'uz' ? "📦 Pochta ma'lumoti" : '📦 Посылка',
-						callback_data: 'edit_parcel',
-					},
+						callback_data: 'edit_parcel'
+					}
 				],
 				[
 					{
 						text: user.language === 'uz' ? '⬅️ Ortga' : '⬅️ Назад',
-						callback_data: 'back_to_confirmation',
-					},
-				],
-			],
+						callback_data: 'back_to_confirmation'
+					}
+				]
+			]
 		}
 
 		await ctx.reply(editMessage, {
 			reply_markup: editKeyboard,
-			parse_mode: 'HTML',
+			parse_mode: 'HTML'
 		})
 	},
 
@@ -593,9 +580,9 @@ module.exports = {
 		const message =
 			user.language === 'uz'
 				? '📞 Yangi telefon raqamingizni kiriting (yoki +998XXXXXXXXX formatida yozing):\n\n' +
-					"Yoki 'Telefon raqamini yuborish' tugmasini bosing."
+				  "Yoki 'Telefon raqamini yuborish' tugmasini bosing."
 				: '📞 Введите новый номер телефона (или напишите в формате +998XXXXXXXXX):\n\n' +
-					'Или нажмите кнопку "Отправить номер телефона".'
+				  'Или нажмите кнопку "Отправить номер телефона".'
 
 		const keyboard = {
 			reply_markup: {
@@ -606,19 +593,19 @@ module.exports = {
 								user.language === 'uz'
 									? '📞 Telefon raqamini yuborish'
 									: '📞 Отправить номер телефона',
-							request_contact: true,
-						},
+							request_contact: true
+						}
 					],
 					[
 						{
 							text: user.language === 'uz' ? '⬅️ Ortga' : '⬅️ Назад',
-							callback_data: 'back_to_edit_menu',
-						},
-					],
+							callback_data: 'back_to_edit_menu'
+						}
+					]
 				],
 				resize_keyboard: true,
-				one_time_keyboard: true,
-			},
+				one_time_keyboard: true
+			}
 		}
 
 		await ctx.reply(message, keyboard)
@@ -640,9 +627,9 @@ module.exports = {
 		const message =
 			user.language === 'uz'
 				? "📦 Pochta yoki yuk ma'lumotlarini yangilang:\n\n" +
-					"Avval pochta/yuk borligini tanlang, so'ng tavsifini kiriting:"
+				  "Avval pochta/yuk borligini tanlang, so'ng tavsifini kiriting:"
 				: '📦 Обновите информацию о посылке/грузе:\n\n' +
-					'Сначала выберите наличие посылки, затем введите описание:'
+				  'Сначала выберите наличие посылки, затем введите описание:'
 
 		await ctx.reply(message, keyboards.parcelKeyboard(user.language))
 	},
@@ -740,13 +727,13 @@ module.exports = {
 			const message =
 				user.language === 'uz'
 					? "❌ Telefon raqami noto'g'ri formatda.\n\n" +
-						"✅ To'g'ri format: +998XXXXXXXXX\n" +
-						'📝 Masalan: +998901234567\n\n' +
-						'Iltimos, qaytadan kiriting:'
+					  "✅ To'g'ri format: +998XXXXXXXXX\n" +
+					  '📝 Masalan: +998901234567\n\n' +
+					  'Iltimos, qaytadan kiriting:'
 					: '❌ Неверный формат номера телефона.\n\n' +
-						'✅ Правильный формат: +998XXXXXXXXX\n' +
-						'📝 Например: +998901234567\n\n' +
-						'Пожалуйста, введите еще раз:'
+					  '✅ Правильный формат: +998XXXXXXXXX\n' +
+					  '📝 Например: +998901234567\n\n' +
+					  'Пожалуйста, введите еще раз:'
 
 			await ctx.reply(message)
 			return false
@@ -823,9 +810,7 @@ module.exports = {
 			!orderData.phone
 		) {
 			const message =
-				user.language === 'uz'
-					? "❌ Barcha maydonlar to'ldirilmagan."
-					: '❌ Не все поля заполнены.'
+				user.language === 'uz' ? "❌ Barcha maydonlar to'ldirilmagan." : '❌ Не все поля заполнены.'
 
 			await ctx.reply(message)
 			return
@@ -845,7 +830,7 @@ module.exports = {
 				parcelDescription: orderData.parcelDescription || '',
 				comment: '',
 				status: 'searching',
-				createdAt: new Date(),
+				createdAt: new Date()
 			})
 
 			await order.save()
@@ -856,14 +841,14 @@ module.exports = {
 			const successMessage =
 				user.language === 'uz'
 					? `✅ Buyurtma muvaffaqiyatli yaratildi!\n\n` +
-						`⏰ <b>Vaqt:</b> ${new Date().toLocaleTimeString('uz-UZ')}\n\n` +
-						`🔍 Haydovchilar qidirilmoqda...`
+					  `⏰ <b>Vaqt:</b> ${new Date().toLocaleTimeString('uz-UZ')}\n\n` +
+					  `🔍 Haydovchilar qidirilmoqda...`
 					: `✅ Заказ успешно создан!\n\n` +
-						`⏰ <b>Время:</b> ${new Date().toLocaleTimeString('ru-RU')}\n\n` +
-						`🔍 Поиск водителей...`
+					  `⏰ <b>Время:</b> ${new Date().toLocaleTimeString('ru-RU')}\n\n` +
+					  `🔍 Поиск водителей...`
 
 			await ctx.reply(successMessage, {
-				parse_mode: 'HTML',
+				parse_mode: 'HTML'
 			})
 
 			// Haydovchi qidirish
@@ -895,13 +880,13 @@ module.exports = {
 		const message =
 			user.language === 'uz'
 				? `📍 Chiqish: ${orderData.fromRegion}\n` +
-					`📍 Kirish: ${orderData.toRegion}\n` +
-					`👥 Yo'lovchilar: ${orderData.passengerCount} kishi\n\n` +
-					`📦 Pochta yoki yuk bormi?`
+				  `📍 Kirish: ${orderData.toRegion}\n` +
+				  `👥 Yo'lovchilar: ${orderData.passengerCount} kishi\n\n` +
+				  `📦 Pochta yoki yuk bormi?`
 				: `📍 Отправление: ${orderData.fromRegion}\n` +
-					`📍 Прибытие: ${orderData.toRegion}\n` +
-					`👥 Пассажиры: ${orderData.passengerCount} человек\n\n` +
-					`📦 Есть посылка или груз?`
+				  `📍 Прибытие: ${orderData.toRegion}\n` +
+				  `👥 Пассажиры: ${orderData.passengerCount} человек\n\n` +
+				  `📦 Есть посылка или груз?`
 
 		await ctx.reply(message, keyboards.parcelKeyboard(user.language))
 	},
@@ -1012,27 +997,25 @@ module.exports = {
 			const passengerMessage =
 				user.language === 'uz'
 					? `✅ Buyurtmangiz tasdiqlandi!\n\n` +
-						`🚗 <b>Haydovchi ma'lumotlari:</b>\n` +
-						`• Ism: ${order.driverId.fullName}\n` +
-						`• Telefon: ${order.driverId.phone}\n\n` +
-						`📍 <b>Yo'nalish:</b> ${order.fromRegion} → ${order.toRegion}\n` +
-						`👥 <b>Yo'lovchilar:</b> ${order.passengerCount} kishi\n` +
-						`${order.hasParcel ? `📦 <b>Pochta:</b> Ha\n` : ''}` +
-						`${order.parcelDescription ? `📝 <b>Tavsif:</b> ${order.parcelDescription}\n` : ''}\n` +
-						`💬 Endi haydovchi bilan bog'laning va jo'nash vaqtini kelishing.`
+					  `🚗 <b>Haydovchi ma'lumotlari:</b>\n` +
+					  `• Ism: ${order.driverId.fullName}\n` +
+					  `• Telefon: ${order.driverId.phone}\n\n` +
+					  `📍 <b>Yo'nalish:</b> ${order.fromRegion} → ${order.toRegion}\n` +
+					  `👥 <b>Yo'lovchilar:</b> ${order.passengerCount} kishi\n` +
+					  `${order.hasParcel ? `📦 <b>Pochta:</b> Ha\n` : ''}` +
+					  `${order.parcelDescription ? `📝 <b>Tavsif:</b> ${order.parcelDescription}\n` : ''}\n` +
+					  `💬 Endi haydovchi bilan bog'laning va jo'nash vaqtini kelishing.`
 					: `✅ Ваш заказ подтвержден!\n\n` +
-						`🚗 <b>Информация о водителе:</b>\n` +
-						`• Имя: ${order.driverId.fullName}\n` +
-						`• Телефон: ${order.driverId.phone}\n\n` +
-						`📍 <b>Направление:</b> ${order.fromRegion} → ${order.toRegion}\n` +
-						`👥 <b>Пассажиры:</b> ${order.passengerCount} человек\n` +
-						`${order.hasParcel ? `📦 <b>Посылка:</b> Да\n` : ''}` +
-						`${
-							order.parcelDescription
-								? `📝 <b>Описание:</b> ${order.parcelDescription}\n`
-								: ''
-						}\n` +
-						`💬 Теперь свяжитесь с водителем и договоритесь о времени отправления.`
+					  `🚗 <b>Информация о водителе:</b>\n` +
+					  `• Имя: ${order.driverId.fullName}\n` +
+					  `• Телефон: ${order.driverId.phone}\n\n` +
+					  `📍 <b>Направление:</b> ${order.fromRegion} → ${order.toRegion}\n` +
+					  `👥 <b>Пассажиры:</b> ${order.passengerCount} человек\n` +
+					  `${order.hasParcel ? `📦 <b>Посылка:</b> Да\n` : ''}` +
+					  `${
+							order.parcelDescription ? `📝 <b>Описание:</b> ${order.parcelDescription}\n` : ''
+					  }\n` +
+					  `💬 Теперь свяжитесь с водителем и договоритесь о времени отправления.`
 
 			await ctx.reply(passengerMessage, { parse_mode: 'HTML' })
 
@@ -1041,40 +1024,34 @@ module.exports = {
 				// Yo'lovchi ma'lumotlarini olish
 				const passenger = await User.findOne({ telegramId: order.userId })
 
-				const passengerName =
-					passenger?.fullName || passenger?.username || 'Nomalum'
-				const passengerPhone =
-					passenger?.phone || order.phone || 'Korsatilmagan'
+				const passengerName = passenger?.fullName || passenger?.username || 'Nomalum'
+				const passengerPhone = passenger?.phone || order.phone || 'Korsatilmagan'
 
 				const driverMessage =
 					user.language === 'uz'
 						? `✅ Yo'lovchi buyurtmangizni tasdiqladi!\n\n` +
-							`👤 <b>Yo'lovchi ma'lumotlari:</b>\n` +
-							`• Ism: ${passengerName}\n` +
-							`• Telefon: ${passengerPhone}\n\n` +
-							`📍 <b>Yo'nalish:</b> ${order.fromRegion} → ${order.toRegion}\n` +
-							`👥 <b>Yo'lovchilar:</b> ${order.passengerCount} kishi\n` +
-							`${order.hasParcel ? `📦 <b>Pochta:</b> Ha\n` : ''}` +
-							`${
-								order.parcelDescription
-									? `📝 <b>Tavsif:</b> ${order.parcelDescription}\n`
-									: ''
-							}\n` +
-							`⚠️ <b>E'tibor bering:</b> Buyurtmani qabul qilsangiz, bo'sh o'rinlaringiz ${order.passengerCount} taga kamayadi!`
+						  `👤 <b>Yo'lovchi ma'lumotlari:</b>\n` +
+						  `• Ism: ${passengerName}\n` +
+						  `• Telefon: ${passengerPhone}\n\n` +
+						  `📍 <b>Yo'nalish:</b> ${order.fromRegion} → ${order.toRegion}\n` +
+						  `👥 <b>Yo'lovchilar:</b> ${order.passengerCount} kishi\n` +
+						  `${order.hasParcel ? `📦 <b>Pochta:</b> Ha\n` : ''}` +
+						  `${
+								order.parcelDescription ? `📝 <b>Tavsif:</b> ${order.parcelDescription}\n` : ''
+						  }\n` +
+						  `⚠️ <b>E'tibor bering:</b> Buyurtmani qabul qilsangiz, bo'sh o'rinlaringiz ${order.passengerCount} taga kamayadi!`
 						: `✅ Пассажир подтвердил ваш заказ!\n\n` +
-							`👤 <b>Информация о пассажире:</b>\n` +
-							`• Имя: ${passengerName}\n` +
-							`• Телефон: ${passengerPhone}\n\n` +
-							`📍 <b>Направление:</b> ${order.fromRegion} → ${order.toRegion}\n` +
-							`👥 <b>Пассажиры:</b> ${order.passengerCount} человек\n` +
-							`${order.hasParcel ? `📦 <b>Посылка:</b> Да\n` : ''}` +
-							`${
-								order.parcelDescription
-									? `📝 <b>Описание:</b> ${order.parcelDescription}\n`
-									: ''
-							}\n` +
-							`💰 <b>Номер заказа:</b> ${order._id}\n\n` +
-							`⚠️ <b>Внимание:</b> Если вы примете заказ, ваши свободные места уменьшатся на ${order.passengerCount}!`
+						  `👤 <b>Информация о пассажире:</b>\n` +
+						  `• Имя: ${passengerName}\n` +
+						  `• Телефон: ${passengerPhone}\n\n` +
+						  `📍 <b>Направление:</b> ${order.fromRegion} → ${order.toRegion}\n` +
+						  `👥 <b>Пассажиры:</b> ${order.passengerCount} человек\n` +
+						  `${order.hasParcel ? `📦 <b>Посылка:</b> Да\n` : ''}` +
+						  `${
+								order.parcelDescription ? `📝 <b>Описание:</b> ${order.parcelDescription}\n` : ''
+						  }\n` +
+						  `💰 <b>Номер заказа:</b> ${order._id}\n\n` +
+						  `⚠️ <b>Внимание:</b> Если вы примете заказ, ваши свободные места уменьшатся на ${order.passengerCount}!`
 
 				// Haydovchi uchun keyboard (qabul qilish/rad etish)
 				const driverKeyboard = {
@@ -1082,29 +1059,25 @@ module.exports = {
 						[
 							{
 								text: user.language === 'uz' ? '✅ Qabul qilish' : '✅ Принять',
-								callback_data: `driver_accept_${order._id}`,
+								callback_data: `driver_accept_${order._id}`
 							},
 							{
 								text: user.language === 'uz' ? '❌ Rad etish' : '❌ Отклонить',
-								callback_data: `driver_reject_${order._id}`,
-							},
-						],
-					],
+								callback_data: `driver_reject_${order._id}`
+							}
+						]
+					]
 				}
 
 				// Haydovchiga xabar yuborish
-				await ctx.telegram.sendMessage(
-					order.driverId.telegramId,
-					driverMessage,
-					{
-						reply_markup: driverKeyboard,
-						parse_mode: 'HTML',
-					},
-				)
+				await ctx.telegram.sendMessage(order.driverId.telegramId, driverMessage, {
+					reply_markup: driverKeyboard,
+					parse_mode: 'HTML'
+				})
 
 				console.log(
 					'✅ Haydovchiga xabar yuborildi (qabul qilish/rad etish tugmalari bilan):',
-					order.driverId.telegramId,
+					order.driverId.telegramId
 				)
 			} catch (telegramError) {
 				console.error('❌ Haydovchiga xabar yuborishda xatolik:', telegramError)
@@ -1113,7 +1086,7 @@ module.exports = {
 				await ctx.reply(
 					user.language === 'uz'
 						? `⚠️ Haydovchiga xabar yuborishda muammo yuz berdi. Iltimos, haydovchini shaxsan chaqiring:\n📞 ${order.driverId.phone}`
-						: `⚠️ Проблема с отправкой сообщения водителю. Пожалуйста, свяжитесь с водителем лично:\n📞 ${order.driverId.phone}`,
+						: `⚠️ Проблема с отправкой сообщения водителю. Пожалуйста, свяжитесь с водителем лично:\n📞 ${order.driverId.phone}`
 				)
 			}
 
@@ -1121,8 +1094,7 @@ module.exports = {
 			user.state = states.MAIN_MENU
 			await user.save()
 
-			const menuMessage =
-				user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню'
+			const menuMessage = user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню'
 			await ctx.reply(menuMessage, keyboards.mainMenuKeyboard(user.language))
 		} catch (error) {
 			console.error('❌ Confirm order error:', error)
@@ -1288,18 +1260,200 @@ module.exports = {
 	// 		}
 	// 	}
 	// },
+	// searchDrivers: async (ctx, order) => {
+	// 	const user = ctx.user
+
+	// 	// Statusni 'searching' ga o'rnatish
+	// 	if (order.status !== 'searching') {
+	// 		order.status = 'searching'
+	// 		await order.save()
+	// 	}
+
+	// 	console.log(
+	// 		`🔍 Qidirilayotgan yo'nalish: ${order.fromRegion} -> ${order.toRegion}`,
+	// 	)
+	// 	console.log(`👥 Yo'lovchilar soni: ${order.passengerCount}`)
+
+	// 	// Haydovchilarni qidirish
+	// 	const drivers = await Driver.find({
+	// 		fromRegion: order.fromRegion,
+	// 		toRegion: order.toRegion,
+	// 		status: 'active',
+	// 		maxPassengers: { $gte: order.passengerCount },
+	// 		$or: [
+	// 			{ paidUntil: { $gte: new Date() } },
+	// 			{ paidUntil: null },
+	// 			{ paidUntil: { $exists: false } },
+	// 		],
+	// 	})
+	// 		.populate('carModel')
+	// 		.populate('carType')
+
+	// 	console.log(`📊 Topilgan haydovchilar: ${drivers.length} ta`)
+
+	// 	drivers.forEach((driver, index) => {
+	// 		console.log(
+	// 			`Haydovchi ${index + 1}: ${driver.fullName} (ID: ${driver._id})`,
+	// 		)
+	// 		console.log(`Telegram ID: ${driver.telegramId}`)
+	// 		console.log(`CarModel ID: ${driver.carModel}`)
+	// 		console.log(`Max Passengers: ${driver.maxPassengers}`)
+	// 		console.log(`Status: ${driver.status}`)
+	// 		console.log('---')
+	// 	})
+
+	// 	if (drivers.length > 0) {
+	// 		await module.exports.showFoundDrivers(ctx, drivers, order)
+	// 	} else {
+	// 		// ============ HAYDOVCHI TOPILMAGANDA ============
+	// 		console.log('❌ Haydovchi topilmadi, kanalga xabar yuborilmoqda...')
+
+	// 		// Buyurtma statusini yangilash
+	// 		order.status = 'pending'
+	// 		await order.save()
+
+	// 		// 1. Avval yo'lovchiga xabar berish
+	// 		const userMessage =
+	// 			user.language === 'uz'
+	// 				? `❌ Hozircha siz tanlagan yo‘nalish bo‘yicha ${order.passengerCount} nafar yo‘lovchi uchun mos transport topilmadi.\n\n` +
+	// 					`📍 <b>Chiqish manzili:</b> ${order.fromRegion}\n` +
+	// 					`📍 <b>Borish manzili:</b> ${order.toRegion}\n` +
+	// 					`👥 <b>Yo‘lovchilar soni:</b> ${order.passengerCount}\n\n` +
+	// 					`📨 Buyurtmangiz hamkorlar kanaliga yuborildi. Tez orada siz bilan bog‘lanishlari mumkin.\n\n` +
+	// 					`⏳ Iltimos, kuting yoki biroz vaqtdan so‘ng qayta urinib ko‘ring.`
+	// 				: `❌ В данный момент по выбранному направлению транспорт для ${order.passengerCount} пассажиров не найден.\n\n` +
+	// 					`📍 <b>Пункт отправления:</b> ${order.fromRegion}\n` +
+	// 					`📍 <b>Пункт назначения:</b> ${order.toRegion}\n` +
+	// 					`👥 <b>Количество пассажиров:</b> ${order.passengerCount}\n\n` +
+	// 					`📨 Ваш заказ отправлен в партнерский канал. С вами могут связаться в ближайшее время.\n\n` +
+	// 					`⏳ Пожалуйста, подождите или попробуйте снова немного позже.`
+
+	// 		await ctx.reply(userMessage, {
+	// 			parse_mode: 'HTML',
+	// 		})
+
+	// 		// 2. KANALGA XABAR YUBORISH
+	// 		try {
+	// 			console.log('📤 Kanalga xabar yuborilmoqda...')
+
+	// 			const channelId = process.env.ORDER_CHANNEL_ID
+
+	// 			if (
+	// 				channelId &&
+	// 				channelId.trim() !== '' &&
+	// 				channelId !== '@your_channel'
+	// 			) {
+	// 				const channelMessage =
+	// 					`🚕 YANGI BUYURTMA - HAYDOVCHI KERAK\n\n` +
+	// 					`📍 Chiqish: ${order.fromRegion}\n` +
+	// 					`📍 Kirish: ${order.toRegion}\n` +
+	// 					`👥 Yo'lovchilar soni: ${order.passengerCount} kishi\n` +
+	// 					`📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
+	// 					`${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n` : ''}` +
+	// 					`👤 Foydalanuvchi: @${order.username || 'username_yoq'}\n` +
+	// 					`🆔 User ID: ${order.userId}\n` +
+	// 					`📞 Telefon: ${order.phone}\n` +
+	// 					`⏰ Vaqt: ${new Date(order.createdAt).toLocaleString('uz-UZ')}\n\n` +
+	// 					`⚠️ Bu yo'nalishda haydovchi yo'q. Kimdir boradigan bo'lsa, yo'lovchi bilan bog'lansin!`
+
+	// 				try {
+	// 					await ctx.telegram.sendMessage(channelId.trim(), channelMessage)
+	// 					console.log('✅ Kanalga xabar yuborildi:', channelId)
+	// 				} catch (channelError) {
+	// 					console.error(
+	// 						'❌ Kanalga yuborishda xatolik:',
+	// 						channelError.message,
+	// 					)
+
+	// 					// Kanalga yuborishda xatolik bo'lsa, adminlarga xabar berish
+	// 					const adminIds = process.env.ADMIN_IDS
+	// 						? process.env.ADMIN_IDS.split(',').map(id => id.trim())
+	// 						: []
+
+	// 					if (adminIds.length > 0) {
+	// 						const errorMessage =
+	// 							`❌ KANALGA XABAR YUBORISHDA XATOLIK\n\n` +
+	// 							`Xato: ${channelError.message}\n` +
+	// 							`Kanal ID: ${channelId}\n` +
+	// 							`Buyurtma: ${order.fromRegion} → ${order.toRegion}\n` +
+	// 							`User: @${order.username || order.userId}`
+
+	// 						for (const adminId of adminIds) {
+	// 							try {
+	// 								await ctx.telegram.sendMessage(adminId, errorMessage)
+	// 								console.log(`✅ Adminga xatolik xabari yuborildi: ${adminId}`)
+	// 							} catch (adminError) {
+	// 								console.error(
+	// 									`Admin ${adminId} ga xabar yuborishda xatolik:`,
+	// 									adminError.message,
+	// 								)
+	// 							}
+	// 						}
+	// 					}
+	// 				}
+	// 			} else {
+	// 				console.log(
+	// 					"⚠️ ORDER_CHANNEL_ID mavjud emas yoki noto'g'ri:",
+	// 					channelId,
+	// 				)
+
+	// 				// Agar kanal ID bo'lmasa, adminlarga shaxsiy xabar yuborish
+	// 				const adminIds = process.env.ADMIN_IDS
+	// 					? process.env.ADMIN_IDS.split(',').map(id => id.trim())
+	// 					: []
+
+	// 				if (adminIds.length > 0) {
+	// 					const adminMessage =
+	// 						`🚕 YANGI BUYURTMA (Kanal yo'q)\n\n` +
+	// 						`📍 Chiqish: ${order.fromRegion}\n` +
+	// 						`📍 Kirish: ${order.toRegion}\n` +
+	// 						`👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
+	// 						`📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
+	// 						`${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n` : ''}` +
+	// 						`👤 Foydalanuvchi: @${order.username || 'N/A'}\n` +
+	// 						`🆔 User ID: ${order.userId}\n` +
+	// 						`📞 Telefon: ${order.phone}\n` +
+	// 						`⏰ Vaqt: ${new Date().toLocaleString('uz-UZ')}\n\n` +
+	// 						`⚠️ KANALGA YUBORILMADI! ORDER_CHANNEL_ID tekshiring.`
+
+	// 					for (const adminId of adminIds) {
+	// 						try {
+	// 							await ctx.telegram.sendMessage(adminId, adminMessage)
+	// 							console.log(`✅ Adminga xabar yuborildi: ${adminId}`)
+	// 						} catch (adminError) {
+	// 							console.error(
+	// 								`Admin ${adminId} ga xabar yuborishda xatolik:`,
+	// 								adminError.message,
+	// 							)
+	// 						}
+	// 					}
+	// 				}
+	// 			}
+	// 		} catch (error) {
+	// 			console.error('❌ Kanalga yuborishda umumiy xatolik:', error.message)
+	// 		}
+
+	// 		// 3. Asosiy menyuga qaytish
+	// 		// 4. Sessionni tozalash
+	// 		if (ctx.session) {
+	// 			delete ctx.session.orderId
+	// 			delete ctx.session.orderData
+	// 		}
+	// 	}
+	// },
+
 	searchDrivers: async (ctx, order) => {
 		const user = ctx.user
 
 		// Statusni 'searching' ga o'rnatish
 		if (order.status !== 'searching') {
 			order.status = 'searching'
+			order.driverSearched = true
+			order.searchCompletedAt = new Date()
 			await order.save()
 		}
 
-		console.log(
-			`🔍 Qidirilayotgan yo'nalish: ${order.fromRegion} -> ${order.toRegion}`,
-		)
+		console.log(`🔍 Qidirilayotgan yo'nalish: ${order.fromRegion} -> ${order.toRegion}`)
 		console.log(`👥 Yo'lovchilar soni: ${order.passengerCount}`)
 
 		// Haydovchilarni qidirish
@@ -1311,18 +1465,22 @@ module.exports = {
 			$or: [
 				{ paidUntil: { $gte: new Date() } },
 				{ paidUntil: null },
-				{ paidUntil: { $exists: false } },
-			],
+				{ paidUntil: { $exists: false } }
+			]
 		})
 			.populate('carModel')
 			.populate('carType')
 
 		console.log(`📊 Topilgan haydovchilar: ${drivers.length} ta`)
 
+		// Haydovchi topilganligini yangilash
+		order.driverFound = drivers.length > 0
+		order.driverSearched = true
+		order.searchCompletedAt = new Date()
+		await order.save()
+
 		drivers.forEach((driver, index) => {
-			console.log(
-				`Haydovchi ${index + 1}: ${driver.fullName} (ID: ${driver._id})`,
-			)
+			console.log(`Haydovchi ${index + 1}: ${driver.fullName} (ID: ${driver._id})`)
 			console.log(`Telegram ID: ${driver.telegramId}`)
 			console.log(`CarModel ID: ${driver.carModel}`)
 			console.log(`Max Passengers: ${driver.maxPassengers}`)
@@ -1343,21 +1501,23 @@ module.exports = {
 			// 1. Avval yo'lovchiga xabar berish
 			const userMessage =
 				user.language === 'uz'
-					? `❌ Hozircha siz tanlagan yo‘nalish bo‘yicha ${order.passengerCount} nafar yo‘lovchi uchun mos transport topilmadi.\n\n` +
-						`📍 <b>Chiqish manzili:</b> ${order.fromRegion}\n` +
-						`📍 <b>Borish manzili:</b> ${order.toRegion}\n` +
-						`👥 <b>Yo‘lovchilar soni:</b> ${order.passengerCount}\n\n` +
-						`📨 Buyurtmangiz hamkorlar kanaliga yuborildi. Tez orada siz bilan bog‘lanishlari mumkin.\n\n` +
-						`⏳ Iltimos, kuting yoki biroz vaqtdan so‘ng qayta urinib ko‘ring.`
-					: `❌ В данный момент по выбранному направлению транспорт для ${order.passengerCount} пассажиров не найден.\n\n` +
-						`📍 <b>Пункт отправления:</b> ${order.fromRegion}\n` +
-						`📍 <b>Пункт назначения:</b> ${order.toRegion}\n` +
-						`👥 <b>Количество пассажиров:</b> ${order.passengerCount}\n\n` +
-						`📨 Ваш заказ отправлен в партнерский канал. С вами могут связаться в ближайшее время.\n\n` +
-						`⏳ Пожалуйста, подождите или попробуйте снова немного позже.`
+					? `❌ Hozircha siz tanlagan yo'nalish bo'yicha ${order.passengerCount} kishi uchun haydovchi topilmadi.\n\n` +
+					  `📍 Chiqish: ${order.fromRegion}\n` +
+					  `📍 Kirish: ${order.toRegion}\n` +
+					  `👥 Yo'lovchilar: ${order.passengerCount} kishi\n\n` +
+					  `🔄 Buyurtmangiz "topilmagan yo'nalishlar" ro'yxatiga qo'shildi.\n` +
+					  `🚗 Haydovchilar boshqa yo'nalishlar orqali siz bilan bog'lanishi mumkin.\n\n` +
+					  `⏳ Agar 7 kun ichida haydovchi topilmasa, buyurtma avtomatik bekor qilinadi.`
+					: `❌ По выбранному направлению для ${order.passengerCount} человек водители не найдены.\n\n` +
+					  `📍 Отправление: ${order.fromRegion}\n` +
+					  `📍 Прибытие: ${order.toRegion}\n` +
+					  `👥 Пассажиры: ${order.passengerCount} человек\n\n` +
+					  `🔄 Ваш заказ добавлен в список "неподходящих направлений".\n` +
+					  `🚗 Водители могут связаться с вами через другие направления.\n\n` +
+					  `⏳ Если в течение 7 дней водитель не найдется, заказ будет автоматически отменен.`
 
 			await ctx.reply(userMessage, {
-				parse_mode: 'HTML',
+				parse_mode: 'HTML'
 			})
 
 			// 2. KANALGA XABAR YUBORISH
@@ -1366,11 +1526,7 @@ module.exports = {
 
 				const channelId = process.env.ORDER_CHANNEL_ID
 
-				if (
-					channelId &&
-					channelId.trim() !== '' &&
-					channelId !== '@your_channel'
-				) {
+				if (channelId && channelId.trim() !== '' && channelId !== '@your_channel') {
 					const channelMessage =
 						`🚕 YANGI BUYURTMA - HAYDOVCHI KERAK\n\n` +
 						`📍 Chiqish: ${order.fromRegion}\n` +
@@ -1388,81 +1544,16 @@ module.exports = {
 						await ctx.telegram.sendMessage(channelId.trim(), channelMessage)
 						console.log('✅ Kanalga xabar yuborildi:', channelId)
 					} catch (channelError) {
-						console.error(
-							'❌ Kanalga yuborishda xatolik:',
-							channelError.message,
-						)
-
-						// Kanalga yuborishda xatolik bo'lsa, adminlarga xabar berish
-						const adminIds = process.env.ADMIN_IDS
-							? process.env.ADMIN_IDS.split(',').map(id => id.trim())
-							: []
-
-						if (adminIds.length > 0) {
-							const errorMessage =
-								`❌ KANALGA XABAR YUBORISHDA XATOLIK\n\n` +
-								`Xato: ${channelError.message}\n` +
-								`Kanal ID: ${channelId}\n` +
-								`Buyurtma: ${order.fromRegion} → ${order.toRegion}\n` +
-								`User: @${order.username || order.userId}`
-
-							for (const adminId of adminIds) {
-								try {
-									await ctx.telegram.sendMessage(adminId, errorMessage)
-									console.log(`✅ Adminga xatolik xabari yuborildi: ${adminId}`)
-								} catch (adminError) {
-									console.error(
-										`Admin ${adminId} ga xabar yuborishda xatolik:`,
-										adminError.message,
-									)
-								}
-							}
-						}
+						console.error('❌ Kanalga yuborishda xatolik:', channelError.message)
 					}
 				} else {
-					console.log(
-						"⚠️ ORDER_CHANNEL_ID mavjud emas yoki noto'g'ri:",
-						channelId,
-					)
-
-					// Agar kanal ID bo'lmasa, adminlarga shaxsiy xabar yuborish
-					const adminIds = process.env.ADMIN_IDS
-						? process.env.ADMIN_IDS.split(',').map(id => id.trim())
-						: []
-
-					if (adminIds.length > 0) {
-						const adminMessage =
-							`🚕 YANGI BUYURTMA (Kanal yo'q)\n\n` +
-							`📍 Chiqish: ${order.fromRegion}\n` +
-							`📍 Kirish: ${order.toRegion}\n` +
-							`👥 Yo'lovchilar: ${order.passengerCount} kishi\n` +
-							`📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
-							`${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n` : ''}` +
-							`👤 Foydalanuvchi: @${order.username || 'N/A'}\n` +
-							`🆔 User ID: ${order.userId}\n` +
-							`📞 Telefon: ${order.phone}\n` +
-							`⏰ Vaqt: ${new Date().toLocaleString('uz-UZ')}\n\n` +
-							`⚠️ KANALGA YUBORILMADI! ORDER_CHANNEL_ID tekshiring.`
-
-						for (const adminId of adminIds) {
-							try {
-								await ctx.telegram.sendMessage(adminId, adminMessage)
-								console.log(`✅ Adminga xabar yuborildi: ${adminId}`)
-							} catch (adminError) {
-								console.error(
-									`Admin ${adminId} ga xabar yuborishda xatolik:`,
-									adminError.message,
-								)
-							}
-						}
-					}
+					console.log("⚠️ ORDER_CHANNEL_ID mavjud emas yoki noto'g'ri:", channelId)
 				}
 			} catch (error) {
 				console.error('❌ Kanalga yuborishda umumiy xatolik:', error.message)
 			}
 
-			// 3. Asosiy menyuga qaytish
-			// 4. Sessionni tozalash
+			// 3. Sessionni tozalash
 			if (ctx.session) {
 				delete ctx.session.orderId
 				delete ctx.session.orderData
@@ -1512,10 +1603,7 @@ module.exports = {
 					console.log(`✅ Adminga xabar yuborildi: ${adminIdNum}`)
 					messageSent = true
 				} catch (adminError) {
-					console.error(
-						`❌ Admin ${adminId} ga xabar yuborishda xatolik:`,
-						adminError.message,
-					)
+					console.error(`❌ Admin ${adminId} ga xabar yuborishda xatolik:`, adminError.message)
 				}
 			}
 
@@ -1540,32 +1628,30 @@ module.exports = {
 			console.log(
 				`Driver ${index + 1}: ${driver.fullName} | ${driver.telegramId} | maxPassengers: ${
 					driver.maxPassengers
-				}`,
+				}`
 			)
-			console.log(
-				`CarModel: ${driver.carModel ? JSON.stringify(driver.carModel) : 'null'}`,
-			)
+			console.log(`CarModel: ${driver.carModel ? JSON.stringify(driver.carModel) : 'null'}`)
 		})
 
 		// ============ ASOSIY XABAR: Inline keyboard bilan ============
 		const orderMessage =
 			user.language === 'uz'
 				? `✅ Buyurtma qabul qilindi!\n\n` +
-					`📍 Chiqish: ${order.fromRegion}\n` +
-					`📍 Kirish: ${order.toRegion}\n` +
-					`👥 Yo'lovchilar soni: ${order.passengerCount} kishi\n` +
-					`📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
-					`${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n\n` : '\n'}` +
-					`Buyurtmangiz qabul qilindi va haydovchilar bilan bog'laning.\n` +
-					`✅ Topilgan haydovchilar:`
+				  `📍 Chiqish: ${order.fromRegion}\n` +
+				  `📍 Kirish: ${order.toRegion}\n` +
+				  `👥 Yo'lovchilar soni: ${order.passengerCount} kishi\n` +
+				  `📦 Pochta: ${order.hasParcel ? 'Ha' : "Yo'q"}\n` +
+				  `${order.parcelDescription ? `📝 Tavsif: ${order.parcelDescription}\n\n` : '\n'}` +
+				  `Buyurtmangiz qabul qilindi va haydovchilar bilan bog'laning.\n` +
+				  `✅ Topilgan haydovchilar:`
 				: `✅ Заказ принят!\n\n` +
-					`📍 Отправление: ${order.fromRegion}\n` +
-					`📍 Прибытие: ${order.toRegion}\n` +
-					`👥 Количество пассажиров: ${order.passengerCount} человек\n` +
-					`📦 Посылка: ${order.hasParcel ? 'Да' : 'Нет'}\n` +
-					`${order.parcelDescription ? `📝 Описание: ${order.parcelDescription}\n\n` : '\n'}` +
-					`Ваш заказ принят, свяжитесь с водителями.\n` +
-					`✅ Найденные водители:`
+				  `📍 Отправление: ${order.fromRegion}\n` +
+				  `📍 Прибытие: ${order.toRegion}\n` +
+				  `👥 Количество пассажиров: ${order.passengerCount} человек\n` +
+				  `📦 Посылка: ${order.hasParcel ? 'Да' : 'Нет'}\n` +
+				  `${order.parcelDescription ? `📝 Описание: ${order.parcelDescription}\n\n` : '\n'}` +
+				  `Ваш заказ принят, свяжитесь с водителями.\n` +
+				  `✅ Найденные водители:`
 
 		// ============ INLINE KEYBOARD YARATISH ============
 		const inlineKeyboard = []
@@ -1581,22 +1667,17 @@ module.exports = {
 					console.log(`Driver ${driver.fullName} carModel object:`, {
 						id: driver.carModel._id,
 						name: driver.carModel.name,
-						nameRu: driver.carModel.nameRu,
+						nameRu: driver.carModel.nameRu
 					})
 
 					carModelDisplay =
 						user.language === 'uz'
 							? driver.carModel.name || "Mashina nomi yo'q"
-							: driver.carModel.nameRu ||
-								driver.carModel.name ||
-								'Нет названия машины'
+							: driver.carModel.nameRu || driver.carModel.name || 'Нет названия машины'
 				} else {
 					// Agar carModel oddiy string bo'lsa
 					carModelDisplay = driver.carModel
-					console.log(
-						`Driver ${driver.fullName} carModel string:`,
-						carModelDisplay,
-					)
+					console.log(`Driver ${driver.fullName} carModel string:`, carModelDisplay)
 				}
 			} else {
 				console.log(`Driver ${driver.fullName} carModel yo'q`)
@@ -1608,13 +1689,13 @@ module.exports = {
 					? `${index + 1}. ${driver.fullName} | ${carModelDisplay} | ${driver.maxPassengers} kishi`
 					: `${index + 1}. ${driver.fullName} | ${carModelDisplay} | ${
 							driver.maxPassengers
-						} человек`
+					  } человек`
 
 			inlineKeyboard.push([
 				{
 					text: buttonText,
-					callback_data: `select_driver_${driver._id}_${order._id}`,
-				},
+					callback_data: `select_driver_${driver._id}_${order._id}`
+				}
 			])
 		})
 
@@ -1622,23 +1703,21 @@ module.exports = {
 		inlineKeyboard.push([
 			{
 				text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-				callback_data: 'main_menu',
-			},
+				callback_data: 'main_menu'
+			}
 		])
 
 		console.log('Keyboard tugmalari:')
 		inlineKeyboard.forEach((row, index) => {
-			console.log(
-				`${index + 1}. ${row[0].text} | callback: ${row[0].callback_data}`,
-			)
+			console.log(`${index + 1}. ${row[0].text} | callback: ${row[0].callback_data}`)
 		})
 
 		// Bitta xabarni inline keyboard bilan chiqarish
 		await ctx.reply(orderMessage, {
 			reply_markup: {
-				inline_keyboard: inlineKeyboard,
+				inline_keyboard: inlineKeyboard
 			},
-			parse_mode: 'HTML',
+			parse_mode: 'HTML'
 		})
 
 		// Asosiy menyuga qaytish
@@ -1653,10 +1732,7 @@ module.exports = {
 		const user = ctx.user
 
 		if (!ctx.session || !ctx.session.orderId) {
-			const message =
-				user.language === 'uz'
-					? '❌ Buyurtma topilmadi.'
-					: '❌ Заказ не найден.'
+			const message = user.language === 'uz' ? '❌ Buyurtma topilmadi.' : '❌ Заказ не найден.'
 
 			await ctx.reply(message)
 			return
@@ -1676,10 +1752,7 @@ module.exports = {
 				delete ctx.session.orderData
 			}
 
-			const message =
-				user.language === 'uz'
-					? '❌ Buyurtma bekor qilindi.'
-					: '❌ Заказ отменен.'
+			const message = user.language === 'uz' ? '❌ Buyurtma bekor qilindi.' : '❌ Заказ отменен.'
 
 			await ctx.reply(message)
 
@@ -1687,8 +1760,7 @@ module.exports = {
 			user.state = states.MAIN_MENU
 			await user.save()
 
-			const menuMessage =
-				user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню'
+			const menuMessage = user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню'
 			await ctx.reply(menuMessage, keyboards.mainMenuKeyboard(user.language))
 		} catch (error) {
 			console.error('Cancel order error:', error)
@@ -1715,7 +1787,7 @@ module.exports = {
 
 			// Jami buyurtmalar soni
 			const totalOrders = await Order.countDocuments({
-				userId: user.telegramId,
+				userId: user.telegramId
 			})
 			const totalPages = Math.ceil(totalOrders / limit)
 
@@ -1730,7 +1802,7 @@ module.exports = {
 				await ctx.reply(
 					user.language === 'uz'
 						? '📭 Sizda hali buyurtmalar mavjud emas.'
-						: '📭 У вас пока нет заказов.',
+						: '📭 У вас пока нет заказов.'
 				)
 				return
 			}
@@ -1749,17 +1821,13 @@ module.exports = {
 					accepted: '✅ Qabul qilingan',
 					rejected: '❌ Rad etilgan',
 					cancelled: '❌ Bekor qilingan',
-					completed: '✅ Yakunlangan',
+					completed: '✅ Yakunlangan'
 				}
 
 				const status =
-					user.language === 'uz'
-						? statusText[order.status] || order.status
-						: order.status
+					user.language === 'uz' ? statusText[order.status] || order.status : order.status
 
-				const driverName = order.driverId
-					? order.driverId.fullName
-					: 'Tanlanmagan'
+				const driverName = order.driverId ? order.driverId.fullName : 'Tanlanmagan'
 				const orderNumber = skip + index + 1
 
 				message += `${orderNumber}. ${order.fromRegion} → ${order.toRegion}\n`
@@ -1784,22 +1852,19 @@ module.exports = {
 				if (page > 1) {
 					paginationButtons.push({
 						text: user.language === 'uz' ? '⬅️ Oldingi' : '⬅️ Назад',
-						callback_data: `myorders_page_${page - 1}`,
+						callback_data: `myorders_page_${page - 1}`
 					})
 				}
 
 				paginationButtons.push({
-					text:
-						user.language === 'uz'
-							? `📄 ${page}/${totalPages}`
-							: `📄 ${page}/${totalPages}`,
-					callback_data: 'current_page',
+					text: user.language === 'uz' ? `📄 ${page}/${totalPages}` : `📄 ${page}/${totalPages}`,
+					callback_data: 'current_page'
 				})
 
 				if (page < totalPages) {
 					paginationButtons.push({
 						text: user.language === 'uz' ? 'Keyingi ➡️' : 'Далее ➡️',
-						callback_data: `myorders_page_${page + 1}`,
+						callback_data: `myorders_page_${page + 1}`
 					})
 				}
 
@@ -1810,14 +1875,14 @@ module.exports = {
 			inlineKeyboard.push([
 				{
 					text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
-					callback_data: 'main_menu',
-				},
+					callback_data: 'main_menu'
+				}
 			])
 
 			await ctx.reply(message, {
 				reply_markup: {
-					inline_keyboard: inlineKeyboard,
-				},
+					inline_keyboard: inlineKeyboard
+				}
 			})
 
 			// Sessionda sahifani saqlash
@@ -1827,7 +1892,7 @@ module.exports = {
 			await ctx.reply(
 				user.language === 'uz'
 					? "❌ Buyurtmalarni ko'rsatishda xatolik yuz berdi."
-					: '❌ Ошибка при отображении заказов.',
+					: '❌ Ошибка при отображении заказов.'
 			)
 		}
 	},
@@ -1846,7 +1911,7 @@ module.exports = {
 		} catch (error) {
 			console.error('My orders page navigation error:', error)
 			await ctx.answerCbQuery(
-				user.language === 'uz' ? '❌ Xatolik yuz berdi' : '❌ Произошла ошибка',
+				user.language === 'uz' ? '❌ Xatolik yuz berdi' : '❌ Произошла ошибка'
 			)
 		}
 	},
@@ -1861,7 +1926,7 @@ module.exports = {
 			await ctx.reply(
 				user.language === 'uz'
 					? "❌ Buyurtma ma'lumotlari topilmadi."
-					: '❌ Данные заказа не найдены.',
+					: '❌ Данные заказа не найдены.'
 			)
 			return
 		}
@@ -1869,15 +1934,9 @@ module.exports = {
 		const orderData = ctx.session.orderData
 
 		// OrderData tekshirish
-		if (
-			!orderData.fromRegion ||
-			!orderData.toRegion ||
-			!orderData.passengerCount
-		) {
+		if (!orderData.fromRegion || !orderData.toRegion || !orderData.passengerCount) {
 			await ctx.reply(
-				user.language === 'uz'
-					? "❌ Barcha maydonlar to'ldirilmagan."
-					: '❌ Не все поля заполнены.',
+				user.language === 'uz' ? "❌ Barcha maydonlar to'ldirilmagan." : '❌ Не все поля заполнены.'
 			)
 			return
 		}
@@ -1901,10 +1960,8 @@ module.exports = {
 
 			const message =
 				user.language === 'uz'
-					? "👤 Sizning ma'lumotlaringiz to'liq emas.\n\n" +
-						'Iltimos, ism-familyangizni kiriting:'
-					: '👤 Ваши данные неполные.\n\n' +
-						'Пожалуйста, введите ваше имя и фамилию:'
+					? "👤 Sizning ma'lumotlaringiz to'liq emas.\n\n" + 'Iltimos, ism-familyangizni kiriting:'
+					: '👤 Ваши данные неполные.\n\n' + 'Пожалуйста, введите ваше имя и фамилию:'
 
 			await ctx.reply(message)
 			return false
@@ -1921,7 +1978,7 @@ module.exports = {
 			await ctx.reply(
 				user.language === 'uz'
 					? "❌ Ism-familya kamida 3 ta belgidan iborat bo'lishi kerak."
-					: '❌ Имя и фамилия должны содержать не менее 3 символов.',
+					: '❌ Имя и фамилия должны содержать не менее 3 символов.'
 			)
 			return
 		}
@@ -1944,13 +2001,13 @@ module.exports = {
 								user.language === 'uz'
 									? '📞 Telefon raqamini yuborish'
 									: '📞 Отправить номер телефона',
-							request_contact: true,
-						},
-					],
+							request_contact: true
+						}
+					]
 				],
 				resize_keyboard: true,
-				one_time_keyboard: true,
-			},
+				one_time_keyboard: true
+			}
 		})
 	},
 
@@ -1975,7 +2032,7 @@ module.exports = {
 			await ctx.reply(
 				user.language === 'uz'
 					? "❌ Telefon raqami noto'g'ri formatda. +998XXXXXXXXX formatida kiriting."
-					: '❌ Неверный формат номера телефона. Введите в формате +998XXXXXXXXX.',
+					: '❌ Неверный формат номера телефона. Введите в формате +998XXXXXXXXX.'
 			)
 			return
 		}
@@ -1988,7 +2045,7 @@ module.exports = {
 			user.language === 'uz'
 				? `✅ Telefon raqami saqlandi: ${formattedPhone}\n\n🎉 Ma'lumotlaringiz to'liq! Endi buyurtma berishingiz mumkin.`
 				: `✅ Номер телефона сохранен: ${formattedPhone}\n\n🎉 Ваши данные полны! Теперь вы можете сделать заказ.`,
-			keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role),
+			keyboards.mainMenuKeyboard(user.language, user.isAdmin, user.role)
 		)
 	},
 	// handleContactPhone: async (ctx) => {
@@ -2069,7 +2126,7 @@ module.exports = {
 			await ctx.reply(
 				user.language === 'uz'
 					? "❌ Telefon raqami topilmadi. Iltimos, 'Telefon raqamini yuborish' tugmasini bosing."
-					: '❌ Номер телефона не найден. Пожалуйста, нажмите кнопку "Отправить номер телефона".',
+					: '❌ Номер телефона не найден. Пожалуйста, нажмите кнопку "Отправить номер телефона".'
 			)
 			return
 		}
@@ -2092,13 +2149,13 @@ module.exports = {
 			const message =
 				user.language === 'uz'
 					? "❌ Telefon raqami noto'g'ri formatda.\n\n" +
-						"✅ To'g'ri format: +998XXXXXXXXX\n" +
-						'📝 Masalan: +998901234567\n\n' +
-						'Iltimos, qaytadan kiriting:'
+					  "✅ To'g'ri format: +998XXXXXXXXX\n" +
+					  '📝 Masalan: +998901234567\n\n' +
+					  'Iltimos, qaytadan kiriting:'
 					: '❌ Неверный формат номера телефона.\n\n' +
-						'✅ Правильный формат: +998XXXXXXXXX\n' +
-						'📝 Например: +998901234567\n\n' +
-						'Пожалуйста, введите еще раз:'
+					  '✅ Правильный формат: +998XXXXXXXXX\n' +
+					  '📝 Например: +998901234567\n\n' +
+					  'Пожалуйста, введите еще раз:'
 
 			await ctx.reply(message)
 			return
@@ -2121,10 +2178,10 @@ module.exports = {
 			user.language === 'uz'
 				? `✅ Telefon raqamingiz qabul qilindi: ${formattedPhone}`
 				: `✅ Ваш номер телефона принят: ${formattedPhone}`,
-			{ reply_markup: { remove_keyboard: true } },
+			{ reply_markup: { remove_keyboard: true } }
 		)
 
 		// Tasdiqlash sahifasini ko'rsatish
 		await module.exports.showOrderConfirmation(ctx)
-	},
+	}
 }

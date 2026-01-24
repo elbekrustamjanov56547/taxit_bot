@@ -37,32 +37,68 @@ const mainMenuKeyboard = (language = 'uz', isAdmin = false, role = 'user') => {
 	const buttons = []
 
 	if (role === 'user') {
+		// USER rolida
 		buttons.push([
 			Markup.button.callback(
 				language === 'uz' ? '🚖 Taksiga buyurtma berish' : '🚖 Заказать такси',
-				'need_taxi',
-			),
+				'need_taxi'
+			)
 		])
-	} else if (role === 'driver') {
-		buttons.push([])
+
 		buttons.push([
 			Markup.button.callback(
 				language === 'uz' ? "🔄 Xizmatni o'zgartirish" : '🔄 Изменить услугу',
-				'switch_to_user',
-			),
+				'switch_to_driver'
+			)
+		])
+	} else if (role === 'driver') {
+		// DRIVER rolida
+		buttons.push([
+			Markup.button.callback(
+				language === 'uz' ? '🚗 Haydovchi menyusi' : '🚗 Меню водителя',
+				'driver_info'
+			)
+		])
+
+		buttons.push([
+			Markup.button.callback(
+				language === 'uz' ? "🔄 Xizmatni o'zgartirish" : '🔄 Изменить услугу',
+				'switch_to_user'
+			)
+		])
+
+		// DRIVER uchun TOPILMAGAN YO'NALISHLAR tugmasi
+		buttons.push([
+			Markup.button.callback(
+				language === 'uz' ? "🔍 Boshqa yo'nalishlar" : '🔍 Другие направления',
+				'show_unmatched_routes'
+			)
 		])
 	} else {
 		// Hali rol tanlamaganlar uchun
 		buttons.push([
+			Markup.button.callback(language === 'uz' ? '🚖 Taksi kerak' : '🚖 Нужно такси', 'need_taxi'),
 			Markup.button.callback(
-				language === 'uz' ? '🚖 Taksiga buyurtma berish' : '🚖 Нужно такси',
-				'need_taxi',
-			),
+				language === 'uz' ? '🚘 Taksi xizmati' : '🚘 Такси сервис',
+				'taxi_service'
+			)
 		])
 	}
+
+	// ADMIN uchun qo'shimcha tugmalar
+	if (isAdmin) {
+		buttons.push([
+			Markup.button.callback(
+				language === 'uz' ? '👨‍💼 Admin paneli' : '👨‍💼 Админ панель',
+				'admin_menu'
+			)
+		])
+	}
+
 	return Markup.inlineKeyboard(buttons)
 }
 
+module.exports = mainMenuKeyboard
 // Asosiy menyuni ko'rsatish (HTML formatda)
 const showMainMenu = (ctx, language) => {
 	const user = ctx.user || { role: 'user' }

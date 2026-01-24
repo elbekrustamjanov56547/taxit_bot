@@ -9,17 +9,30 @@ const orderSchema = new mongoose.Schema({
 		type: String
 	},
 	fullName: {
-		// 👤 YANGI: Yo'lovchining to'liq ismi
 		type: String
 	},
 	autoExpireAt: Date,
-	autoClosed: { type: Boolean, default: false },
+	autoClosed: {
+		type: Boolean,
+		default: false
+	},
+
+	// ============ YANGI MAYDONLAR ============
+	driverFound: {
+		type: Boolean,
+		default: false
+	},
+	driverSearched: {
+		type: Boolean,
+		default: false
+	},
+	searchCompletedAt: Date,
+	// =========================================
+
 	phone: {
-		// 📞 YANGI: Yo'lovchining telefon raqami
 		type: String
 	},
 	departureTime: {
-		// ⏰ YANGI: Jo'nash vaqti
 		type: String
 	},
 	fromRegion: {
@@ -50,11 +63,9 @@ const orderSchema = new mongoose.Schema({
 		ref: 'Driver'
 	},
 	driverFullName: {
-		// 👤 YANGI: Haydovchining to'liq ismi
 		type: String
 	},
 	driverPhone: {
-		// 📞 YANGI: Haydovchining telefon raqami
 		type: String
 	},
 	carNumber: {
@@ -71,7 +82,8 @@ const orderSchema = new mongoose.Schema({
 			'rejected',
 			'cancelled',
 			'completed',
-			'expired'
+			'expired',
+			'contacted' // Yangi status
 		],
 		default: 'pending'
 	},

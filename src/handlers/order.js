@@ -5,6 +5,7 @@ const states = require('../utils/states')
 const keyboards = require('../keyboards/main')
 const regionKeyboards = require('../keyboards/regions')
 
+const { getTimeAgo, formatPhoneNumber } = require('../utils/helpers')
 module.exports = {
 	// ============ HAYDOVCHI TANLASH ============
 	// handleDriverSelection: async (ctx, callbackData) => {
@@ -984,6 +985,669 @@ module.exports = {
 				user.language === 'uz'
 					? '❌ Buyurtma rad etishda xatolik yuz berdi.'
 					: '❌ Ошибка при отклонении заказа.'
+			)
+		}
+	},
+	// showUnmatchedRoutes: async (ctx) => {
+	//     const user = ctx.user
+
+	//     try {
+	//         console.log('🔍 ========== showUnmatchedRoutes START ==========')
+
+	//         // 1. Haydovchining profili borligini tekshirish
+	//         const driver = await Driver.findOne({ telegramId: user.telegramId })
+
+	//         if (!driver) {
+	//             await ctx.reply(
+	//                 user.language === 'uz'
+	//                     ? '❌ Haydovchi profilingiz topilmadi. Avval profil yarating.'
+	//                     : '❌ Ваш профиль водителя не найден. Сначала создайте профиль.'
+	//             )
+	//             return
+	//         }
+
+	//         // 2. Haydovchining faol ekanligini tekshirish
+	//         if (driver.status !== 'active') {
+	//             await ctx.reply(
+	//                 user.language === 'uz'
+	//                     ? '❌ Sizning profilingiz faol emas. Faollashtiring.'
+	//                     : '❌ Ваш профиль не активен. Активируйте его.'
+	//             )
+	//             return
+	//         }
+
+	//         // 3. Topilmagan yo'nalishlarni olish (vaqti o'tmagan va autoClosed bo'lmagan)
+	//         const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+
+	//         const unmatchedOrders = await Order.find({
+	//             $and: [
+	//                 {
+	//                     $or: [
+	//                         { fromRegion: { $ne: driver.fromRegion } },
+	//                         { toRegion: { $ne: driver.toRegion } }
+	//                     ]
+	//                 },
+	//                 {
+	//                     status: 'pending',
+	//                     createdAt: { $gte: sevenDaysAgo },
+	//                     autoClosed: false
+	//                 }
+	//             ]
+	//         })
+	//         .sort({ createdAt: -1 })
+	//         .limit(20) // Ko'pi bilan 20 ta buyurtma ko'rsatish
+
+	//         console.log(`📊 Topilmagan yo'nalishlar: ${unmatchedOrders.length} ta`)
+
+	//         if (unmatchedOrders.length === 0) {
+	//             const message = user.language === 'uz'
+	//                 ? `📭 Hozircha topilmagan yo'nalishlar mavjud emas.\n\n` +
+	//                   `📍 Sizning yo'nalishingiz: ${driver.fromRegion} → ${driver.toRegion}\n` +
+	//                   `⏰ So'nggi 7 kun ichida boshqa yo'nalishlarda buyurtma berilmagan.`
+	//                 : `📭 Нет неподходящих направлений в данный момент.\n\n` +
+	//                   `📍 Ваше направление: ${driver.fromRegion} → ${driver.toRegion}\n` +
+	//                   `⏰ За последние 7 дней не было заказов по другим направлениям.`
+
+	//             await ctx.reply(message)
+	//             return
+	//         }
+
+	//         // 4. Ko'rsatish uchun xabar tayyorlash
+	//         let message = user.language === 'uz'
+	//             ? `🔍 Topilmagan yo'nalishlar (so'nggi 7 kun)\n\n` +
+	//               `📍 Sizning yo'nalishingiz: ${driver.fromRegion} → ${driver.toRegion}\n\n` +
+	//               `📊 Boshqa yo'nalishlardagi buyurtmalar:\n`
+	//             : `🔍 Неподходящие направления (последние 7 дней)\n\n` +
+	//               `📍 Ваше направление: ${driver.fromRegion} → ${driver.toRegion}\n\n` +
+	//               `📊 Заказы по другим направлениям:\n`
+
+	//         // 5. Har bir buyurtmani chiroyli formatda ko'rsatish
+	//         const inlineKeyboard = []
+
+	//         unmatchedOrders.forEach((order, index) => {
+	//             // Buyurtma ma'lumotlari
+	//             const passengerCountText = user.language === 'uz'
+	//                 ? `${order.passengerCount} kishi`
+	//                 : `${order.passengerCount} человек`
+
+	//             const parcelText = order.hasParcel
+	//                 ? (user.language === 'uz' ? '📦 Ha' : '📦 Да')
+	//                 : (user.language === 'uz' ? '📦 Yo\'q' : '📦 Нет')
+
+	//             const timeAgo = getTimeAgo(order.createdAt, user.language)
+
+	//             // Xabarga qo'shish
+	//             message += `\n${index + 1}. ${order.fromRegion} → ${order.toRegion}\n`
+	//             message += `   👤 @${order.username || 'noma\'lum'}\n`
+	//             message += `   👥 ${passengerCountText}\n`
+	//             message += `   ${parcelText}\n`
+	//             message += `   ⏰ ${timeAgo}\n`
+
+	//             // Tugma yaratish (buyurtmani ko'rish uchun)
+	//             inlineKeyboard.push([
+	//                 {
+	//                     text: user.language === 'uz'
+	//                         ? `👁️ ${index + 1}. ${order.fromRegion} → ${order.toRegion}`
+	//                         : `👁️ ${index + 1}. ${order.fromRegion} → ${order.toRegion}`,
+	//                     callback_data: `view_unmatched_${order._id}`
+	//                 }
+	//             ])
+	//         })
+
+	//         // 6. Statistik ma'lumot
+	//         message += `\n📊 Jami: ${unmatchedOrders.length} ta buyurtma\n`
+	//         message += user.language === 'uz'
+	//             ? `ℹ️ Bu buyurtmalar adminlar kanaliga yuborilgan.\n`
+	//             : `ℹ️ Эти заказы отправлены в канал администраторов.\n`
+
+	//         // 7. Navigatsiya tugmalari
+	//         inlineKeyboard.push([
+	//             {
+	//                 text: user.language === 'uz' ? '🔄 Yangilash' : '🔄 Обновить',
+	//                 callback_data: 'refresh_unmatched'
+	//             },
+	//             {
+	//                 text: user.language === 'uz' ? '🏠 Asosiy menyu' : '🏠 Главное меню',
+	//                 callback_data: 'main_menu'
+	//             }
+	//         ])
+
+	//         // 8. Xabarni yuborish
+	//         await ctx.reply(message, {
+	//             reply_markup: {
+	//                 inline_keyboard: inlineKeyboard
+	//             },
+	//             parse_mode: 'HTML'
+	//         })
+
+	//         console.log('✅ showUnmatchedRoutes END ==========')
+
+	//     } catch (error) {
+	//         console.error('❌ showUnmatchedRoutes error:', error)
+
+	//         await ctx.reply(
+	//             user.language === 'uz'
+	//                 ? "❌ Topilmagan yo'nalishlarni ko'rsatishda xatolik yuz berdi."
+	//                 : '❌ Ошибка при отображении неподходящих направлений.'
+	//         )
+	//     }
+	// },
+
+	// ============ TOPILMAGAN YO'NALISHLARNI YANGILASH ============
+
+	// order.js faylida
+	// handlers/order.js faylida
+	showUnmatchedRoutes: async (ctx, page = 1) => {
+		const user = ctx.user
+
+		try {
+			console.log('🔍 ========== showUnmatchedRoutes START ==========')
+
+			// 1. Faqat haydovchilar uchun
+			if (user.role !== 'driver') {
+				await ctx.reply(
+					user.language === 'uz'
+						? '❌ Bu funksiya faqat haydovchilar uchun mavjud.'
+						: '❌ Эта функция доступна только для водителей.'
+				)
+				return
+			}
+
+			// 2. Pagination settings
+			const limit = 5
+			const skip = (page - 1) * limit
+
+			// 3. 7 kun oldingi vaqt
+			const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+
+			// 4. Filtr
+			const filter = {
+				status: 'pending',
+				driverFound: false,
+				autoClosed: false,
+				createdAt: { $gte: sevenDaysAgo }
+			}
+
+			// 5. Orderlarni olish
+			const unmatchedOrders = await Order.find(filter)
+				.sort({ createdAt: -1 })
+				.skip(skip)
+				.limit(limit)
+
+			const totalOrders = await Order.countDocuments(filter)
+			const totalPages = Math.max(1, Math.ceil(totalOrders / limit))
+
+			console.log(
+				`📊 Haydovchi topilmagan buyurtmalar: ${unmatchedOrders.length} ta, Sahifa: ${page}/${totalPages}`
+			)
+
+			if (unmatchedOrders.length === 0) {
+				const message =
+					user.language === 'uz'
+						? `📭 Hozircha haydovchi topilmagan buyurtmalar mavjud emas.\n\n⏰ So'nggi 7 kun ichida haydovchi topilmagan buyurtmalar yo'q.`
+						: `📭 Нет заказов без водителей в данный момент.\n\n⏰ За последние 7 дней не было заказов без водителей.`
+				await ctx.reply(message)
+				return
+			}
+
+			// ✅ 6. Faqat sarlavha (user text ro‘yxat YO‘Q)
+			const message = user.language === 'uz' ? `Topilmagan haydovchilar` : `Не найденные водители`
+
+			// 7. Faqat tugmalar (orderlar)
+			const inlineKeyboard = []
+
+			unmatchedOrders.forEach(order => {
+				const passengerCountText =
+					user.language === 'uz' ? `${order.passengerCount} kishi` : `${order.passengerCount} чел`
+
+				inlineKeyboard.push([
+					{
+						text: `${order.username || order.fullName || 'User'} | ${passengerCountText} | ${
+							order.fromRegion
+						}→${order.toRegion}`,
+						callback_data: `view_unmatched_${order._id}`
+					}
+				])
+			})
+
+			// ✅ 8. REGIONS — BUTUNLAY O‘CHDI (hech qanday region tugma yo‘q)
+
+			// 9. Pagination (bitta qator)
+			const paginationRow = []
+
+			if (page > 1) {
+				paginationRow.push({
+					text: user.language === 'uz' ? '« Ortga' : '« Назад',
+					callback_data: `unmatched_page_${page - 1}`
+				})
+			}
+
+			paginationRow.push({
+				text: `[ ${page} ]`,
+				callback_data: 'current_page'
+			})
+
+			if (page < totalPages) {
+				paginationRow.push({
+					text: user.language === 'uz' ? 'Keyingi »' : 'Далее »',
+					callback_data: `unmatched_page_${page + 1}`
+				})
+			}
+
+			inlineKeyboard.push(paginationRow)
+
+			// 10. Yuborish
+			await ctx.reply(message, {
+				reply_markup: { inline_keyboard: inlineKeyboard }
+			})
+
+			console.log('✅ showUnmatchedRoutes END ==========')
+		} catch (error) {
+			console.error('❌ showUnmatchedRoutes error:', error)
+			await ctx.reply(
+				user.language === 'uz'
+					? "❌ Haydovchi topilmagan buyurtmalarni ko'rsatishda xatolik yuz berdi."
+					: '❌ Ошибка при отображении заказов без водителей.'
+			)
+		}
+	},
+
+	// refreshUnmatchedRoutes: async ctx => {
+	// 	const user = ctx.user
+
+	// 	try {
+	// 		// Oldingi xabarni o'chirish
+	// 		await ctx.deleteMessage()
+
+	// 		// Yangi ma'lumotlarni ko'rsatish
+	// 		await module.exports.showUnmatchedRoutes(ctx)
+
+	// 		await ctx.answerCbQuery(user.language === 'uz' ? '✅ Yangilandi' : '✅ Обновлено')
+	// 	} catch (error) {
+	// 		console.error('Refresh unmatched routes error:', error)
+	// 		await ctx.answerCbQuery(user.language === 'uz' ? '❌ Xatolik' : '❌ Ошибка')
+	// 	}
+	// },
+	// handlers/order.js faylida
+	refreshUnmatchedRoutes: async ctx => {
+		const user = ctx.user
+
+		try {
+			// Oldingi xabarni o'chirish (agar mavjud bo'lsa)
+			try {
+				if (ctx.callbackQuery && ctx.callbackQuery.message) {
+					await ctx.deleteMessage()
+				}
+			} catch (deleteError) {
+				console.log('Delete message error (non-critical):', deleteError.message)
+			}
+
+			// Yangi ma'lumotlarni ko'rsatish (1-sahifadan boshlab)
+			await module.exports.showUnmatchedRoutes(ctx, 1)
+
+			await ctx.answerCbQuery(user.language === 'uz' ? '✅ Yangilandi' : '✅ Обновлено')
+		} catch (error) {
+			console.error('Refresh unmatched routes error:', error)
+			await ctx.answerCbQuery(user.language === 'uz' ? '❌ Xatolik' : '❌ Ошибка')
+		}
+	},
+
+	viewUnmatchedOrder: async (ctx, callbackData) => {
+		const user = ctx.user
+
+		try {
+			const orderId = callbackData.replace('view_unmatched_', '')
+
+			const order = await Order.findById(orderId)
+
+			if (!order) {
+				await ctx.answerCbQuery(
+					user.language === 'uz' ? '❌ Buyurtma topilmadi' : '❌ Заказ не найден'
+				)
+				return
+			}
+
+			// Batafsil ma'lumotlar
+			const passengerCountText =
+				user.language === 'uz' ? `${order.passengerCount} kishi` : `${order.passengerCount} человек`
+
+			const parcelStatus = order.hasParcel
+				? user.language === 'uz'
+					? '📦 Pochta bor'
+					: '📦 Посылка есть'
+				: user.language === 'uz'
+				? "📦 Pochta yo'q"
+				: '📦 Посылки нет'
+
+			const timeAgo = getTimeAgo(order.createdAt, user.language)
+
+			// formatPhoneNumber funksiyasidan foydalanish
+			const phoneNumber =
+				formatPhoneNumber(order.phone) || (user.language === 'uz' ? "Ko'rsatilmagan" : 'Не указан')
+
+			const message =
+				user.language === 'uz'
+					? `🔍 **Batafsil ma'lumot**\n` +
+					  `════════════════════════════\n` +
+					  `👤 **Yo'lovchi:** ${order.fullName || order.username || 'Nomalum'}\n` +
+					  `📞 **Telefon:** ${phoneNumber}\n` +
+					  `📍 **Yo'nalish:** ${order.fromRegion} → ${order.toRegion}\n` +
+					  `👥 **Yo'lovchilar:** ${passengerCountText}\n` +
+					  `${parcelStatus}\n` +
+					  (order.parcelDescription ? `📝 **Tavsif:** ${order.parcelDescription}\n` : '') +
+					  `⏰ **Vaqt:** ${timeAgo}\n` +
+					  `════════════════════════════\n\n` +
+					  `ℹ️ Bu buyurtmaga hali haydovchi topilmagan.`
+					: `🔍 **Подробная информация**\n` +
+					  `════════════════════════════\n` +
+					  `👤 **Пассажир:** ${order.fullName || order.username || 'Неизвестно'}\n` +
+					  `📞 **Телефон:** ${phoneNumber}\n` +
+					  `📍 **Направление:** ${order.fromRegion} → ${order.toRegion}\n` +
+					  `👥 **Пассажиры:** ${passengerCountText}\n` +
+					  `${parcelStatus}\n` +
+					  (order.parcelDescription ? `📝 **Описание:** ${order.parcelDescription}\n` : '') +
+					  `⏰ **Время:** ${timeAgo}\n` +
+					  `ℹ️ Для этого заказа еще не найден водитель.`
+
+			const keyboard = {
+				inline_keyboard: [
+					[
+						{
+							text: user.language === 'uz' ? "📞 Bog'lanish" : '📞 Связаться',
+							callback_data: `contact_passenger_${order._id}`
+						}
+					],
+					[
+						{
+							text: user.language === 'uz' ? '⬅️ Orqaga' : '⬅️ Назад',
+							callback_data: 'back_to_unmatched'
+						}
+					]
+				]
+			}
+
+			await ctx.reply(message, {
+				reply_markup: keyboard
+			})
+
+			await ctx.answerCbQuery()
+		} catch (error) {
+			console.error('View unmatched order error:', error)
+			await ctx.answerCbQuery(user.language === 'uz' ? '❌ Xatolik' : '❌ Ошибка')
+		}
+	},
+	// ============ YO'LOVCHI BILAN BOG'LANISH ============
+	contactPassenger: async (ctx, callbackData) => {
+		const user = ctx.user
+
+		try {
+			const orderId = callbackData.replace('contact_passenger_', '')
+
+			const order = await Order.findById(orderId)
+
+			if (!order) {
+				await ctx.answerCbQuery(
+					user.language === 'uz' ? '❌ Buyurtma topilmadi' : '❌ Заказ не найден'
+				)
+				return
+			}
+
+			// Haydovchi ma'lumotlarini olish
+			const driver = await Driver.findOne({ telegramId: user.telegramId })
+
+			if (!driver) {
+				await ctx.answerCbQuery(
+					user.language === 'uz' ? '❌ Profilingiz topilmadi' : '❌ Профиль не найден'
+				)
+				return
+			}
+
+			// Yo'lovchiga xabar yuborish
+			const passengerMessage =
+				user.language === 'uz'
+					? `👋 Salom! Men haydovchi ${driver.fullName}.\n\n` +
+					  `🚗 Sizning buyurtmangizni ko'rdim:\n` +
+					  `📍 ${order.fromRegion} → ${order.toRegion}\n` +
+					  `👥 ${order.passengerCount} kishi\n\n` +
+					  `ℹ️ Mana mening ma'lumotlarim:\n` +
+					  `👤 Ism: ${driver.fullName}\n` +
+					  `📞 Telefon: ${driver.phone}\n` +
+					  `🚗 Mashina: ${driver.carModel?.name || 'Mashina'}\n` +
+					  `👥 Sig'im: ${driver.maxPassengers} kishi\n\n` +
+					  `✅ Bu yo'nalishda ham boraman. Qo'shilsangiz, bog'laning!`
+					: `👋 Привет! Я водитель ${driver.fullName}.\n\n` +
+					  `🚗 Я увидел ваш заказ:\n` +
+					  `📍 ${order.fromRegion} → ${order.toRegion}\n` +
+					  `👥 ${order.passengerCount} человек\n\n` +
+					  `ℹ️ Вот мои данные:\n` +
+					  `👤 Имя: ${driver.fullName}\n` +
+					  `📞 Телефон: ${driver.phone}\n` +
+					  `🚗 Машина: ${driver.carModel?.name || 'Машина'}\n` +
+					  `👥 Вместимость: ${driver.maxPassengers} человек\n\n` +
+					  `✅ Я тоже еду в этом направлении. Если хотите присоединиться, свяжитесь!`
+
+			try {
+				await ctx.telegram.sendMessage(order.userId, passengerMessage)
+
+				// Haydovchiga xabar
+				await ctx.reply(
+					user.language === 'uz'
+						? `✅ Yo'lovchiga xabar yuborildi!\n\n` +
+								`📞 Yo'lovchi telefon raqami: ${order.phone}\n` +
+								`👤 Yo'lovchi: @${order.username || "noma'lum"}\n` +
+								`📍 Yo'nalish: ${order.fromRegion} → ${order.toRegion}\n\n` +
+								`ℹ️ Endi yo'lovchi siz bilan bog'lanishi mumkin.`
+						: `✅ Сообщение отправлено пассажиру!\n\n` +
+								`📞 Телефон пассажира: ${order.phone}\n` +
+								`👤 Пассажир: @${order.username || 'неизвестно'}\n` +
+								`📍 Направление: ${order.fromRegion} → ${order.toRegion}\n\n` +
+								`ℹ️ Теперь пассажир может связаться с вами.`
+				)
+
+				// Buyurtma statusini yangilash
+				order.status = 'contacted'
+				await order.save()
+			} catch (telegramError) {
+				console.error('Telegram send error:', telegramError)
+
+				// Agar yo'lovchi bloklagan bo'lsa
+				await ctx.reply(
+					user.language === 'uz'
+						? `❌ Yo'lovchiga xabar yuborib bo'lmadi.\n\n` +
+								`📞 Yo'lovchi telefon raqami: ${order.phone}\n` +
+								`👤 Siz o'zingiz telefon qilishingiz kerak.`
+						: `❌ Не удалось отправить сообщение пассажиру.\n\n` +
+								`📞 Телефон пассажира: ${order.phone}\n` +
+								`👤 Вам нужно позвонить самим.`
+				)
+			}
+
+			await ctx.answerCbQuery()
+		} catch (error) {
+			console.error('Contact passenger error:', error)
+			await ctx.answerCbQuery(user.language === 'uz' ? '❌ Xatolik' : '❌ Ошибка')
+		}
+	},
+
+	backToUnmatched: async ctx => {
+		const user = ctx.user
+
+		try {
+			// Oldingi xabarni o'chirish
+			try {
+				await ctx.deleteMessage()
+			} catch (deleteError) {
+				console.log('Delete message error:', deleteError.message)
+			}
+
+			// Asosiy ro'yxatga qaytish (1-sahifadan)
+			await module.exports.showUnmatchedRoutes(ctx, 1)
+
+			await ctx.answerCbQuery()
+		} catch (error) {
+			console.error('Back to unmatched error:', error)
+			await ctx.answerCbQuery(user.language === 'uz' ? '❌ Xatolik' : '❌ Ошибка')
+		}
+	},
+	showUnmatchedRoutesByRegion: async (ctx, region, page = 1) => {
+		const user = ctx.user
+
+		try {
+			console.log('📍 ========== showUnmatchedRoutesByRegion START ==========')
+
+			// 1. Faqat haydovchilar uchun
+			if (user.role !== 'driver') {
+				await ctx.reply(
+					user.language === 'uz'
+						? '❌ Bu funksiya faqat haydovchilar uchun mavjud.'
+						: '❌ Эта функция доступна только для водителей.'
+				)
+				return
+			}
+
+			// 2. Pagination settings
+			const limit = 5
+			const skip = (page - 1) * limit
+
+			// 3. 7 kun oldingi vaqt
+			const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+
+			// 4. FILTR: faqat tanlangan viloyatdagi buyurtmalar
+			const filter = {
+				fromRegion: region,
+				status: 'pending',
+				driverFound: false,
+				autoClosed: false,
+				createdAt: { $gte: sevenDaysAgo }
+			}
+
+			// 5. Buyurtmalarni olish
+			const unmatchedOrders = await Order.find(filter)
+				.sort({ createdAt: -1 })
+				.skip(skip)
+				.limit(limit)
+
+			const totalOrders = await Order.countDocuments(filter)
+			const totalPages = Math.ceil(totalOrders / limit)
+
+			console.log(
+				`📍 ${region} viloyatidagi buyurtmalar: ${unmatchedOrders.length} ta, Sahifa: ${page}/${totalPages}`
+			)
+
+			if (unmatchedOrders.length === 0) {
+				const message =
+					user.language === 'uz'
+						? `📭 ${region} viloyatida haydovchi topilmagan buyurtmalar mavjud emas.\n\n` +
+						  `⏰ So'nggi 7 kun ichida ${region} viloyatidan buyurtma berilmagan.`
+						: `📭 В области ${region} нет заказов без водителей.\n\n` +
+						  `⏰ За последние 7 дней не было заказов из области ${region}.`
+
+				await ctx.reply(message)
+				return
+			}
+
+			// 6. Xabar tayyorlash - SKRINSHOTDAGI FORMATDA
+			let message = ''
+
+			if (user.language === 'uz') {
+				message = `Topilmagan haydovchilar\n` + `\n\n`
+			} else {
+				message = `Не найденные водители\n` + `\n\n`
+			}
+
+			// 7. Har bir buyurtmani skrinshotdagi formatda ko'rsatish
+			// const inlineKeyboard = []
+
+			// unmatchedOrders.forEach((order, index) => {
+			// 	const passengerCountText =
+			// 		user.language === 'uz' ? `${order.passengerCount} kishi` : `${order.passengerCount} чел`
+
+			// 	const parcelText = order.hasParcel
+			// 		? user.language === 'uz'
+			// 			? 'pochta bor'
+			// 			: 'посылка есть'
+			// 		: user.language === 'uz'
+			// 		? 'pochta yo‘q'
+			// 		: 'посылки нет'
+
+			// 	// Buyurtma qatorini qo'shish (SKRINSHOT FORMATDA)
+			// 	message +=
+			// 		`${order.username || order.fullName || 'Nomalum'}  ||  ` +
+			// 		`${passengerCountText}  ||  ` +
+			// 		`${parcelText}\n`
+
+			// 	// TUGMA: Ism emas, yo'nalish ham emas - Batafsil ko'rish uchun
+			// 	inlineKeyboard.push([
+			// 		{
+			// 			text: `${order.username || 'User'} | ${order.passengerCount}kishi | ${order.toRegion}`,
+			// 			callback_data: `view_unmatched_${order._id}`
+			// 		}
+			// 	])
+			// })
+
+			// // 8. Chiziq qo'shish
+			// message += `\n────────────────────────────\n`
+
+			// 9. VILOYAT FILTRLARI - HAMMASI BIR QATORDAGI 3 TA TUGMA
+			// const regions = ['Toshkent', 'Samarqand', 'Namangan', 'Barchasi']
+
+			// const regionButtons = regions.map(regionName => ({
+			// 	text:
+			// 		regionName === 'Barchasi'
+			// 			? user.language === 'uz'
+			// 				? '🌍 Barchasi'
+			// 				: '🌍 Все'
+			// 			: regionName,
+			// 	callback_data:
+			// 		regionName === 'Barchasi'
+			// 			? 'show_unmatched_routes'
+			// 			: `filter_region_${regionName.toLowerCase()}_1`
+			// }))
+
+			// 4 ta viloyatni 2 qatorga joylash (2x2)
+			inlineKeyboard.push(regionButtons.slice(0, 2))
+			inlineKeyboard.push(regionButtons.slice(2, 4))
+
+			// 10. Pagination tugmalari (RASMDAGIDEK - bitta qator)
+			const paginationRow = []
+
+			if (page > 1) {
+				paginationRow.push({
+					text: user.language === 'uz' ? '« Ortga' : '« Назад',
+					callback_data: `filter_region_${region}_${page - 1}`
+				})
+			}
+
+			// Joriy sahifa
+			paginationRow.push({
+				text: `[ ${page} ]`,
+				callback_data: 'current_page'
+			})
+
+			if (page < totalPages) {
+				paginationRow.push({
+					text: user.language === 'uz' ? 'Keyingi »' : 'Далее »',
+					callback_data: `filter_region_${region}_${page + 1}`
+				})
+			}
+
+			if (paginationRow.length > 0) {
+				inlineKeyboard.push(paginationRow)
+			}
+
+			// 11. Xabarni yuborish
+			await ctx.reply(message, {
+				reply_markup: { inline_keyboard: inlineKeyboard },
+				parse_mode: 'Markdown'
+			})
+
+			console.log('✅ showUnmatchedRoutesByRegion END ==========')
+		} catch (error) {
+			console.error('❌ showUnmatchedRoutesByRegion error:', error)
+			await ctx.reply(
+				user.language === 'uz'
+					? "❌ Viloyat bo'yicha buyurtmalarni ko'rsatishda xatolik yuz berdi."
+					: '❌ Ошибка при отображении заказов по региону.'
 			)
 		}
 	}
