@@ -1880,10 +1880,6 @@ bot.action('main_menu', async ctx => {
 					{
 						text: user.language === 'uz' ? "🔄 Xizmatni o'zgartirish" : '🔄 Изменить услугу',
 						callback_data: 'switch_to_driver'
-					},
-					{
-						text: language === 'uz' ? "🔍 Boshqa yo'nalishlar" : '🔍 Другие направления',
-						callback_data: 'show_unmatched_routes'
 					}
 				]
 			]

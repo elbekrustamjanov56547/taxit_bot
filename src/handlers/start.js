@@ -88,10 +88,6 @@ module.exports = {
 								{
 									text: user.language === 'uz' ? "🔄 Xizmatni o'zgartirish" : '🔄 Изменить услугу',
 									callback_data: 'switch_to_driver'
-								},
-								{
-									text: user.language === 'uz' ? "🔍 Boshqa yo'nalishlar" : '🔍 Другие направления', // ✅ FIXED: language -> user.language
-									callback_data: 'show_unmatched_routes'
 								}
 							]
 						]
