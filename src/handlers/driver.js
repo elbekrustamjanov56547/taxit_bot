@@ -512,40 +512,41 @@ const showInactiveDriverMenu = async (ctx, driver) => {
 			  `👤 <b>Ism:</b> ${populatedDriver.fullName}\n` +
 			  `🚗 <b>Mashina:</b> ${carModelInfo}${carTypeInfo}${carNumberInfo}\n` +
 			  `📍 <b>Yo'nalish:</b> ${populatedDriver.fromRegion} → ${populatedDriver.toRegion}\n` +
-			  `👥 <b>Sig'im:</b> ${populatedDriver.maxPassengers} kishi\n\n` +
-			  (populatedDriver.status === 'inactive'
-					? `💳 <b>Holat:</b> Profilingiz faol emas\n` +
-					  `📞 <b>Sabab:</b> Oylik to'lov amalga oshirilmagan\n\n`
-					: `✅ <b>Holat:</b> Profilingiz faol\n\n`) +
-			  `✅ <b>Qanday faollashtirish:</b>\n` +
-			  `1. "To'lov qilish" tugmasini bosing\n` +
-			  `2. Admin bilan Telegram chat ochiladi\n` +
-			  `3. Adminga "To'lov qilmoqchiman" deb yozing\n` +
-			  `4. To'lov qiling va profilingiz faollashadi`
-			: `🚘 <b>Профиль водителя (Неактивен)</b>\n\n` +
+			  `👥 <b>Sig'im:</b> ${populatedDriver.maxPassengers} kishi\n\n` 
+			  // (populatedDriver.status === 'inactive'
+				// 	? `💳 <b>Holat:</b> Profilingiz faol emas\n` +
+				// 	  `📞 <b>Sabab:</b> Oylik to'lov amalga oshirilmagan\n\n` 
+					// : `✅ <b>Holat:</b> Profilingiz faol\n\n`) +
+			//   `✅ <b>Qanday faollashtirish:</b>\n` +
+			//   `1. "To'lov qilish" tugmasini bosing\n` +
+			//   `2. Admin bilan Telegram chat ochiladi\n` +
+			//   `3. Adminga "To'lov qilmoqchiman" deb yozing\n` +
+			//   `4. To'lov qiling va profilingiz faollashadi`
+			// : `🚘 <b>Профиль водителя (Неактивен)</b>\n\n` + 
+			:
 			  `<b>Ваши данные:</b>\n` +
 			  `👤 <b>Имя:</b> ${populatedDriver.fullName}\n` +
 			  `🚗 <b>Машина:</b> ${carModelInfo}${carTypeInfo}${carNumberInfo}\n` +
 			  `📍 <b>Направление:</b> ${populatedDriver.fromRegion} → ${populatedDriver.toRegion}\n` +
-			  `👥 <b>Вместимость:</b> ${populatedDriver.maxPassengers} человек\n\n` +
-			  (populatedDriver.status === 'inactive'
-					? `💳 <b>Статус:</b> Ваш профиль не активен\n` +
-					  `📞 <b>Причина:</b> Ежемесячный платеж не произведен\n\n`
-					: `✅ <b>Статус:</b> Ваш профиль активен\n\n`) +
-			  `✅ <b>Как активировать:</b>\n` +
-			  `1. Нажмите кнопку "Оплатить"\n` +
-			  `2. Откроется чат в Telegram с администратором\n` +
-			  `3. Напишите администратору "Хочу оплатить"\n` +
-			  `4. Оплатите и ваш профиль активируется`
+			  `👥 <b>Вместимость:</b> ${populatedDriver.maxPassengers} человек\n\n` 
+			  // (populatedDriver.status === 'inactive'
+				// 	? `💳 <b>Статус:</b> Ваш профиль не активен\n` +
+				// 	  `📞 <b>Причина:</b> Ежемесячный платеж не произведен\n\n`
+				// 	: `✅ <b>Статус:</b> Ваш профиль активен\n\n`) +
+			  // `✅ <b>Как активировать:</b>\n` +
+			  // `1. Нажмите кнопку "Оплатить"\n` +
+			  // `2. Откроется чат в Telegram с администратором\n` +
+			  // `3. Напишите администратору "Хочу оплатить"\n` +
+			  // `4. Оплатите и ваш профиль активируется`
 
 	const keyboard = {
 		inline_keyboard: [
-			[
-				{
-					text: user.language === 'uz' ? "💳 To'lov qilish" : '💳 Оплатить',
-					callback_data: 'driver_payment'
-				}
-			],
+			// [
+			// 	{
+			// 		text: user.language === 'uz' ? "💳 To'lov qilish" : '💳 Оплатить',
+			// 		callback_data: 'driver_payment'
+			// 	}
+			// ],
 			[
 				{
 					text: user.language === 'uz' ? '✏️ Profilni tahrirlash' : '✏️ Редактировать профиль',
@@ -7106,9 +7107,9 @@ const showUnmatchedRoutesMenu = async (ctx) => {
     const user = ctx.user
     
     const message = user.language === 'uz'	
-        ? `🔍 Topilmagan yo'nalishlar\n\n` +
+        ? `Buyurtmalar\n\n` +
           `Bu yerda sizning yo'nalishingizga mos kelmaydigan, ` +
-          `lekin boshqa yo'nalishlardagi buyurtmalarni ko'rishingiz mumkin.\n\n` +
+          `lekin boshqa buyurtmalarni ko'rishingiz mumkin.\n\n` +
           `ℹ️ Ma'lumotlar so'nggi 7 kun ichida yaratilgan buyurtmalardan olinadi.`
         : `🔍 Неподходящие направления\n\n` +
           `Здесь вы можете видеть заказы по другим направлениям, ` +

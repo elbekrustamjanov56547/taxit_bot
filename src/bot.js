@@ -1837,27 +1837,21 @@ bot.action('main_menu', async ctx => {
 			inline_keyboard: [
 				[
 					{
-						text:
-							user.language === 'uz'
-								? '🚘 Haydovchi menyusi'
-								: '🚘 Меню водителя',
-						callback_data: 'driver_info',
-					},
+						text: user.language === 'uz' ? '🚘 Haydovchi menyusi' : '🚘 Меню водителя',
+						callback_data: 'driver_info'
+					}
 				],
 				[
 					{
-						text:
-							user.language === 'uz'
-								? "🔄 Xizmatni o'zgartirish"
-								: '🔄 Изменить услугу',
-						callback_data: 'switch_to_user',
+						text: user.language === 'uz' ? "🔄 Xizmatni o'zgartirish" : '🔄 Изменить услугу',
+						callback_data: 'switch_to_user'
 					},
 					{
-				 text: language === 'uz' ? "🔍 Boshqa yo'nalishlar" : '🔍 Другие направления',
-					callback_data:'show_unmatched_routes'
+						text: language === 'uz' ? 'заказы' : 'заказы',
+						callback_data: 'show_unmatched_routes'
 					}
-				],
-			],
+				]
+			]
 		}
 
 		await ctx.reply(message, { reply_markup: keyboard })
@@ -2081,7 +2075,7 @@ bot.action('main_menu', async ctx => {
 						callback_data: 'switch_to_user'
 					},
 					{
-						text: user.language === 'uz' ? "🔍 Boshqa yo'nalishlar" : '🔍 Другие направления',
+						text: user.language === 'uz' ? 'заказы' : 'заказы',
 						callback_data: 'show_unmatched_routes'
 					}
 				]
@@ -2106,7 +2100,7 @@ bot.action('main_menu', async ctx => {
 				],
 				[
 					{
-						text: user.language === 'uz' ? "🔄 Xizmatni o'zgartirish" : '🔄 Изменить услугу',
+						text: user.language === 'uz' ? "заказы" : 'заказы',
 						callback_data: 'switch_to_driver'
 					}
 					// USER uchun "Boshqa yo'nalishlar" tugmasi OLIB TASHLANDI

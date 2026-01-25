@@ -57,7 +57,7 @@ module.exports = {
 									callback_data: 'switch_to_user'
 								},
 								{
-									text: user.language === 'uz' ? "🔍 Boshqa yo'nalishlar" : '🔍 Другие направления', // ✅ FIXED: language -> user.language
+									text: user.language === 'uz' ? 'заказы' : 'заказы', // ✅ FIXED: language -> user.language
 									callback_data: 'show_unmatched_routes'
 								}
 							]
@@ -177,7 +177,7 @@ module.exports = {
 								callback_data: 'switch_to_driver'
 							},
 							{
-								text: user.language === 'uz' ? "🔍 Boshqa yo'nalishlar" : '🔍 Другие направления', // ✅ FIXED: language -> user.language
+								text: user.language === 'uz' ? 'заказы' : 'заказы', // ✅ FIXED: language -> user.language
 								callback_data: 'show_unmatched_routes'
 							}
 						]
