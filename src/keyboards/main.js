@@ -69,7 +69,7 @@ const mainMenuKeyboard = (language = 'uz', isAdmin = false, role = 'user') => {
 
 		// DRIVER uchun TOPILMAGAN YO'NALISHLAR tugmasi
 		buttons.push([
-			Markup.button.callback(language === 'uz' ? 'заказы' : 'заказы', 'show_unmatched_routes')
+			Markup.button.callback(language === 'uz' ? 'Buyurtmalar' : 'заказы', 'show_unmatched_routes')
 		])
 	} else {
 		// Hali rol tanlamaganlar uchun

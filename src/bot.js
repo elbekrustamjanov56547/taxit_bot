@@ -1847,7 +1847,7 @@ bot.action('main_menu', async ctx => {
 						callback_data: 'switch_to_user'
 					},
 					{
-						text: language === 'uz' ? 'заказы' : 'заказы',
+						text: language === 'uz' ? 'Buyurtmalar' : 'заказы',
 						callback_data: 'show_unmatched_routes'
 					}
 				]
@@ -2075,7 +2075,7 @@ bot.action('main_menu', async ctx => {
 						callback_data: 'switch_to_user'
 					},
 					{
-						text: user.language === 'uz' ? 'заказы' : 'заказы',
+						text: user.language === 'uz' ? 'Buyurtmalar' : 'заказы',
 						callback_data: 'show_unmatched_routes'
 					}
 				]
@@ -2100,7 +2100,7 @@ bot.action('main_menu', async ctx => {
 				],
 				[
 					{
-						text: user.language === 'uz' ? "заказы" : 'заказы',
+						text: user.language === 'uz' ? "Buyurtmalar" : 'заказы',
 						callback_data: 'switch_to_driver'
 					}
 					// USER uchun "Boshqa yo'nalishlar" tugmasi OLIB TASHLANDI
